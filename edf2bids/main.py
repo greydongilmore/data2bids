@@ -5,7 +5,6 @@ Created on Sat Dec 29 13:49:51 2018
 @author: Greydon
 """
 import os
-import sys
 import numpy as np
 import pandas as pd
 pd.set_option('precision', 6)
@@ -15,9 +14,9 @@ import datetime
 from shutil import copyfile
 import gzip
 import mne
-import re
+import argparse
 
-from edf2bids.helpers import EDFReader, padtrim, sorted_nicely, partition, determine_groups, is_float
+from helpers import EDFReader, padtrim, sorted_nicely, partition, determine_groups, is_float
 
 # Metadata used for the dataset decription
 ieeg_file_metadata = {
@@ -101,7 +100,6 @@ def _write_json(dictionary, fname, overwrite=False, verbose=False):
         print(os.linesep + "Writing '%s'..." % fname + os.linesep)
         print(json_output)
 
-#ifile = file_list[1]
 def get_file_info(raw_file_path):
     """
     Extract header data from EDF file.
@@ -164,7 +162,7 @@ def get_file_info(raw_file_path):
     
     return filesInfo
 
-def make_bids_filename(subject_id=None, session_id=None, run=None, suffix=None, prefix=None):
+def make_bids_filename(subject_id, session_id, run, suffix, prefix):
     """
     Generate a BIDS filename.
     
@@ -345,8 +343,6 @@ def _electrodes_data(file_info_run, electrodes_fname, systemInfo, coordinates=No
     
     print('Finished writing', electrodes_fname.split('\\')[-1], '\n')
 
-#file_info_run = file_data[irun]
-#ichan = chan_idx[0]
 def _channels_data(file_info_run, channels_fname, run, systemInfo, data_path, overwrite=False, verbose=False):
     """
     Channels data tsv file for each session.
@@ -398,6 +394,8 @@ def _annotations_data(file_info_run, annotation_fname, data_path, raw_file_path,
     annotTemp = mne.io.read_raw_edf(os.path.join(raw_file_path, file_info_run['FileName']), preload=True, exclude = chanindx[1:], verbose=None)
     events_edf = annotTemp.find_edf_events()[[i for i,x in enumerate(annotTemp.find_edf_events()) if not x[2].isdigit() and not is_float(x[2]) and not x[2].startswith(ignoreNotes)]]
     file_in.close()
+    
+    print('\n')
 
     df = pd.DataFrame(OrderedDict([
                       ('timestamp', [x[0] for x in events_edf]),
@@ -405,7 +403,7 @@ def _annotations_data(file_info_run, annotation_fname, data_path, raw_file_path,
                 
     _write_tsv(annotation_fname, df, overwrite, verbose, append = True)
 
-def _sidecar_json(file_info_run, sidecar_fname, run, systemInfo, kind, overwrite=False, verbose=False):
+def _sidecar_json(file_info_run, sidecar_fname, run, systemInfo, overwrite=False, verbose=False):
     """
     Sidecar JSON file for the edf file.
     
@@ -443,9 +441,6 @@ def _sidecar_json(file_info_run, sidecar_fname, run, systemInfo, kind, overwrite
     
     print('Finished writing', sidecar_fname.split('\\')[-1], '\n')
 
-#file_data = [file_info[ises]]
-#overwrite = False
-#make_dir = False
 def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, output_path,
                     coordinates, electrode_imp, make_dir, overwrite, verbose, compress):
     """
@@ -468,6 +463,7 @@ def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, ou
         annotation_fname = make_bids_filename(subject_id, session_id, run, suffix='annotations.tsv', prefix=data_path)
         
         # De-identify the file
+        print('De-identifying file... \n')
         with open(os.path.join(raw_file_path, file_data[irun]['FileName']), 'r+b') as fid:
             assert(fid.tell() == 0)
             fid.seek(8)
@@ -476,11 +472,15 @@ def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, ou
             
         # File compression using GZIP
         if compress:
+            print('Compressing/copying file... \n')
+            
             with open(os.path.join(raw_file_path, file_data[irun]['FileName']), 'rb') as src, gzip.open(data_fname + '.gz', 'wb') as dst:        
                 dst.writelines(src)
             coord_intendedFor_suffix = 'ieeg.edf.gz'
             data_fname = data_fname + '.gz'
         else:
+            print('Copying file... \n')
+            
             copyfile(os.path.join(raw_file_path, file_data[irun]['FileName']), data_fname)
             coord_intendedFor_suffix = 'ieeg.edf'
         
@@ -489,19 +489,13 @@ def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, ou
         _scans_data('/'.join(data_fname.split('\\')[-2:]), file_data[irun], scans_fname, systemInfo)
         
         _channels_data(file_data[irun], channels_fname, run, systemInfo, data_path, overwrite=overwrite, verbose=verbose)
-        _sidecar_json(file_data[irun], sidecar_fname, run, systemInfo, 'mer', overwrite=overwrite, verbose=verbose)
+        _sidecar_json(file_data[irun], sidecar_fname, run, systemInfo, overwrite=overwrite, verbose=verbose)
     
     coord_intendedFor = make_bids_filename(subject_id, session_id, run=run, suffix = coord_intendedFor_suffix, prefix='/'.join(['sub'+Intended_for[0]] + Intended_for[1:])).replace('\\','/')
     _electrodes_data(file_data[irun], electrodes_fname, systemInfo, coordinates=coordinates, electrode_imp=electrode_imp, overwrite=overwrite, verbose=verbose)
     _coordsystem_json(file_data[irun], coord_fname, coord_intendedFor, systemInfo, overwrite=overwrite, verbose=verbose)
 
 #%%   
-data_dir = r'F:\projects\iEEG\sourcedata'
-output_path = r'F:\projects\iEEG\bids'
-compression = True
-ifold = folders[5]
-session_start = 1
-ises = 1
 def main(data_dir, output_path, compression):
     
     dataset_fname = make_bids_filename(None, session_id=None, run=None, suffix='dataset_description.json', prefix=output_path)
@@ -514,7 +508,7 @@ def main(data_dir, output_path, compression):
     if os.path.exists(participants_fname):
         participant_tsv = pd.read_table(participants_fname)
     else:
-        _participants_data(None, participants_fname)
+        _participants_data(None, None, participants_fname)
         participant_tsv = pd.read_table(participants_fname)
         
     for ifold in folders: 
@@ -542,10 +536,15 @@ def main(data_dir, output_path, compression):
             for ises in range(session_start, num_sessions):
                 session_id = str(ises+1).zfill(3)
                 systemInfo = natus_info
-    
+                
+                print('Starting conversion file {} of {} for sub-{} \n'.format(str(ises+1), str(num_sessions - session_start), subject_id))
+                
                 raw_to_bids(subject_id, session_id, [file_info[ises]], systemInfo, raw_file_path, output_path,
                             coordinates=None, electrode_imp=None, make_dir=True, overwrite=True, verbose=False, compress=compression)
+                
+                print('Finished converting file {} of {} for sub-{} \n'.format(str(ises+1), str(num_sessions - session_start), subject_id))
             
+            # If subject not in participants.tsv then add
             if not in_table: 
                 _participants_data(subject_id, [file_info[0]], participants_fname)
                 
@@ -555,24 +554,20 @@ def main(data_dir, output_path, compression):
             print('Participant', 'sub-' + subject_id, 'already exists in the dataset!')
         
 if __name__ == "__main__":
-
-    if len(sys.argv)-1 < 1:
-        print ("Usage: python " + os.path.basename(__file__) +
-               " data_dir output_dir")
-        sys.exit()
+    
+    # Input arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('data_dir', help='Directory for the raw data.')
+    parser.add_argument('output_dir', help='Save anonymized edf files to')
+    parser.add_argument("-c", "--compression", action="store_true", default=False, help="Compress the edf files by gzip.")
+    args = parser.parse_args()
+    
+    if args.compression:
+        print('Will compress the edf files.\n')
     else:
-        data_dir = sys.argv[1]
-        output_dir = sys.argv[2]
-        if len(sys.argv)>3:
-            compression = sys.argv[3]
-            if compression=='True':
-                compression = True
-                print("Will compress the EDF file.")
-            else:
-                compression = False
-                print("Will not compress the EDF file.")
-        else:
-            compression = False
-            print("Will not compress the EDF file.")
-  
-    main(data_dir, output_dir, compression)
+        print('Will not compress the edf files.\n')
+        
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
+        
+    main(args.data_dir, args.output_dir, args.compression)
