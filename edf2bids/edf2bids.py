@@ -496,13 +496,18 @@ def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, ou
     _coordsystem_json(file_data[irun], coord_fname, coord_intendedFor, systemInfo, overwrite=overwrite, verbose=verbose)
 
 #%%   
-def main(data_dir, output_path, compression):
+def main(data_dir, output_path, compression, subjectNumber):
     
     dataset_fname = make_bids_filename(None, session_id=None, run=None, suffix='dataset_description.json', prefix=output_path)
     if not os.path.exists(dataset_fname):
         _dataset_json(dataset_fname)
         
     folders = sorted_nicely([x for x in os.listdir(data_dir) if x.startswith('sub')])
+    
+    if subjectNumber != '0000':
+        folders = [x for x in folders if x.endswith(subjectNumber)]
+        print('Will only process subject:', subjectNumber)
+        
     participants_fname = make_bids_filename(None, session_id=None, run=None, suffix='participants.tsv', prefix=output_path)
     
     if os.path.exists(participants_fname):
@@ -560,6 +565,7 @@ if __name__ == "__main__":
     parser.add_argument('data_dir', help='Directory for the raw data.')
     parser.add_argument('output_dir', help='Save anonymized edf files to')
     parser.add_argument("-c", "--compression", action="store_true", default=False, help="Compress the edf files by gzip.")
+    parser.add_argument("-s", "--subject", type=str, default='0000', help="Run specific subject only")
     args = parser.parse_args()
     
     if args.compression:
@@ -570,4 +576,4 @@ if __name__ == "__main__":
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
         
-    main(args.data_dir, args.output_dir, args.compression)
+    main(args.data_dir, args.output_dir, args.compression, args.subject)
