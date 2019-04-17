@@ -1,0 +1,7 @@
+Dataset description
+===================
+
+This dataset includes 24 hour recordings from patients in the epilepsy monitoring unit at University Hospital in London, Ontario, Canada.
+
+Files included for each subject:
+    SEEG recordings in de-identified gzipped edf format.

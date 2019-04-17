@@ -12,6 +12,7 @@ import json
 from collections import OrderedDict
 import datetime
 from shutil import copyfile
+import shutil
 import gzip
 import mne
 import argparse
@@ -238,6 +239,26 @@ def _dataset_json(dataset_fname):
     
     _write_json(info_dataset_json, dataset_fname)
 
+def _participants_json(participants_fname):
+    """
+    Participant description JSON file.
+    
+    """
+    info_participant_json = OrderedDict([
+        ('age', 
+                 {'Description': 'age of the participants.', 
+                  'Units': 'years.'}),
+        ('sex', 
+                 {'Description': 'sex of the participants.', 
+                  'Levels': {'m': 'male',
+                              'f': 'female'}}),
+        ('group', 
+                 {'Description': 'group the patient belongs to', 
+                  })
+        ])
+
+    _write_json(info_participant_json, participants_fname)
+    
 def _participants_data(subject_id, file_info_sub, participants_fname):
     """
     Participant tsv file generation.
@@ -249,13 +270,35 @@ def _participants_data(subject_id, file_info_sub, participants_fname):
             writeFile.write( "\n" )
             
     else:
+        # Parse edf files for age and gender (not all files will contain this info)
+        age = []
+        gender = []
+        for ifile in file_info_sub:
+            if isinstance(ifile['Age'], int):
+                age = ifile['Age']
+            if isinstance(ifile['Gender'], str):
+                gender = ifile['Gender']
+
         df = pd.DataFrame(OrderedDict([
                           ('participant_id', 'sub-' + subject_id if subject_id is not None else ''),
-                          ('age', file_info_sub[0]['Age']),
-                          ('sex', file_info_sub[0]['Gender']),
+                          ('age', age if age else 'n/a'),
+                          ('sex', gender if gender else 'n/a'),
                           ('group', 'patient')]), index= [0])
-    
+        
         _write_tsv(participants_fname, df, overwrite=False, verbose=False, append = True) 
+
+def _scans_json(scans_fname):
+    """
+    Participant description JSON file.
+    
+    """
+    info_scans_json = OrderedDict([
+        ('duration', 
+                 {'Description': 'total duration of the recording.', 
+                  'Units': 'hours.'})
+        ])
+
+    _write_json(info_scans_json, scans_fname)
     
 def _scans_data(file_name, file_info_run, scans_fname, systemInfo):
     """
@@ -288,7 +331,7 @@ def _coordsystem_json(file_info_run, coord_fname, coord_intendedFor, systemInfo,
     
     _write_json(info_coordsystem_json, coord_fname, overwrite, verbose)
     
-    print('Finished writing', coord_fname.split('\\')[-1], '\n')
+    print('Finished writing {} \n'.format(coord_fname.split('\\')[-1]))
     
 def _electrodes_data(file_info_run, electrodes_fname, systemInfo, coordinates=None, electrode_imp=None, overwrite=False, verbose=False):
     """
@@ -341,7 +384,7 @@ def _electrodes_data(file_info_run, electrodes_fname, systemInfo, coordinates=No
     
     _write_tsv(electrodes_fname, df_electrodes, overwrite, verbose, append = True)
     
-    print('Finished writing', electrodes_fname.split('\\')[-1], '\n')
+    print('Finished writing {} \n'.format(electrodes_fname.split('\\')[-1]))
 
 def _channels_data(file_info_run, channels_fname, run, systemInfo, data_path, overwrite=False, verbose=False):
     """
@@ -365,9 +408,9 @@ def _channels_data(file_info_run, channels_fname, run, systemInfo, data_path, ov
                       ('name', info_temp['ChanName']),
                       ('type', np.repeat(info_temp['Type'], len(info_temp['ChanName']))),
                       ('units', info_temp['Unit']),
-                      ('sampling_frequency', np.repeat(systemInfo['SamplingFrequency'], len(info_temp['ChanName']))),
                       ('low_cutoff', np.repeat(file_info_run['Lowpass'] if file_info_run['Lowpass'] is not None else 'n/a', len(info_temp['ChanName']))),
                       ('high_cutoff', np.repeat(file_info_run['Highpass'] if file_info_run['Highpass'] is not None else 'n/a', len(info_temp['ChanName']))),
+                      ('sampling_frequency', np.repeat(systemInfo['SamplingFrequency'], len(info_temp['ChanName']))),
                       ('notch', np.repeat('n/a',len(info_temp['ChanName']))),
                       ('reference', np.repeat('n/a',len(info_temp['ChanName']))),
                       ('group', values)]))
@@ -376,7 +419,7 @@ def _channels_data(file_info_run, channels_fname, run, systemInfo, data_path, ov
         
     _write_tsv(channels_fname, mainDF, overwrite, verbose, append = False)
     
-    print('Finished writing', channels_fname.split('\\')[-1], '\n')
+    print('Finished writing {} \n'.format(channels_fname.split('\\')[-1]))
 
 def _annotations_data(file_info_run, annotation_fname, data_path, raw_file_path, overwrite, verbose):
     """
@@ -439,7 +482,7 @@ def _sidecar_json(file_info_run, sidecar_fname, run, systemInfo, overwrite=False
     
     _write_json(info_sidecar_json, sidecar_fname, overwrite, verbose)
     
-    print('Finished writing', sidecar_fname.split('\\')[-1], '\n')
+    print('Finished writing {} \n'.format(sidecar_fname.split('\\')[-1]))
 
 def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, output_path,
                     coordinates, electrode_imp, make_dir, overwrite, verbose, compress):
@@ -494,7 +537,14 @@ def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, ou
     coord_intendedFor = make_bids_filename(subject_id, session_id, run=run, suffix = coord_intendedFor_suffix, prefix='/'.join(['sub'+Intended_for[0]] + Intended_for[1:])).replace('\\','/')
     _electrodes_data(file_data[irun], electrodes_fname, systemInfo, coordinates=coordinates, electrode_imp=electrode_imp, overwrite=overwrite, verbose=verbose)
     _coordsystem_json(file_data[irun], coord_fname, coord_intendedFor, systemInfo, overwrite=overwrite, verbose=verbose)
-
+     
+    code_output_path = os.path.join(output_path, 'code', 'edf2bids')
+    code_path = make_bids_folders(subject_id, session_id, None, code_output_path, make_dir, overwrite)
+    
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    shutil.copy(os.path.join(script_path, 'edf2bids.py'), code_path)
+    shutil.copy(os.path.join(script_path, 'helpers.py'), code_path)
+    
 #%%   
 def main(data_dir, output_path, compression, subjectNumber):
     
@@ -515,7 +565,21 @@ def main(data_dir, output_path, compression, subjectNumber):
     else:
         _participants_data(None, None, participants_fname)
         participant_tsv = pd.read_table(participants_fname)
-        
+    
+    # Add a participants json file
+    if not os.path.exists(participants_fname.split('.tsv')[0]+'.json'):
+        _participants_json(participants_fname.split('.tsv')[0]+'.json')
+      
+    # Add a bidsignore file
+    if '.bidsignore' not in os.listdir(output_path):
+        shutil.copy(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bidsignore'), 
+                    os.path.join(output_path,'.bidsignore'))
+    
+    # Add a README file
+    if not os.path.exists(os.path.join(output_path,'README')):
+        shutil.copy(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README'), 
+                    os.path.join(output_path,'README'))
+
     for ifold in folders: 
         subject_id = 'P' + ifold.split('-')[1]          
         raw_file_path = os.path.join(data_dir, ifold)
@@ -536,27 +600,33 @@ def main(data_dir, output_path, compression, subjectNumber):
         else:
             session_start = 0
             in_table = False
-            
+        
+        # Add scans json file for each subject
+        sub_path = make_bids_folders(subject_id, None, None, output_path, False, False)
+        scans_json_fname = make_bids_filename(subject_id, session_id=None, run=None, suffix='scans.json', prefix=sub_path)
+        if not os.path.exists(scans_json_fname):
+            _scans_json(scans_json_fname)
+        
         if newSessions:
             for ises in range(session_start, num_sessions):
                 session_id = str(ises+1).zfill(3)
                 systemInfo = natus_info
                 
-                print('Starting conversion file {} of {} for sub-{} \n'.format(str(ises+1), str(num_sessions - session_start), subject_id))
+                print('Starting conversion file {} of {} for sub-{} \n'.format(str((ises+1) - session_start), str(num_sessions - session_start), subject_id))
                 
                 raw_to_bids(subject_id, session_id, [file_info[ises]], systemInfo, raw_file_path, output_path,
                             coordinates=None, electrode_imp=None, make_dir=True, overwrite=True, verbose=False, compress=compression)
                 
-                print('Finished converting file {} of {} for sub-{} \n'.format(str(ises+1), str(num_sessions - session_start), subject_id))
+                print('Finished converting file {} of {} for sub-{} \n'.format(str((ises+1) - session_start), str(num_sessions - session_start), subject_id))
             
             # If subject not in participants.tsv then add
             if not in_table: 
-                _participants_data(subject_id, [file_info[0]], participants_fname)
+                _participants_data(subject_id, file_info, participants_fname)
                 
             participant_tsv = pd.read_table(participants_fname)
             
         else:
-            print('Participant', 'sub-' + subject_id, 'already exists in the dataset!')
+            print('Participant sub-{} already exists in the dataset! \n'.format(subject_id))
         
 if __name__ == "__main__":
     

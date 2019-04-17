@@ -23,8 +23,10 @@ def sorted_nicely( l ):
 ignoreNotes = ('Closed','De-block','Opened','Video','Impedance', 'Stop Recording','Saturation Recovery','Breakout box','Gain/Filter','Clip Note',
                    'Headbox Disconnecting', 'Headbox Reconnected')
 
-data_dir = r'F:\projects\iEEG\bids'
+data_dir = r'D:\projects\iEEG\code\edf2bids'
 scene_dir = r'F:\projects\iEEG\scenes'
+script_path = r'C:\Users\Greydon\Documents\github\edf2bids\edf2bids'
+
 subs = [x for x in os.listdir(data_dir) if x.startswith('sub')]
 isub = subs[0]
 ises = sessions[0]
@@ -32,6 +34,11 @@ for isub in subs:
     sessions = sorted_nicely([x for x in os.listdir(os.path.join(data_dir, isub)) if x.startswith('ses')])
     
     for ises in sessions:
+        code_path = os.path.join(data_dir, isub, ises)
+        
+        os.remove(os.path.join(code_path,'edf2bids.py'))
+        shutil.copy(os.path.join(script_path, 'edf2bids.py'), code_path)
+    
 #        coords = [x for x in os.listdir(os.path.join(data_dir, isub, ises, 'ieeg')) if x.endswith('coordsystem.json')][0]
 #        
 #        fname = os.path.join(data_dir, isub, ises, 'ieeg', coords)
