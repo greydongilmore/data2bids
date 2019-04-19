@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+7# -*- coding: utf-8 -*-
 """
 Created on Sat Dec 29 13:49:51 2018
 
@@ -491,6 +491,13 @@ def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, ou
     
     """
     data_path = make_bids_folders(subject_id, session_id, 'ieeg', output_path, make_dir, overwrite)
+    
+    # Add scans json file for each subject
+    sub_path = make_bids_folders(subject_id, None, None, output_path, False, False)
+    scans_json_fname = make_bids_filename(subject_id, session_id=None, run=None, suffix='scans.json', prefix=sub_path)
+    if not os.path.exists(scans_json_fname):
+        _scans_json(scans_json_fname)
+        
     electrodes_fname = make_bids_filename(subject_id, session_id, run=None, suffix='electrodes.tsv', prefix=data_path)
     coord_fname = make_bids_filename(subject_id, session_id, run=None, suffix = 'coordsystem.json', prefix=data_path)
     Intended_for = data_path.split('sub')[-1].split('\\')
@@ -600,12 +607,6 @@ def main(data_dir, output_path, compression, subjectNumber):
         else:
             session_start = 0
             in_table = False
-        
-        # Add scans json file for each subject
-        sub_path = make_bids_folders(subject_id, None, None, output_path, False, False)
-        scans_json_fname = make_bids_filename(subject_id, session_id=None, run=None, suffix='scans.json', prefix=sub_path)
-        if not os.path.exists(scans_json_fname):
-            _scans_json(scans_json_fname)
         
         if newSessions:
             for ises in range(session_start, num_sessions):
