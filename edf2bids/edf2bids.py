@@ -83,9 +83,19 @@ def _write_tsv(fname, df, overwrite=False, verbose=False, append = False):
     
     if os.path.exists(fname) and append:
         with open(fname,'a') as fd:
-            df.to_csv(fd, sep='\t', index=False, header = False, na_rep='n/a')
+            df.to_csv(fd, sep='\t', index=False, header = False, na_rep='n/a',line_terminator="")
+        
+        with open(fname) as f:
+            lines = f.readlines()
+            last = len(lines) - 1
+            lines[last] = lines[last].replace('\r','').replace('\n','')
+        with open(fname, 'w') as wr:
+            wr.writelines(lines) 
+
     else:
-        df.to_csv(fname, sep='\t', index=False, na_rep='n/a')
+        with open(fname,'w') as fd:
+            df.to_csv(fd, sep='\t', index=False, header = False, na_rep='n/a', line_terminator="")
+       
 
 def _write_json(dictionary, fname, overwrite=False, verbose=False):
     """
@@ -550,7 +560,7 @@ def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, ou
         else:
             print('Copying file... \n')
             
-            shutil.copyfile2(os.path.join(raw_file_path, file_data[irun]['FileName']), data_fname)
+            shutil.copyfileobj(os.path.join(raw_file_path, file_data[irun]['FileName']), data_fname)
             coord_intendedFor_suffix = 'ieeg.edf'
         
         _annotations_data(file_data[irun], annotation_fname, data_path, raw_file_path, overwrite, verbose)
@@ -571,7 +581,11 @@ def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, ou
     shutil.copy(os.path.join(script_path, 'edf2bids.py'), code_path)
     shutil.copy(os.path.join(script_path, 'helpers.py'), code_path)
     
-#%%   
+#%% 
+#data_dir = r'F:\projects\iEEG\sourcedata'
+#output_path = r'F:\projects\iEEG\bids2'
+#compression = True
+#subjectNumber = '012'
 def main(data_dir, output_path, compression, subjectNumber):
     
     dataset_fname = make_bids_filename(None, session_id=None, run=None, suffix='dataset_description.json', prefix=output_path)
@@ -587,10 +601,10 @@ def main(data_dir, output_path, compression, subjectNumber):
     participants_fname = make_bids_filename(None, session_id=None, run=None, suffix='participants.tsv', prefix=output_path)
     
     if os.path.exists(participants_fname):
-        participant_tsv = pd.read_table(participants_fname)
+        participant_tsv = pd.read_csv(participants_fname, sep='\t')
     else:
         _participants_data(None, None, participants_fname)
-        participant_tsv = pd.read_table(participants_fname)
+        participant_tsv = pd.read_csv(participants_fname, sep='\t')
     
     # Add a participants json file
     if not os.path.exists(participants_fname.split('.tsv')[0]+'.json'):
@@ -615,7 +629,6 @@ def main(data_dir, output_path, compression, subjectNumber):
         
         # True if subject already in participant.tsv file
         if 'sub-' + subject_id in participant_tsv['participant_id'].values:
-            in_table = True
             sessionsDone = sorted_nicely([x for x in os.listdir(os.path.join(output_path,'sub-'+subject_id)) if x.startswith('ses')])
             
             # Determine if new sessions to run, and where to begin
@@ -624,8 +637,9 @@ def main(data_dir, output_path, compression, subjectNumber):
             else:
                 newSessions = False
         else:
+            _participants_data(subject_id, file_info, participants_fname)
+            participant_tsv = pd.read_csv(participants_fname, sep='\t')
             session_start = 0
-            in_table = False
         
         if newSessions:
             for ises in range(session_start, num_sessions):
@@ -639,11 +653,11 @@ def main(data_dir, output_path, compression, subjectNumber):
                 
                 print('Finished converting file {} of {} for sub-{} \n'.format(str((ises+1) - session_start), str(num_sessions - session_start), subject_id))
             
-            # If subject not in participants.tsv then add
-            if not in_table: 
-                _participants_data(subject_id, file_info, participants_fname)
-                
-            participant_tsv = pd.read_table(participants_fname)
+#            # If subject not in participants.tsv then add
+#            if not in_table: 
+#                _participants_data(subject_id, file_info, participants_fname)
+#                
+#            participant_tsv = pd.read_csv(participants_fname, sep='\t')
             
         else:
             print('Participant sub-{} already exists in the dataset! \n'.format(subject_id))
