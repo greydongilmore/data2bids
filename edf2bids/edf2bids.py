@@ -16,6 +16,7 @@ import shutil
 import gzip
 import mne
 import argparse
+import struct
 
 from helpers import EDFReader, padtrim, sorted_nicely, partition, determine_groups, is_float
 
@@ -484,6 +485,13 @@ def _sidecar_json(file_info_run, sidecar_fname, run, systemInfo, overwrite=False
     
     print('Finished writing {} \n'.format(sidecar_fname.split('\\')[-1]))
 
+#def get_uncompressed_size(file):
+#    pipe_in = os.popen('gzip -l %s' % file)
+#    list_1 = pipe_in.readlines()
+#    list_2 = list_1[1].split()
+#    c , u , r , n = list_2
+#    return int(u)
+    
 def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, output_path,
                     coordinates, electrode_imp, make_dir, overwrite, verbose, compress):
     """
@@ -519,19 +527,30 @@ def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, ou
             fid.seek(8)
             fid.write(padtrim('sub-' + subject_id, 80).encode('utf-8')) # subject id
             fid.write(padtrim(make_bids_filename(None, session_id, run, suffix='ieeg.edf', prefix=''), 80).encode('utf-8')) # recording id
-            
+        
+        
+#        size_src = os.stat(r'F:\projects\iEEG\sourcedata\sub-012\Gow~ Robert_ee795a65-c143-4213-bd89-70a6ab7a6651.edf').st_size
+#		size_dst = get_uncompressed_size(r'F:\projects\iEEG\sourcedata\test\sub-P012\ses-001\ieeg\sub-P012_ses-001_run-01_ieeg.edf.gz')
+#
+#		float_src = float( size_src )
+#		float_dst = (float( size_dst )*10) +float( size_dst )
+#
+#		percentage = int(float_dst/float_src*100)
+        
         # File compression using GZIP
         if compress:
             print('Compressing/copying file... \n')
             
             with open(os.path.join(raw_file_path, file_data[irun]['FileName']), 'rb') as src, gzip.open(data_fname + '.gz', 'wb') as dst:        
-                dst.writelines(src)
+#                shutil.copy2(src, dst)
+                shutil.copyfileobj(src, dst)
+                
             coord_intendedFor_suffix = 'ieeg.edf.gz'
             data_fname = data_fname + '.gz'
         else:
             print('Copying file... \n')
             
-            copyfile(os.path.join(raw_file_path, file_data[irun]['FileName']), data_fname)
+            shutil.copyfile2(os.path.join(raw_file_path, file_data[irun]['FileName']), data_fname)
             coord_intendedFor_suffix = 'ieeg.edf'
         
         _annotations_data(file_data[irun], annotation_fname, data_path, raw_file_path, overwrite, verbose)
