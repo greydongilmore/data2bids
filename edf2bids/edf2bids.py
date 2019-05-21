@@ -82,9 +82,7 @@ def _write_tsv(fname, df, overwrite=False, verbose=False, append = False):
         pass
     
     if os.path.exists(fname) and append:
-        with open(fname,'a') as fd:
-            df.to_csv(fd, sep='\t', index=False, header = False, na_rep='n/a',line_terminator="")
-        
+        df.to_csv(fname, sep='\t', index=False, header = False, na_rep='n/a', mode='a', line_terminator="")
         with open(fname) as f:
             lines = f.readlines()
             last = len(lines) - 1
@@ -93,9 +91,10 @@ def _write_tsv(fname, df, overwrite=False, verbose=False, append = False):
             wr.writelines(lines) 
 
     else:
-        with open(fname,'w') as fd:
-            df.to_csv(fd, sep='\t', index=False, header = False, na_rep='n/a', line_terminator="")
-       
+        data1 = df.iloc[0:len(df)-1]
+        data2 = df.iloc[[len(df)-1]]
+        data1.to_csv(fname, sep='\t', encoding='utf-8', index = False)
+        data2.to_csv(fname, sep='\t', encoding='utf-8', header= False, index = False, mode='a',line_terminator="")       
 
 def _write_json(dictionary, fname, overwrite=False, verbose=False):
     """
@@ -117,7 +116,7 @@ def get_file_info(raw_file_path):
     Extract header data from EDF file.
     
     """
-    file_list = [x.lower() for x in os.listdir(raw_file_path) if x.endswith('.edf')]
+    file_list = [x for x in os.listdir(raw_file_path) if x.endswith('.edf')]
     filesInfo = []
     for ifile in file_list:
         filen = os.path.join(raw_file_path, ifile)
@@ -342,7 +341,7 @@ def _coordsystem_json(file_info_run, coord_fname, coord_intendedFor, systemInfo,
     
     _write_json(info_coordsystem_json, coord_fname, overwrite, verbose)
     
-    print('Finished writing {} \n'.format(coord_fname.split('\\')[-1]))
+    print('Finished writing {} \n'.format(coord_fname.split(os.path.sep)[-1]))
     
 def _electrodes_data(file_info_run, electrodes_fname, systemInfo, coordinates=None, electrode_imp=None, overwrite=False, verbose=False):
     """
@@ -395,7 +394,7 @@ def _electrodes_data(file_info_run, electrodes_fname, systemInfo, coordinates=No
     
     _write_tsv(electrodes_fname, df_electrodes, overwrite, verbose, append = True)
     
-    print('Finished writing {} \n'.format(electrodes_fname.split('\\')[-1]))
+    print('Finished writing {} \n'.format(electrodes_fname.split(os.path.sep)[-1]))
 
 def _channels_data(file_info_run, channels_fname, run, systemInfo, data_path, overwrite=False, verbose=False):
     """
@@ -430,7 +429,7 @@ def _channels_data(file_info_run, channels_fname, run, systemInfo, data_path, ov
         
     _write_tsv(channels_fname, mainDF, overwrite, verbose, append = False)
     
-    print('Finished writing {} \n'.format(channels_fname.split('\\')[-1]))
+    print('Finished writing {} \n'.format(channels_fname.split(os.path.sep)[-1]))
 
 def _annotations_data(file_info_run, annotation_fname, data_path, raw_file_path, overwrite, verbose):
     """
@@ -493,7 +492,7 @@ def _sidecar_json(file_info_run, sidecar_fname, run, systemInfo, overwrite=False
     
     _write_json(info_sidecar_json, sidecar_fname, overwrite, verbose)
     
-    print('Finished writing {} \n'.format(sidecar_fname.split('\\')[-1]))
+    print('Finished writing {} \n'.format(sidecar_fname.split(os.path.sep)[-1]))
 
 #def get_uncompressed_size(file):
 #    pipe_in = os.popen('gzip -l %s' % file)
@@ -518,7 +517,7 @@ def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, ou
         
     electrodes_fname = make_bids_filename(subject_id, session_id, run=None, suffix='electrodes.tsv', prefix=data_path)
     coord_fname = make_bids_filename(subject_id, session_id, run=None, suffix = 'coordsystem.json', prefix=data_path)
-    Intended_for = data_path.split('sub')[-1].split('\\')
+    Intended_for = data_path.split('sub')[-1].split(os.path.sep)
     num_runs = len(file_data)
 
     for irun in range(num_runs):
@@ -565,7 +564,7 @@ def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, ou
         
         _annotations_data(file_data[irun], annotation_fname, data_path, raw_file_path, overwrite, verbose)
         
-        _scans_data('/'.join(data_fname.split('\\')[-2:]), file_data[irun], scans_fname, systemInfo)
+        _scans_data('/'.join(data_fname.split(os.path.sep)[-2:]), file_data[irun], scans_fname, systemInfo)
         
         _channels_data(file_data[irun], channels_fname, run, systemInfo, data_path, overwrite=overwrite, verbose=verbose)
         _sidecar_json(file_data[irun], sidecar_fname, run, systemInfo, overwrite=overwrite, verbose=verbose)
@@ -582,10 +581,8 @@ def raw_to_bids(subject_id, session_id, file_data, systemInfo, raw_file_path, ou
     shutil.copy(os.path.join(script_path, 'helpers.py'), code_path)
     
 #%% 
-#data_dir = r'F:\projects\iEEG\sourcedata'
-#output_path = r'F:\projects\iEEG\bids2'
-#compression = True
-#subjectNumber = '012'
+data_dir = r'/media/veracrypt1/projects/iEEG/sourcedata/new'
+output_path = r'/media/veracrypt1/projects/iEEG/bids2'
 def main(data_dir, output_path, compression, subjectNumber):
     
     dataset_fname = make_bids_filename(None, session_id=None, run=None, suffix='dataset_description.json', prefix=output_path)
@@ -626,6 +623,7 @@ def main(data_dir, output_path, compression, subjectNumber):
         file_info = get_file_info(raw_file_path)
         num_sessions = len(file_info)
         newSessions = True
+        file_info_idx = 0
         
         # True if subject already in participant.tsv file
         if 'sub-' + subject_id in participant_tsv['participant_id'].values:
@@ -634,6 +632,16 @@ def main(data_dir, output_path, compression, subjectNumber):
             # Determine if new sessions to run, and where to begin
             if len(sessionsDone) < num_sessions:
                 session_start = num_sessions-(num_sessions - len(sessionsDone))
+            elif os.path.exists(os.path.join(output_path,'sub-'+subject_id, 'sub-'+subject_id + '_scans.tsv')):
+                scans_tsv = pd.read_csv(os.path.join(output_path,'sub-'+subject_id, 'sub-'+subject_id + '_scans.tsv'), sep='\t')
+                session_dates = [x['Date']+'T'+x['Time'] for x in file_info]
+                unique_sessions = [x for x,i in enumerate(session_dates) if i in list(scans_tsv['acq_time'])]
+                file_info = [i for j, i in enumerate(file_info) if j not in unique_sessions]
+                session_dates = [x['Date']+'T'+x['Time'] for x in file_info]
+                unique_sessions = [x for x,i in enumerate(session_dates) if i in list(scans_tsv['acq_time'])]
+                if not unique_sessions:
+                    session_start = len(sessionsDone)
+                    num_sessions = session_start + len(file_info)
             else:
                 newSessions = False
         else:
@@ -648,11 +656,13 @@ def main(data_dir, output_path, compression, subjectNumber):
                 
                 print('Starting conversion file {} of {} for sub-{} \n'.format(str((ises+1) - session_start), str(num_sessions - session_start), subject_id))
                 
-                raw_to_bids(subject_id, session_id, [file_info[ises]], systemInfo, raw_file_path, output_path,
+                raw_to_bids(subject_id, session_id, [file_info[file_info_idx]], systemInfo, raw_file_path, output_path,
                             coordinates=None, electrode_imp=None, make_dir=True, overwrite=True, verbose=False, compress=compression)
                 
                 print('Finished converting file {} of {} for sub-{} \n'.format(str((ises+1) - session_start), str(num_sessions - session_start), subject_id))
-            
+                
+                file_info_idx += 1
+                
 #            # If subject not in participants.tsv then add
 #            if not in_table: 
 #                _participants_data(subject_id, file_info, participants_fname)
