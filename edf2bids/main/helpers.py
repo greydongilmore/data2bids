@@ -12,13 +12,16 @@ import json
 import datetime
 import warnings
 import re
-from copy import deepcopy
-from struct import pack, unpack
+from struct import unpack
 from math import floor
 import shutil
 import glob
 from collections import OrderedDict
 
+
+##############################################################################
+#                                 HELPERS                                    #
+##############################################################################
 def padtrim(buf, num):
 	"""
 	Adds padding to string data.
@@ -106,168 +109,32 @@ def determine_groups(iterable):
 	
 	return values
 
-class EDFWriter():
-	"""
-	This class will write to the edf file format.
-	
-	:param fname: filename to write.
-	:type iterable: string
-		
-	"""
-	def __init__(self, fname=None):
-		self.fname = None
-		self.meas_info = None
-		self.chan_info = None
-		self.calibrate = None
-		self.offset    = None
-		self.n_records = 0
-		if fname:
-			self.open(fname)
-
-	def open(self, fname):
-		with open(fname, 'r+') as fid:
-			assert(fid.tell() == 0)
-		self.fname = fname
-
-	def close(self):
-		# it is still needed to update the number of records in the header
-		# this requires copying the whole file content
-		meas_info = self.meas_info
-		chan_info = self.chan_info
-		# update the n_records value in the file
-		tempname = self.fname + '.bak'
-		os.rename(self.fname, tempname)
-		with open(tempname, 'r+') as fid1:
-			assert(fid1.tell() == 0)
-			with open(self.fname, 'wb') as fid2:
-				assert(fid2.tell() == 0)
-				fid2.write(fid1.read(236).encode('utf-8'))
-				fid1.read(8)                                    # skip this part
-				fid2.write(padtrim(str(self.n_records), 8).encode('utf-8'))     # but write this instead
-				fid2.write(fid1.read(meas_info['data_offset'] - 236 - 8).encode('utf-8'))
-				blocksize = np.sum(chan_info['n_samps']) * meas_info['data_size']
-				for block in range(self.n_records):
-					fid2.write(fid1.read(blocksize).encode('utf-8'))
-		os.remove(tempname)
-		self.fname = None
-		self.meas_info = None
-		self.chan_info = None
-		self.calibrate = None
-		self.offset    = None
-		self.n_records = 0
-		return
-	
-	def padtrim(buf, num):
-		num -= len(buf)
-		if num>=0:
-			# pad the input to the specified length
-			return (str(buf) + ' ' * num)
+def sec2time(sec, n_msec=3):
+	''' Convert seconds to 'D days, HH:MM:SS.FFF' '''
+	if hasattr(sec,'__len__'):
+		return [sec2time(s) for s in sec]
+	neg=False
+	if sec <0:
+		neg=True
+		sec = sec*-1
+	m, s = divmod(sec, 60)
+	h, m = divmod(m, 60)
+	d, h = divmod(h, 24)
+	if n_msec > 0:
+		pattern = '%%02d:%%02d:%%0%d.%df' % (n_msec+3, n_msec)
+	else:
+		pattern = r'%02d:%02d:%02d'
+	if d == 0:
+		if neg:
+			return '-' + pattern % (h, m, s)
 		else:
-			# trim the input to the specified length
-			return (buf[0:num])
-	
-	def writeHeader(self, header):
-		meas_info = header['meas_info']
-		chan_info = header['chan_info']
-		meas_size = 256
-		chan_size = 256 * meas_info['nchan']
-		with open(self.fname, 'r+') as fid:
-			assert(fid.tell() == 0)
+			return pattern % (h, m, s)
+		
+	return ('%d days, ' + pattern) % (d, h, m, s)
 
-			# fill in the missing or incomplete information
-			if not 'subject_id' in meas_info:
-				meas_info['subject_id'] = ''
-			if not 'recording_id' in meas_info:
-				meas_info['recording_id'] = ''
-			if not 'subtype' in meas_info:
-				meas_info['subtype'] = 'edf'
-			nchan = meas_info['nchan']
-			if not 'ch_names' in chan_info or len(chan_info['ch_names'])<nchan:
-				chan_info['ch_names'] = [str(i) for i in range(nchan)]
-			if not 'transducers' in chan_info or len(chan_info['transducers'])<nchan:
-				chan_info['transducers'] = ['' for i in range(nchan)]
-			if not 'units' in chan_info or len(chan_info['units'])<nchan:
-				chan_info['units'] = ['' for i in range(nchan)]
-
-			if meas_info['subtype'] in ('24BIT', 'bdf'):
-				meas_info['data_size'] = 3  # 24-bit (3 byte) integers
-			else:
-				meas_info['data_size'] = 2  # 16-bit (2 byte) integers
-
-			fid.write(padtrim('0', 8))
-			fid.write(padtrim(meas_info['subject_id'], 80))
-			fid.write(padtrim(meas_info['recording_id'], 80))
-			fid.write(padtrim('{:0>2d}.{:0>2d}.{:0>2d}'.format(meas_info['day'], meas_info['month'], meas_info['year']), 8))
-			fid.write(padtrim('{:0>2d}.{:0>2d}.{:0>2d}'.format(meas_info['hour'], meas_info['minute'], meas_info['second']), 8))
-			fid.write(padtrim(str(meas_size + chan_size), 8))
-#            fid.write((' ' * 44).encode('utf-8'))
-			fid.write(' ' * 44)
-			fid.write(padtrim(str(-1), 8))  # the final n_records should be inserted on byte 236
-			fid.write(padtrim(str(meas_info['record_length']), 8))
-			fid.write(padtrim(str(meas_info['nchan']), 4))
-
-			# ensure that these are all np arrays rather than lists
-			for key in ['physical_min', 'transducers', 'physical_max', 'digital_max', 'ch_names', 'n_samps', 'units', 'digital_min']:
-				chan_info[key] = np.asarray(chan_info[key])
-
-			for i in range(meas_info['nchan']):
-				fid.write(padtrim(    chan_info['ch_names'][i], 16))
-			for i in range(meas_info['nchan']):
-				fid.write(padtrim(    chan_info['transducers'][i], 80))
-			for i in range(meas_info['nchan']):
-				fid.write(padtrim(    chan_info['units'][i], 8))
-			for i in range(meas_info['nchan']):
-				fid.write(padtrim(str(chan_info['physical_min'][i]), 8))
-			for i in range(meas_info['nchan']):
-				fid.write(padtrim(str(chan_info['physical_max'][i]), 8))
-			for i in range(meas_info['nchan']):
-				fid.write(padtrim(str(chan_info['digital_min'][i]), 8))
-			for i in range(meas_info['nchan']):
-				fid.write(padtrim(str(chan_info['digital_max'][i]), 8))
-			for i in range(meas_info['nchan']):
-#                fid.write((' ' * 80).encode('utf-8')) # prefiltering
-				fid.write(' ' * 80) # prefiltering
-			for i in range(meas_info['nchan']):
-				fid.write(padtrim(str(chan_info['n_samps'][i]), 8))
-			for i in range(meas_info['nchan']):
-#                fid.write((' ' * 32).encode('utf-8')) # reserved
-				fid.write(' ' * 32) # reserved
-			meas_info['data_offset'] = fid.tell()
-
-		self.meas_info = meas_info
-		self.chan_info = chan_info
-		self.calibrate = (chan_info['physical_max'] - chan_info['physical_min'])/(chan_info['digital_max'] - chan_info['digital_min']);
-		self.offset    =  chan_info['physical_min'] - self.calibrate * chan_info['digital_min'];
-		channels = list(range(meas_info['nchan']))
-		for ch in channels:
-			if self.calibrate[ch]<0:
-			  self.calibrate[ch] = 1;
-			  self.offset[ch]    = 0;
-	
-	def writeBlock(self, data):
-		meas_info = self.meas_info
-		chan_info = self.chan_info
-		with open(self.fname, 'ab') as fid:
-			assert(fid.tell() > 0)
-			for i in range(meas_info['nchan']):
-				raw = deepcopy(data[i])
-
-				assert(len(raw)==chan_info['n_samps'][i])
-				if min(raw)<chan_info['physical_min'][i]:
-					warnings.warn('Value exceeds physical_min: ' + str(min(raw)) );
-				if max(raw)>chan_info['physical_max'][i]:
-					warnings.warn('Value exceeds physical_max: '+ str(max(raw)));
-
-				raw -= self.offset[i]  # FIXME I am not sure about the order of calibrate and offset
-				raw /= self.calibrate[i]
-
-				raw = np.asarray(raw, dtype=np.int16)
-				buf = [pack('h', x) for x in raw]
-				for val in buf:
-					fid.write(val)
-			self.n_records += 1
-			
-			
+##############################################################################
+#                              EDF READER                                    #
+##############################################################################
 class EDFReader():
 	"""
 	This class will read the edf file format.
@@ -283,22 +150,13 @@ class EDFReader():
 		self.calibrate = None
 		self.offset    = None
 		if fname:
-			self.open(fname)
+			self.fname = fname
+			self.readHeader()
 
 	def open(self, fname):
-		
-		with open(fname, 'rb') as fid:
-			assert(fid.tell() == 0)
 		self.fname = fname
-		self.readHeader()
-		return (self.meas_info, self.chan_info)
-
-	def close(self):
-		self.fname = None
-		self.meas_info = None
-		self.chan_info = None
-		self.calibrate = None
-		self.offset    = None
+		
+		return self.readHeader()
 
 	def readHeader(self):
 		# the following is copied over from MNE-Python and subsequently modified
@@ -309,12 +167,26 @@ class EDFReader():
 			assert(fid.tell() == 0)
 			meas_info['magic'] = fid.read(8).strip().decode()
 			subject_id = fid.read(80).strip().decode()  # subject id
+			meas_info['subject_code'] = subject_id.split(' ')[0]
 			meas_info['gender'] = subject_id.split(' ')[1]
 			meas_info['birthdate'] = subject_id.split(' ')[2]
 			
 			meas_info['subject_id'] = subject_id.split(' ')[-1]
+			
+			meas_info['firstname'] = None
+			meas_info['lastname'] = None
+			if not any(substring in meas_info['subject_id'].lower() for substring in {'x,x','x_x'}):
+				meas_info['lastname'],meas_info['firstname'] = meas_info['subject_id'].replace('_',',').split(',')
+			else:
+				filen = os.path.basename(self.fname).replace(' ','')
+				if any(substring in filen for substring in {'~','_'}):
+					firstname = filen.replace('_',' ').replace('~',' ').split()[1]
+					meas_info['firstname'] = firstname if firstname.lower() != 'x' else None
+					lastname = filen.replace('_',' ').replace('~',' ').split()[0]
+					meas_info['lastname'] = lastname if lastname.lower() != 'x' else None
+					
 			meas_info['recording_id'] = fid.read(80).strip().decode()  # recording id
-
+			
 			day, month, year = [int(x) for x in re.findall('(\d+)', fid.read(8).decode())]
 			hour, minute, second = [int(x) for x in re.findall('(\d+)', fid.read(8).decode())]
 			meas_info['day'] = day
@@ -398,23 +270,27 @@ class EDFReader():
 				meas_info['n_records'] = tot_samps/sum(n_samps)
 		
 		self.calibrate = (chan_info['physical_max'] - chan_info['physical_min'])/(chan_info['digital_max'] - chan_info['digital_min'])
-		self.offset    =  chan_info['physical_min'] - self.calibrate * chan_info['digital_min']
+		self.offset =  chan_info['physical_min'] - self.calibrate * chan_info['digital_min']
+		
+		chan_info['calibrate'] = self.calibrate
+		chan_info['offset'] = self.offset
+		
 		for ch in channels:
 			if self.calibrate[ch]<0:
-			  self.calibrate[ch] = 1
-			  self.offset[ch]    = 0
+				self.calibrate[ch] = 1
+				self.offset[ch] = 0
 		
-		header = {}
-		header['meas_info'] = meas_info
-		header['chan_info'] = chan_info
-		
-		tal_indx = [i for i,x in enumerate(chan_info['ch_names']) if x.endswith('Annotations')][0]
-		header['meas_info']['millisecond'] = meas_info['millisecond'] = read_annotation_block(0, self.fname, header, tal_indx)[0][0][0]
+		self.header = {}
+		self.header['meas_info'] = meas_info
+		self.header['chan_info'] = chan_info
 		
 		self.meas_info = meas_info
 		self.chan_info = chan_info
 		
-		return header
+		tal_indx = [i for i,x in enumerate(self.header['chan_info']['ch_names']) if x.endswith('Annotations')][0]
+		self.header['meas_info']['millisecond'] = meas_info['millisecond'] = self.read_annotation_block(0, tal_indx)[0][0][0]
+		
+		return self.header
 	
 	def padtrim(buf, num):
 		num -= len(buf)
@@ -425,26 +301,161 @@ class EDFReader():
 			# trim the input to the specified length
 			return (buf[0:num])
 	
-	def readBlock(self, block):
+	def _read_annotations_apply_offset(self, triggers):
+		events = []
+		offset = 0.
+		for k, ev in enumerate(triggers):
+			onset = float(ev[0]) + offset
+			duration = float(ev[2]) if ev[2] else 0
+			for description in ev[3].split('\x14')[1:]:
+				if description:
+					events.append([onset, duration, description, ev[4]])
+				elif k==0:
+					# "The startdate/time of a file is specified in the EDF+ header
+					# fields 'startdate of recording' and 'starttime of recording'.
+					# These fields must indicate the absolute second in which the
+					# start of the first data record falls. So, the first TAL in
+					# the first data record always starts with +0.X2020, indicating
+					# that the first data record starts a fraction, X, of a second
+					# after the startdate/time that is specified in the EDF+
+					# header. If X=0, then the .X may be omitted."
+					offset = -onset
+					
+		return events if events else list()
+	
+	def read_annotation_block(self, block, tal_indx):
+		pat = '([+-]\\d+\\.?\\d*)(\x15(\\d+\\.?\\d*))?(\x14.*?)\x14\x00'
 		assert(block>=0)
-		meas_info = self.meas_info
-		chan_info = self.chan_info
 		data = []
 		with open(self.fname, 'rb') as fid:
 			assert(fid.tell() == 0)
-			blocksize = np.sum(chan_info['n_samps']) * meas_info['data_size']
-			fid.seek(meas_info['data_offset'] + block * blocksize)
-			for i in range(meas_info['nchan']):
-				buf = fid.read(chan_info['n_samps'][i]*meas_info['data_size'])
-				raw = np.asarray(unpack('<{}h'.format(chan_info['n_samps'][i]), buf), dtype=np.float32)
+			blocksize = np.sum(self.header['chan_info']['n_samps']) * self.header['meas_info']['data_size']
+			fid.seek(np.int64(self.header['meas_info']['data_offset']) + np.int64(block) * np.int64(blocksize))
+			read_idx = 0
+			for i in range(self.header['meas_info']['nchan']):
+				read_idx += np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size'])
+				buf = fid.read(np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']))
+				if i==tal_indx:
+					raw = re.findall(pat, buf.decode('latin-1'))
+					if raw:
+						data.append(list(map(list, [x+(block,) for x in raw])))
+			
+		return data
+	
+	def extract_annotations(self, deidentify=True):
+		overwrite_strings = [self.header['meas_info']['firstname'], self.header['meas_info']['lastname']]
+		overwrite_strings = [x for x in overwrite_strings if x is not None]
+		remove_strings = ['XLSPIKE','XLEVENT']
+	
+		tal_indx = [i for i,x in enumerate(self.header['chan_info']['ch_names']) if x.endswith('Annotations')][0]
+		
+		start_time = 0
+		end_time = self.header['meas_info']['n_records']*self.header['meas_info']['record_length']
+		
+		begsample = int(self.header['meas_info']['sampling_frequency']*float(start_time))
+		endsample = int(self.header['meas_info']['sampling_frequency']*float(end_time))
+	
+		begblock = int(np.floor((begsample) / self.header['chan_info']['n_samps'][tal_indx]))
+		endblock = int(np.floor((endsample) / self.header['chan_info']['n_samps'][tal_indx]))
+	
+		annotations = []
+		for block in range(begblock, endblock+1):
+			data_temp = self.read_annotation_block(block, tal_indx)
+			if data_temp:
+					annotations.append(data_temp[0])
+					
+		events = self._read_annotations_apply_offset([item for sublist in annotations for item in sublist])
+		
+		if deidentify:
+			if overwrite_strings:
+				### Replace any identifier strings
+				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_strings)]
+				if identity_idx:
+					events = self.overwrite_annotations(events, identity_idx, tal_indx, overwrite_strings, 'replace')
+			
+			if remove_strings:
+				### Remove unwanted annoations
+				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() == x[2].lower() for substring in remove_strings)]
+				if identity_idx:
+					events = self.overwrite_annotations(events, identity_idx, tal_indx, remove_strings, 'remove')
+		
+		annot_df = pd.DataFrame({})
+		if events:
+			fulldate = datetime.datetime.strptime(self.header['meas_info']['meas_date'], '%Y-%m-%d %H:%M:%S')
+			for i, annot in enumerate(events):
+				data_temp = {'onset': annot[0],
+							 'duration': annot[1],
+							 'time_abs': (fulldate + datetime.timedelta(seconds=annot[0]+float(self.header['meas_info']['millisecond']))).strftime('%H:%M:%S.%f'),
+							 'time_rel': sec2time(annot[0], 6),
+							 'event': annot[2]}
+				annot_df = pd.concat([annot_df, pd.DataFrame([data_temp])], axis = 0)
+		
+		return annot_df
+	
+	def overwrite_annotations(self, events, identity_idx, tal_indx, strings, action='replace'):
+		pat = '([+-]\\d+\\.?\\d*)(\x15(\\d+\\.?\\d*))?(\x14.*?)\x14\x00'
+		indexes = []
+		for ident in identity_idx:
+			block_chk = events[ident][-1]
+			replace_idx = [i for i,x in enumerate(strings) if x.lower() in events[ident][2].lower()]
+			for irep in replace_idx:
+				assert(block_chk>=0)
+				new_block=[]
+				with open(self.fname, 'rb') as fid:
+					assert(fid.tell() == 0)
+					blocksize = np.sum(self.header['chan_info']['n_samps']) * self.header['meas_info']['data_size']
+					fid.seek(np.int64(self.header['meas_info']['data_offset']) + np.int64(block_chk) * np.int64(blocksize))
+					for i in range(self.header['meas_info']['nchan']):
+						buf = fid.read(np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']))
+						if i==tal_indx:
+							if action == 'replace':
+								new_block = buf.lower().replace(bytes(strings[irep],'latin-1').lower(), bytes(''.join(np.repeat('X', len(strings[irep]))),'latin-1'))
+								events[ident][2] = events[ident][2].lower().replace(strings[irep].lower(), ''.join(np.repeat('X', len(strings[irep]))))
+								assert(len(new_block)==len(buf))
+								
+							elif action == 'remove':
+								raw = re.findall(pat, buf.decode('latin-1'))[0][0] +'\x14\x14'
+								new_block = raw + ('\x00'*(len(buf)-len(raw)))
+								indexes.append(ident)
+								assert(len(new_block)==len(buf))
+								
+				if new_block:
+					with open(self.fname, 'r+b') as fid:
+						assert(fid.tell() == 0)
+						blocksize = np.sum(self.header['chan_info']['n_samps']) * self.header['meas_info']['data_size']
+						fid.seek(np.int64(self.header['meas_info']['data_offset']) + np.int64(block_chk) * np.int64(blocksize))
+						read_idx = 0
+						for i in range(self.header['meas_info']['nchan']):
+							read_idx += np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size'])
+							buf = fid.read(np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']))
+							if i==tal_indx:
+								back = fid.seek(-np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']), 1)
+								assert(fid.tell()==back)
+								fid.write(new_block.encode('latin-1'))
+		
+		if indexes:
+			for index in sorted(indexes, reverse=True):
+				del events[index]
+		
+		return events
+
+	def readBlock(self, block):
+		assert(block>=0)
+		data = []
+		with open(self.fname, 'rb') as fid:
+			assert(fid.tell() == 0)
+			blocksize = np.sum(self.header['chan_info']['n_samps']) * self.header['meas_info']['data_size']
+			fid.seek(self.header['meas_info']['data_offset'] + block * blocksize)
+			for i in range(self.header['meas_info']['nchan']):
+				buf = fid.read(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size'])
+				raw = np.asarray(unpack('<{}h'.format(self.header['chan_info']['n_samps'][i]), buf), dtype=np.float32)
 				raw *= self.calibrate[i]
 				raw += self.offset[i]  # FIXME I am not sure about the order of calibrate and offset
 				data.append(raw)
 		return (data)
 	
 	def readSamples(self, channel, begsample, endsample):
-		chan_info = self.chan_info
-		n_samps = chan_info['n_samps'][channel]
+		n_samps = self.header['chan_info']['n_samps'][channel]
 		begblock = int(floor((begsample) / n_samps))
 		endblock = int(floor((endsample) / n_samps))
 		data = self.readBlock(begblock)[channel]
@@ -456,20 +467,20 @@ class EDFReader():
 	
 	def getSignalTextLabels(self):
 		# convert from unicode to string
-		return [str(x) for x in self.chan_info['ch_names']]
+		return [str(x) for x in self.header['chan_info']['ch_names']]
 
 	def getNSignals(self):
-		return self.meas_info['nchan']
+		return self.header['meas_info']['nchan']
 
 	def getSignalFreqs(self):
-		return self.chan_info['n_samps'] / self.meas_info['record_length']
+		return self.header['chan_info']['n_samps'] / self.header['meas_info']['record_length']
 
 	def getNSamples(self):
-		return self.chan_info['n_samps'] * self.meas_info['n_records']
+		return self.header['chan_info']['n_samps'] * self.header['meas_info']['n_records']
 
 	def readSignal(self, chanindx):
 		begsample = 0;
-		endsample = self.chan_info['n_samps'][chanindx] * self.meas_info['n_records'] - 1;
+		endsample = self.header['chan_info']['n_samps'][chanindx] * self.header['meas_info']['n_records'] - 1;
 		return self.readSamples(chanindx, begsample, endsample)
 
 def _write_tsv(fname, df, overwrite=False, verbose=False, append = False):
@@ -716,12 +727,11 @@ def get_file_info(raw_file_path_sub, bids_settings):
 	for ises in file_list:
 		filesInfo_ses = []
 		for ifile in ises:
-			filen = os.path.join(raw_file_path_sub, ifile)
-			file_in = EDFReader()
 			try:
-				meas_info, chan_info = file_in.open(filen)
-				header = file_in.readHeader()
-				file_in.close()
+				filen = os.path.join(raw_file_path_sub, ifile)
+				file_in = EDFReader()
+				header = file_in.open(filen)
+				
 				chan_label_file_ses = []
 				if sub_dir:
 					chan_label_file_ses = [x for x in os.listdir(os.path.dirname(filen)) if 'channel_label' in x]
@@ -745,23 +755,23 @@ def get_file_info(raw_file_path_sub, bids_settings):
 						('FileName', ifile),
 						('SubDir', raw_file_path_sub.split(os.path.sep)[-1]),
 						('DisplayName', ifile if not sub_dir else ifile.split(os.path.sep)[0]),
-						('Subject', meas_info['subject_id']),
-						('Gender', meas_info['gender']),
-						('Age', int(np.floor(((datetime.datetime.strptime(meas_info['meas_date'].split(' ')[0],"%Y-%m-%d") 
-								- datetime.datetime.strptime(datetime.datetime.strptime(meas_info['birthdate'],
-								'%d-%b-%Y').strftime('%Y-%m-%d'),"%Y-%m-%d")).days)/365)) if meas_info['birthdate'] != 'X' else 'X'),
-						('Birthdate', meas_info['birthdate']),
-						('RecordingID', meas_info['recording_id']),
-						('Date', meas_info['meas_date'].split(' ')[0]),
-						('Time', meas_info['meas_date'].split(' ')[1]),
-						('DataOffset', meas_info['data_offset']),
-						('NRecords', meas_info['n_records']),
-						('RecordLength', meas_info['record_length']),
-						('TotalRecordTime', round((((meas_info['n_records']*(meas_info['sampling_frequency']*meas_info['record_length']))/meas_info['sampling_frequency'])/60)/60,3)),
-						('NChan', meas_info['nchan']),
-						('SamplingFrequency', meas_info['sampling_frequency']),
-						('Highpass', meas_info['highpass']),
-						('Lowpass', meas_info['lowpass']),
+						('Subject', header['meas_info']['subject_id']),
+						('Gender', header['meas_info']['gender']),
+						('Age', int(np.floor(((datetime.datetime.strptime(header['meas_info']['meas_date'].split(' ')[0],"%Y-%m-%d") 
+								- datetime.datetime.strptime(datetime.datetime.strptime(header['meas_info']['birthdate'],
+								'%d-%b-%Y').strftime('%Y-%m-%d'),"%Y-%m-%d")).days)/365)) if header['meas_info']['birthdate'] != 'X' else 'X'),
+						('Birthdate', header['meas_info']['birthdate']),
+						('RecordingID', header['meas_info']['recording_id']),
+						('Date', header['meas_info']['meas_date'].split(' ')[0]),
+						('Time', header['meas_info']['meas_date'].split(' ')[1]),
+						('DataOffset', header['meas_info']['data_offset']),
+						('NRecords', header['meas_info']['n_records']),
+						('RecordLength', header['meas_info']['record_length']),
+						('TotalRecordTime', round((((header['meas_info']['n_records']*(header['meas_info']['sampling_frequency']*header['meas_info']['record_length']))/header['meas_info']['sampling_frequency'])/60)/60,3)),
+						('NChan', header['meas_info']['nchan']),
+						('SamplingFrequency', header['meas_info']['sampling_frequency']),
+						('Highpass', header['meas_info']['highpass']),
+						('Lowpass', header['meas_info']['lowpass']),
 						('Groups', group_info),
 						('EDF_type', header['meas_info']['subtype']),
 						('ses_chan_label', chan_label_file_ses)]
@@ -1171,23 +1181,14 @@ def read_annotation_block(block, data_fname, header, chanindx):
 
 def deidentify_edf(fname, isub, offset_date, rename):
 	file_in = EDFReader()
-	file_in.open(os.path.join(fname))
-	header = file_in.readHeader()
-	file_in.close()
+	header = file_in.open(fname)
 	
-	edf_subject_id = []
-	recording_id = []
-	if not header['meas_info']['birthdate'] == 'X':
-		edf_subject_id = 'X X X ' + isub
-		
-	if not header['meas_info']['gender'] == 'X':
-		edf_subject_id = 'X X X ' + isub
-		
-	if not header['meas_info']['subject_id'] == isub:
-		edf_subject_id = 'X X X ' + isub
-	
-	if not header['meas_info']['recording_id'] == 'Startdate X X X X':
-		recording_id = 'Startdate X X X X'
+	edf_deidentify = {}
+	edf_deidentify['subject_code'] = 'X' if not header['meas_info']['subject_code'] == 'X' else None
+	edf_deidentify['birthdate'] = 'X' if not header['meas_info']['birthdate'] == 'X' else None
+	edf_deidentify['gender'] = 'X' if not header['meas_info']['gender'] == 'X' else None
+	edf_deidentify['subject_id'] = 'X,X' if not header['meas_info']['subject_id'] == 'X,X' else None
+	recording_id = 'Startdate X X X X' if not header['meas_info']['recording_id'] == 'Startdate X X X X' else None
 	
 	new_date = []
 	days_off = 0
@@ -1202,28 +1203,30 @@ def deidentify_edf(fname, isub, offset_date, rename):
 		assert(fid.tell() == 0)
 		fid.seek(8)
 		
-		if edf_subject_id:
-			fid.write(padtrim(edf_subject_id, 80).encode('utf-8'))
+		if any(x for x in edf_deidentify.items() if x != None):
+			fid.write(padtrim('X X X X,X', 80).encode('latin-1'))
 		else:
 			fid.seek(80+8)
 			assert(fid.tell() == 80+8)
 		
-		if recording_id:
-			fid.write(padtrim(recording_id, 80).encode('utf-8'))
+		if recording_id is not None:
+			fid.write(padtrim(recording_id, 80).encode('latin-1'))
 		else:
 			fid.seek(80+80+8)
 			assert(fid.tell() == 80+80+8)
 			
 		if new_date:
-			fid.write(padtrim(new_date, 8).encode('utf-8'))
+			fid.write(padtrim(new_date, 8).encode('latin-1'))
 		else:
 			fid.seek(80+80+8+8)
 			assert(fid.tell() == 80+80+8+8)
 			
-	if rename:		
-		if '~' in fname.split(os.path.sep)[-1]:
-			new_name = '_'.join([isub] + fname.split(os.path.sep)[-1].split('_')[1:]).split('.')[0] + '.edf'
-			os.rename(fname, os.path.join(os.path.dirname(fname), new_name))
+	if rename:
+		if any(substring in fname.split(os.path.sep)[-1] for substring in {'~','_'}):
+			new_name = fname.split(os.path.sep)[-1].replace(' ','').replace('~','_').split('_')
+			if len(new_name)>2:
+				new_name = '_'.join([isub, ''.join(new_name[2:])])
+				os.rename(fname, os.path.join(os.path.dirname(fname), new_name))
 		else:
 			new_name = fname
 	else:

@@ -495,94 +495,6 @@ class edf2bids(QtCore.QThread):
 		mainDF['units'] = mainDF['units'].str.replace('uV', 'μV')
 		self._write_tsv(channels_fname, mainDF, overwrite, verbose, append = False)
 	
-	def extract_annotations(self):
-		tal_indx = [i for i,x in enumerate(header['chan_info']['ch_names']) if x.endswith('Annotations')][0]
-		
-		start_time = 0
-		end_time = header['meas_info']['n_records']*header['meas_info']['record_length']
-		
-		begsample = int(header['meas_info']['sampling_frequency']*float(start_time))
-		endsample = int(header['meas_info']['sampling_frequency']*float(end_time))
-	
-		begblock = int(np.floor((begsample) / header['chan_info']['n_samps'][tal_indx]))
-		endblock = int(np.floor((endsample) / header['chan_info']['n_samps'][tal_indx]))
-		
-		update_cnt = int(endblock/10)
-		annotations = []
-		for block in range(begblock, endblock-1):
-			data_temp = read_annotation_block(block, tal_indx)
-			if data_temp:
-					annotations.append(data_temp[0])
-			if block == update_cnt:
-				if block == endblock:
-					self.conversionStatusText = 'anot{}%'.format(int(np.ceil((update_cnt/endblock)*100)))
-				else:
-					self.conversionStatusText = '{}%'.format(int(np.ceil((update_cnt/endblock)*100)))
-				self.progressEvent.emit(self.conversionStatusText)
-				update_cnt += int(endblock/10)
-				
-		events = _read_annotations_apply_offset([item for sublist in annotations for item in sublist])
-	
-	def read_annotation_samples(self, chanindx, data_fname, begsample, endsample, header):
-		n_samps = header['chan_info']['n_samps'][chanindx]
-		begblock = int(np.floor((begsample) / n_samps))
-		endblock = int(np.floor((endsample) / n_samps))
-		data, overwrite = read_annotation_block(begblock, data_fname, header, chanindx)
-		update_cnt = int(endblock/10)
-		for block in range(begblock+1, endblock+1):
-			data_temp, overwrite_temp = read_annotation_block(block, data_fname, header, chanindx)
-			if data_temp:
-				data.append(data_temp[0])
-			if overwrite_temp:
-				overwrite.append(overwrite_temp[0])
-			if block == update_cnt:
-				if block == endblock:
-					self.conversionStatusText = 'anot{}%'.format(int(np.ceil((update_cnt/endblock)*100)))
-				else:
-					self.conversionStatusText = '{}%'.format(int(np.ceil((update_cnt/endblock)*100)))
-				self.progressEvent.emit(self.conversionStatusText)
-				update_cnt += int(endblock/10)
-		
-		if overwrite:
-			for iblock in range(len(overwrite)):
-				if 'Montage' in overwrite[iblock][0]:
-					text_update = 'Montage Event'
-				elif 'Name' in overwrite[iblock][0]:
-					text_update = overwrite[iblock][5].lower()
-					text_update = text_update.replace(header['meas_info']['firstname'], 'firstname')
-					text_update = text_update.replace(header['meas_info']['lastname'], 'lastname')
-				elif 'Other' in overwrite[iblock][0]:
-					text_update = ''
-
-				data.append([overwrite[iblock][3], overwrite[iblock][4], text_update])
-				with open(data_fname, 'r+b') as fid:
-					assert(fid.tell() == 0)
-					fid.seek(overwrite[iblock][1] - overwrite[iblock][2])
-					times = overwrite[iblock][3] + '\x14\x14\x00' + overwrite[iblock][4] + '\x14' + text_update +'\x14'
-					ending = (times + ('\x00' * (overwrite[iblock][2]-len(times)))).encode('utf-8')
-					assert(len(ending)==overwrite[iblock][2])
-					fid.write(ending) # subject id
-								
-		df_data = pd.DataFrame({})
-		if len(data)>0:
-			for iannot in range(len(data)):
-				ms = str(int((datetime.timedelta(seconds=float(data[iannot][0])).microseconds)/1000))
-				data_temp = {'onset': data[iannot][0],
-							 'duration': data[iannot][1],
-							 'seconds': float(data[iannot][0]),
-							 'time': str(datetime.timedelta(seconds=float(data[iannot][0]))).split('.')[0]+ms,
-							 'event': data[iannot][2]}
-							
-				df_data = pd.concat([df_data, pd.DataFrame([data_temp])], axis = 0)
-		else:
-			data_temp = {'onset': '','duration': '','seconds': '','time':'','event': ''}
-			df_data = pd.concat([df_data, pd.DataFrame([data_temp])], axis = 0)
-			
-		df_data = df_data[['onset','duration','seconds','time','event']]
-		df_data = df_data.sort_values(by='seconds').reset_index(drop=True)
-
-		return df_data
-	
 	def _annotations_data(self, file_info_run, annotation_fname, data_fname, source_name, overwrite, verbose):
 		"""
 		Constructs an annotations data tsv file about patient specific events from edf file.
@@ -599,27 +511,9 @@ class edf2bids(QtCore.QThread):
 		:type verbose: boolean
 		
 		"""
-		file_in = EDFReader()
-		file_in.open(data_fname)
-		header = file_in.readHeader()
-		file_in.close()
-		filen = os.path.basename(source_name).split('_')[0]
-		header['meas_info']['firstname'] = None
-		header['meas_info']['lastname'] = None
-		if any(substring in filen for substring in {'~','_'}):
-			firstname = filen.replace('_',' ').replace('~',' ').split()[1].lower()
-			header['meas_info']['firstname'] = firstname if firstname != 'x' else None
-			lastname = filen.replace('_',' ').replace('~',' ').split()[0].lower()
-			header['meas_info']['lastname'] = lastname if lastname != 'x' else None
-			
-		chanindx = [i for i,x in enumerate(header['chan_info']['ch_names']) if x.endswith('Annotations')][0]
-	
-		begsample = 0
-		endsample = header['chan_info']['n_samps'][chanindx] * header['meas_info']['n_records'] - 1
-		annotation_data = self.read_annotation_samples(chanindx, data_fname, begsample, endsample, header)
-	
-#		self._write_tsv(annotation_fname, annotation_data, overwrite, verbose, append = True)
-				
+		file_in = EDFReader(data_fname)
+		annotation_data = file_in.extract_annotations(deidentify=True)
+		
 		annotation_data.to_csv(annotation_fname, sep='\t', index=False, na_rep='n/a', line_terminator="")
 	
 	def _sidecar_json(self, file_info_run, sidecar_fname, session_id, overwrite=False, verbose=False):
@@ -722,12 +616,11 @@ class edf2bids(QtCore.QThread):
 		for ises in file_list:
 			filesInfo_ses = []
 			for ifile in ises:
-				filen = os.path.join(raw_file_path, ifile)
-				file_in = EDFReader()
 				try:
-					meas_info, chan_info = file_in.open(filen)
-					header = file_in.readHeader()
-					file_in.close()
+					filen = os.path.join(raw_file_path, ifile)
+					file_in = EDFReader()
+					header = file_in.open(filen)
+					
 					chan_label_file_ses = []
 					if sub_dir:
 						chan_label_file_ses = [x for x in os.listdir(os.path.dirname(filen)) if 'channel_label' in x]
@@ -751,23 +644,23 @@ class edf2bids(QtCore.QThread):
 							('FileName', ifile),
 							('SubDir', raw_file_path.split(os.path.sep)[-1]),
 							('DisplayName', ifile if not sub_dir else ifile.split(os.path.sep)[0]),
-							('Subject', meas_info['subject_id']),
-							('Gender', meas_info['gender']),
-							('Age', int(np.floor(((datetime.datetime.strptime(meas_info['meas_date'].split(' ')[0],"%Y-%m-%d") 
-									- datetime.datetime.strptime(datetime.datetime.strptime(meas_info['birthdate'],
-									'%d-%b-%Y').strftime('%Y-%m-%d'),"%Y-%m-%d")).days)/365)) if meas_info['birthdate'] != 'X' else 'X'),
-							('Birthdate', meas_info['birthdate']),
-							('RecordingID', meas_info['recording_id']),
-							('Date', meas_info['meas_date'].split(' ')[0]),
-							('Time', meas_info['meas_date'].split(' ')[1]),
-							('DataOffset', meas_info['data_offset']),
-							('NRecords', meas_info['n_records']),
-							('RecordLength', meas_info['record_length']),
-							('TotalRecordTime', round((((meas_info['n_records']*(meas_info['sampling_frequency']*meas_info['record_length']))/meas_info['sampling_frequency'])/60)/60,3)),
-							('NChan', meas_info['nchan']),
-							('SamplingFrequency', meas_info['sampling_frequency']),
-							('Highpass', meas_info['highpass']),
-							('Lowpass', meas_info['lowpass']),
+							('Subject', header['meas_info']['subject_id']),
+							('Gender', header['meas_info']['gender']),
+							('Age', int(np.floor(((datetime.datetime.strptime(header['meas_info']['meas_date'].split(' ')[0],"%Y-%m-%d") 
+									- datetime.datetime.strptime(datetime.datetime.strptime(header['meas_info']['birthdate'],
+									'%d-%b-%Y').strftime('%Y-%m-%d'),"%Y-%m-%d")).days)/365)) if header['meas_info']['birthdate'] != 'X' else 'X'),
+							('Birthdate', header['meas_info']['birthdate']),
+							('RecordingID', header['meas_info']['recording_id']),
+							('Date', header['meas_info']['meas_date'].split(' ')[0]),
+							('Time', header['meas_info']['meas_date'].split(' ')[1]),
+							('DataOffset', header['meas_info']['data_offset']),
+							('NRecords', header['meas_info']['n_records']),
+							('RecordLength', header['meas_info']['record_length']),
+							('TotalRecordTime', round((((header['meas_info']['n_records']*(header['meas_info']['sampling_frequency']*header['meas_info']['record_length']))/header['meas_info']['sampling_frequency'])/60)/60,3)),
+							('NChan', header['meas_info']['nchan']),
+							('SamplingFrequency', header['meas_info']['sampling_frequency']),
+							('Highpass', header['meas_info']['highpass']),
+							('Lowpass', header['meas_info']['lowpass']),
 							('Groups', group_info),
 							('EDF_type', header['meas_info']['subtype']),
 							('ses_chan_label', chan_label_file_ses)]
