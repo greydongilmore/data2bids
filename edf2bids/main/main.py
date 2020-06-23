@@ -755,7 +755,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		else:
 			self.conversionStatus.appendPlainText('\nCompleted conversion at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 			self.conversionStatus.appendPlainText('Your data has been BIDsified!\n')
-			self.updateStatus("Conversion complete.")
+			self.updateStatus("BIDs conversion complete.")
 			
 		self.cancelButton.setEnabled(False)
 		self.cancelButton.setStyleSheet(self.inactive_color)
@@ -766,6 +766,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 	
 	def onSpredButton(self):
 		self.conversionStatus.appendPlainText('Converting directory to SPReD format...')
+		self.updateStatus('Converting to SPReD format...')
 		QtGui.QGuiApplication.processEvents()
 		folders = [x for x in os.listdir(self.output_path) if os.path.isdir(os.path.join(self.output_path, x)) and 'code' not in x]
 		output_folders = ['_'.join([''.join(' '.join(re.split('(\d+)', x.split('-')[-1])).split()[:2])] + ' '.join(re.split('(\d+)', x.split('-')[-1])).split()[2:]) for x in folders]
@@ -809,6 +810,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			shutil.move(old_file, new_file)
 			
 		self.conversionStatus.appendPlainText('SPReD format conversion completed in output directory!')
+		self.updateStatus('SPReD conversion complete.')
 		
 		self.spredButton.setEnabled(False)
 		self.spredButton.setStyleSheet(self.inactive_color)
