@@ -772,13 +772,15 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		sub_cnt = 0
 		for isub in folders:
 			ses_folders = [x for x in os.listdir(os.path.sep.join([self.output_path, isub])) if os.path.isdir(os.path.sep.join([self.output_path, isub, x]))]
-			ses_folders_output = ['_'.join([' '.join(re.split('(\D+)', x.split('-')[-1])).split()[0], ''.join(' '.join(re.split('(\D+)', x.split('-')[-1])).split()[1:3]), ' '.join(re.split('(\D+)', x.split('-')[-1])).split()[-1]]) for x in ses_folders]
+			
+			session_split = [[x for x in i if x.isdigit()] for i in ses_folders]
+			ses_folders_output = ['_'.join([x[0]+x[1],'SE'+x[2]+x[3]]) for x in session_split]
 			ses_folders_output = ['_'.join([output_folders[sub_cnt], x]) for x in ses_folders_output]
 			ses_cnt = 0
 			for ises in ses_folders:
-				sub_fold = ses_folders_output[ses_cnt].split('_')[-1].lower()
-				old_fold = os.path.sep.join([self.output_path, isub, ises, sub_fold])
-				new_fold = os.path.sep.join([self.output_path, 'SPReD', output_folders[sub_cnt], ses_folders_output[ses_cnt], ses_folders_output[ses_cnt]])
+				sub_fold = [x for x in os.listdir(os.path.sep.join([self.output_path, isub, ises])) if os.path.isdir(os.path.sep.join([self.output_path, isub, ises, x]))]
+				old_fold = os.path.sep.join([self.output_path, isub, ises, sub_fold[0]])
+				new_fold = os.path.sep.join([self.output_path, 'SPReD', output_folders[sub_cnt], ses_folders_output[ses_cnt]+'_'+sub_fold[0].upper(), ses_folders_output[ses_cnt]+'_'+sub_fold[0].upper()])
 				
 				if not os.path.exists(new_fold):
 					os.makedirs(new_fold)
