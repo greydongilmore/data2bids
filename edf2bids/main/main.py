@@ -351,23 +351,26 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			for i in range(parent_count):
 				sub = root.child(i).text(0)
 				child_count = root.child(i).childCount()
+				ses_cnt = 0
 				for j in range(child_count):
 					item = root.child(i).child(j)
-					for irun in range(len(self.file_info[sub][j])):
-						if self.file_info[sub][j][irun]['DisplayName'] == item.text(0):
-							if self.file_info[sub][j][irun]['SamplingFrequency'] != int(item.text(4)):
-								self.file_info[sub][j][irun]['SamplingFrequency'] = int(item.text(4))
-								self.file_info[sub][j][irun]['TotalRecordTime'] = round((((self.file_info[sub][j][irun]['NRecords']*(int(item.text(4))*self.file_info[sub][j][irun]['RecordLength']))/int(item.text(4)))/60)/60,3)
+					for ses_cnt in range(len(self.file_info[sub])):
+						for irun in range(len(self.file_info[sub][ses_cnt])):
+							if self.file_info[sub][ses_cnt][irun]['DisplayName'] == item.text(0):
+								if self.file_info[sub][ses_cnt][irun]['SamplingFrequency'] != int(item.text(4)):
+									self.file_info[sub][ses_cnt][irun]['SamplingFrequency'] = int(item.text(4))
+									self.file_info[sub][ses_cnt][irun]['TotalRecordTime'] = round((((self.file_info[sub][ses_cnt][irun]['NRecords']*(int(item.text(4))*self.file_info[sub][ses_cnt][irun]['RecordLength']))/int(item.text(4)))/60)/60,3)
+								
+								if self.file_info[sub][ses_cnt][irun]['RecordingType'] != self.treeViewLoad.itemWidget(item, 7).currentText():
+									self.file_info[sub][ses_cnt][irun]['RecordingType'] = self.treeViewLoad.itemWidget(item, 7).currentText()
+								
+								if self.file_info[sub][ses_cnt][irun]['RecordingLength'] != self.treeViewLoad.itemWidget(item, 8).currentText():
+									self.file_info[sub][ses_cnt][irun]['RecordingLength'] = self.treeViewLoad.itemWidget(item, 8).currentText()
 							
-							if self.file_info[sub][j][irun]['RecordingType'] != self.treeViewLoad.itemWidget(item, 7).currentText():
-								self.file_info[sub][j][irun]['RecordingType'] = self.treeViewLoad.itemWidget(item, 7).currentText()
-							
-							if self.file_info[sub][j][irun]['RecordingLength'] != self.treeViewLoad.itemWidget(item, 8).currentText():
-								self.file_info[sub][j][irun]['RecordingLength'] = self.treeViewLoad.itemWidget(item, 8).currentText()
+								if self.file_info[sub][ses_cnt][irun]['Retro_Pro'] != self.treeViewLoad.itemWidget(item, 9).currentText():
+									self.file_info[sub][ses_cnt][irun]['Retro_Pro'] = self.treeViewLoad.itemWidget(item, 9).currentText()
+								
 						
-							if self.file_info[sub][j][irun]['Retro_Pro'] != self.treeViewLoad.itemWidget(item, 9).currentText():
-								self.file_info[sub][j][irun]['Retro_Pro'] = self.treeViewLoad.itemWidget(item, 9).currentText()
-									
 			self.new_sessions = read_output_dir(self.output_path, self.file_info, self.offsetDate.isChecked(), participants_fname=None)
 			
 #			isub = list(new_sessions)[0]
@@ -735,9 +738,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			elif text == '10%':
 				self.conversionStatus.appendPlainText('Extract/Scrub Annotations: ' + text)
 				self.conversionStatus.moveCursor(QtGui.QTextCursor.End)
-			elif 'anot' in text:
-				self.conversionStatus.insertPlainText(' ' + text + '\n')
-				self.conversionStatus.appendPlainText('\n')
+			elif 'annot' in text:
+				self.conversionStatus.insertPlainText(' ' + text.strip('annot') + '\n')
 			else:
 				self.conversionStatus.insertPlainText(' ' + text)
 		else:

@@ -176,7 +176,10 @@ class EDFReader():
 			meas_info['firstname'] = None
 			meas_info['lastname'] = None
 			if not any(substring in meas_info['subject_id'].lower() for substring in {'x,x','x_x'}):
-				meas_info['lastname'],meas_info['firstname'] = meas_info['subject_id'].replace('_',',').split(',')
+				meas_info['lastname'],meas_info['firstname'] = meas_info['subject_id'].replace('_',',').replace('-',',').split(',')
+				if meas_info['lastname'] == 'sub':
+					meas_info['lastname']=meas_info['firstname']
+					meas_info['firstname']='sub'
 			else:
 				filen = os.path.basename(self.fname).replace(' ','')
 				if any(substring in filen for substring in {'~','_'}):
@@ -342,7 +345,7 @@ class EDFReader():
 			
 		return data
 	
-	def extract_annotations(self, deidentify=True):
+	def extract_annotations(self, callback, deidentify=True):
 		overwrite_strings = [self.header['meas_info']['firstname'], self.header['meas_info']['lastname']]
 		overwrite_strings = [x for x in overwrite_strings if x is not None]
 		remove_strings = ['XLSPIKE','XLEVENT']
@@ -354,16 +357,23 @@ class EDFReader():
 		
 		begsample = int(self.header['meas_info']['sampling_frequency']*float(start_time))
 		endsample = int(self.header['meas_info']['sampling_frequency']*float(end_time))
-	
-		begblock = int(np.floor((begsample) / self.header['chan_info']['n_samps'][tal_indx]))
-		endblock = int(np.floor((endsample) / self.header['chan_info']['n_samps'][tal_indx]))
-	
+		
+		n_samps = max(set(list(self.header['chan_info']['n_samps'])), key = list(self.header['chan_info']['n_samps']).count)
+		
+		begblock = int(np.floor((begsample) / n_samps))
+		endblock = int(np.floor((endsample) / n_samps))
+		
+		update_cnt = int((endblock+1)/10)
 		annotations = []
-		for block in range(begblock, endblock+1):
+		for block in range(begblock, endblock):
 			data_temp = self.read_annotation_block(block, tal_indx)
 			if data_temp:
 					annotations.append(data_temp[0])
-					
+			if block == update_cnt and block < (endblock-(int((endblock+1)/20))):
+				callback.emit('{}%'.format(int(np.ceil((update_cnt/endblock)*100))))
+				update_cnt += int((endblock+1)/10)
+		
+		callback.emit('annot100%')
 		events = self._read_annotations_apply_offset([item for sublist in annotations for item in sublist])
 		
 		if deidentify:
@@ -869,8 +879,8 @@ def folders_in(path_to_parent):
 #%%
 
 # from bids_settings import ieeg_file_metadata, natus_info
-# raw_file_path = r'/media/veracrypt6/projects/eplink/other_data/twh eplink data'
-# output_path = r'/media/veracrypt6/projects/eplink/test'
+# raw_file_path = r'B:/projects/iEEG/data/int'
+# output_path = r'B:/projects/iEEG/data/out'
 
 # bids_settings = {}
 # bids_settings['json_metadata'] = ieeg_file_metadata
@@ -900,7 +910,7 @@ def read_input_dir(input_dir, bids_settings):
 		
 	sub_file_info = {}
 	sub_chan_file = {}
-	for ifold in folders:			
+	for ifold in folders:
 		subject_id = ifold.replace('_','')
 		if not subject_id.startswith('sub-'):
 			subject_id = 'sub-' + subject_id

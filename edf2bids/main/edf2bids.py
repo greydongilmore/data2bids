@@ -512,9 +512,9 @@ class edf2bids(QtCore.QThread):
 		
 		"""
 		file_in = EDFReader(data_fname)
-		annotation_data = file_in.extract_annotations(deidentify=True)
+		annotation_data = file_in.extract_annotations(self.progressEvent, deidentify=True)
 		
-		annotation_data.to_csv(annotation_fname, sep='\t', index=False, na_rep='n/a', line_terminator="")
+		annotation_data.to_csv(annotation_fname, sep='\t', index=False, na_rep='n/a', line_terminator="", float_format='%.3f')
 	
 	def _sidecar_json(self, file_info_run, sidecar_fname, session_id, overwrite=False, verbose=False):
 		"""
@@ -901,7 +901,7 @@ class edf2bids(QtCore.QThread):
 							if update_cnt < copied:
 								if update_cnt == int(total_size/10):
 									callback.emit('copy{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
-								else:
+								elif copied < (total_size-(int((total_size)/20))):
 									callback.emit('{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
 								update_cnt += int(total_size/10)
 
