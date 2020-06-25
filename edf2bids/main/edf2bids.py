@@ -64,7 +64,7 @@ class edf2bids(QtCore.QThread):
 		self.make_dir = []
 		self.overwrite = []
 		self.verbose = []
-		self.deidentify_source = False
+		self.deidentify_source = []
 		self.offset_date = []
 		self.bids_settings = []
 		self.test_conversion = []
@@ -989,7 +989,12 @@ class edf2bids(QtCore.QThread):
 									annotation_fname = self.make_bids_filename(isub, session_id, task_id, run_num, suffix='annotations.tsv', prefix=data_path)
 									self._annotations_data(file_data[0][irun], annotation_fname, source_name, source_name, self.overwrite, self.verbose)
 							else:
-								self.bids_settings['json_metadata']['EpochLength'] = 0
+								if self.deidentify_source:
+									source_name = os.path.join(raw_file_path, file_data[0][irun]['FileName'])
+									source_name, epochLength = deidentify_edf(source_name, isub, self.offset_date, True)
+									self.bids_settings['json_metadata']['EpochLength'] = epochLength
+								else:
+									self.bids_settings['json_metadata']['EpochLength'] = 0
 								
 							self._scans_data('/'.join(data_fname.split(os.path.sep)[-2:]), file_data[0][irun], scans_fname, self.offset_date)
 							

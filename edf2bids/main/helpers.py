@@ -175,7 +175,7 @@ class EDFReader():
 			
 			meas_info['firstname'] = None
 			meas_info['lastname'] = None
-			if not any(substring in meas_info['subject_id'].lower() for substring in {'x,x','x_x'}):
+			if not any(substring in meas_info['subject_id'].lower() for substring in {'x,x','x_x','x'}):
 				meas_info['lastname'],meas_info['firstname'] = meas_info['subject_id'].replace('_',',').replace('-',',').split(',')
 				if meas_info['lastname'] == 'sub':
 					meas_info['lastname']=meas_info['firstname']
@@ -879,15 +879,15 @@ def folders_in(path_to_parent):
 #%%
 
 # from bids_settings import ieeg_file_metadata, natus_info
-# raw_file_path = r'B:/projects/iEEG/data/int'
-# output_path = r'B:/projects/iEEG/data/out'
+# raw_file_path = r'B:/projects/eplink/walkthrough_example/input'
+# output_path = r'B:/projects/eplink/walkthrough_example/out'
 
 # bids_settings = {}
 # bids_settings['json_metadata'] = ieeg_file_metadata
 # bids_settings['natus_info'] = natus_info
 # bids_settings['settings_panel'] = {'Deidentify_source': False,
 # 									 'offset_dates': False}
-# input_dir = r'/media/veracrypt6/projects/eplink/other_data/twh eplink data'
+# input_dir = r'B:/projects/eplink/walkthrough_example/input'
 # file_info, chan_label_file = read_input_dir(raw_file_path, bids_settings)
 
 # isub = list(file_info)[0]
@@ -1197,7 +1197,7 @@ def deidentify_edf(fname, isub, offset_date, rename):
 	edf_deidentify['subject_code'] = 'X' if not header['meas_info']['subject_code'] == 'X' else None
 	edf_deidentify['birthdate'] = 'X' if not header['meas_info']['birthdate'] == 'X' else None
 	edf_deidentify['gender'] = 'X' if not header['meas_info']['gender'] == 'X' else None
-	edf_deidentify['subject_id'] = 'X,X' if not header['meas_info']['subject_id'] == 'X,X' else None
+	edf_deidentify['subject_id'] = 'X' if not header['meas_info']['subject_id'] == 'X' else None
 	recording_id = 'Startdate X X X X' if not header['meas_info']['recording_id'] == 'Startdate X X X X' else None
 	
 	new_date = []
@@ -1214,7 +1214,7 @@ def deidentify_edf(fname, isub, offset_date, rename):
 		fid.seek(8)
 		
 		if any(x for x in edf_deidentify.items() if x != None):
-			fid.write(padtrim('X X X X,X', 80).encode('latin-1'))
+			fid.write(padtrim('X X X X', 80).encode('latin-1'))
 		else:
 			fid.seek(80+8)
 			assert(fid.tell() == 80+8)
@@ -1232,11 +1232,11 @@ def deidentify_edf(fname, isub, offset_date, rename):
 			assert(fid.tell() == 80+80+8+8)
 			
 	if rename:
-		if any(substring in fname.split(os.path.sep)[-1] for substring in {'~','_'}):
-			new_name = fname.split(os.path.sep)[-1].replace(' ','').replace('~','_').split('_')
+		if any(substring in fname.split(os.path.sep)[-1] for substring in {'~','_','-'}):
+			new_name = fname.split(os.path.sep)[-1].replace(' ','').replace('~','_').replace('-','_').split('_')
 			if len(new_name)>2:
-				new_name = '_'.join([isub, ''.join(new_name[2:])])
-				os.rename(fname, os.path.join(os.path.dirname(fname), new_name))
+				new_name = os.path.join(os.path.dirname(fname), '_'.join([isub, ''.join(new_name[2:])]))
+				os.rename(fname, new_name)
 		else:
 			new_name = fname
 	else:

@@ -88,7 +88,7 @@
         }
     },
     "settings_panel": {
-        "Deidentify_source": false,
+        "Deidentify_source": true,
         "offset_dates": false
     }
 }

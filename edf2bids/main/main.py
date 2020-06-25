@@ -101,7 +101,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		
 		self.l1 = QtWidgets.QTreeWidgetItem(["Check items are already present in output directory."])
 		
-		self.deidentifyInputDir.stateChanged.connect(self.onDeidentifyCheckbox)
+# 		self.deidentifyInputDir.stateChanged.connect(self.onDeidentifyCheckbox)
 		self.offsetDate.stateChanged.connect(self.onOffsetdateCheckbox)
 		
 		self.loadDirButton.clicked.connect(self.onLoadDirButton)
@@ -142,22 +142,22 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		
 		self.bids_settings = bids_settings_json_temp
 		
-		self.deidentifyInputDir.setChecked(self.bids_settings['settings_panel']['Deidentify_source'])
+# 		self.deidentifyInputDir.setChecked(self.bids_settings['settings_panel']['Deidentify_source'])
 		self.offsetDate.setChecked(self.bids_settings['settings_panel']['offset_dates'])
 	
-	def onDeidentifyCheckbox(self):
-		file = os.path.join(self.application_path, 'bids_settings.json')
-		with open(file) as settings_file:
-				bids_settings_json_temp = json.load(settings_file)
-				
-		if bids_settings_json_temp['settings_panel']['Deidentify_source'] != self.deidentifyInputDir.isChecked():
-			bids_settings_json_temp['settings_panel']['Deidentify_source'] = self.deidentifyInputDir.isChecked()
-			json_output = json.dumps(bids_settings_json_temp, indent=4)
-			with open(file, 'w') as fid:
-				fid.write(json_output)
-				fid.write('\n')
-				
-			self.bids_settings = bids_settings_json_temp
+# 	def onDeidentifyCheckbox(self):
+# 		file = os.path.join(self.application_path, 'bids_settings.json')
+# 		with open(file) as settings_file:
+# 				bids_settings_json_temp = json.load(settings_file)
+# 				
+# 		if bids_settings_json_temp['settings_panel']['Deidentify_source'] != self.deidentifyInputDir.isChecked():
+# 			bids_settings_json_temp['settings_panel']['Deidentify_source'] = self.deidentifyInputDir.isChecked()
+# 			json_output = json.dumps(bids_settings_json_temp, indent=4)
+# 			with open(file, 'w') as fid:
+# 				fid.write(json_output)
+# 				fid.write('\n')
+# 				
+# 			self.bids_settings = bids_settings_json_temp
 	
 	def onOffsetdateCheckbox(self):
 		file = os.path.join(self.application_path, 'bids_settings.json')
@@ -675,7 +675,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.worker.make_dir = True
 		self.worker.overwrite = True
 		self.worker.verbose = False
-		self.worker.deidentity_source = self.deidentifyInputDir.isChecked()
+		self.worker.deidentify_source = self.deidentifyInputDir.isChecked()
 		self.worker.offset_date = self.offsetDate.isChecked()
 		self.worker.test_conversion = self.testConvert.isChecked()
 		self.worker.annotations_only = self.annotationsOnly.isChecked()
