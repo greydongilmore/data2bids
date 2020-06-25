@@ -1004,6 +1004,9 @@ class edf2bids(QtCore.QThread):
 						shutil.copy(os.path.join(self.script_path, 'edf2bids.py'), code_path)
 						shutil.copy(os.path.join(self.script_path, 'helpers.py'), code_path)
 					
+						self.conversionStatusText = 'Finished conversion: session {} of {} for {} at {}'.format(str(ises+1), str(len(values['session_labels'])), isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+						self.progressEvent.emit(self.conversionStatusText)
+					
 					time.sleep(0.1)
 					
 					if isub not in list(self.participant_tsv['participant_id']):

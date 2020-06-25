@@ -18,7 +18,9 @@ from PySide2 import QtGui, QtCore, QtWidgets
 from widgets import gui_layout
 from widgets import settings_panel
 from edf2bids import edf2bids
-from helpers import read_input_dir, read_output_dir, make_bids_filename, _dataset_json, _participants_data, _participants_json, moveAllFilesinDir
+from bids2spred import bids2spred
+
+from helpers import read_input_dir, read_output_dir, make_bids_filename, _dataset_json, _participants_data, _participants_json
 
 class SettingsDialog(QtWidgets.QDialog, settings_panel.Ui_Dialog):
 	def __init__(self):
@@ -631,7 +633,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.conversionStatus.clear()
 		self.updateStatus("Converting files...")
 		
-		### convert script	
+		### convert script
 		dataset_fname = make_bids_filename(None, session_id=None, run_num=None, suffix='dataset_description.json', prefix=self.output_path)
 		if not os.path.exists(dataset_fname):
 			_dataset_json(dataset_fname, self.bids_settings)
@@ -739,7 +741,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 				self.conversionStatus.appendPlainText('Extract/Scrub Annotations: ' + text)
 				self.conversionStatus.moveCursor(QtGui.QTextCursor.End)
 			elif 'annot' in text:
-				self.conversionStatus.insertPlainText(' ' + text.strip('annot') + '\n')
+				self.conversionStatus.insertPlainText(' ' + text.strip('annot'))
 			else:
 				self.conversionStatus.insertPlainText(' ' + text)
 		else:
@@ -765,61 +767,45 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.spredButton.setStyleSheet(self.spred_button_color)
 	
 	def onSpredButton(self):
-		self.conversionStatus.appendPlainText('Converting directory to SPReD format...')
 		self.updateStatus('Converting to SPReD format...')
 		QtGui.QGuiApplication.processEvents()
-		folders = [x for x in os.listdir(self.output_path) if os.path.isdir(os.path.join(self.output_path, x)) and 'code' not in x]
-		output_folders = ['_'.join([''.join(' '.join(re.split('(\d+)', x.split('-')[-1])).split()[:2])] + ' '.join(re.split('(\d+)', x.split('-')[-1])).split()[2:]) for x in folders]
-		sub_cnt = 0
-		for isub in folders:
-			ses_folders = [x for x in os.listdir(os.path.sep.join([self.output_path, isub])) if os.path.isdir(os.path.sep.join([self.output_path, isub, x]))]
-			
-			session_split = [[x for x in i if x.isdigit()] for i in ses_folders]
-			ses_folders_output = ['_'.join([x[0]+x[1],'SE'+x[2]+x[3]]) for x in session_split]
-			ses_folders_output = ['_'.join([output_folders[sub_cnt], x]) for x in ses_folders_output]
-			ses_cnt = 0
-			for ises in ses_folders:
-				sub_fold = [x for x in os.listdir(os.path.sep.join([self.output_path, isub, ises])) if os.path.isdir(os.path.sep.join([self.output_path, isub, ises, x]))]
-				old_fold = os.path.sep.join([self.output_path, isub, ises, sub_fold[0]])
-				new_fold = os.path.sep.join([self.output_path, 'SPReD', output_folders[sub_cnt], ses_folders_output[ses_cnt]+'_'+sub_fold[0].upper(), ses_folders_output[ses_cnt]+'_'+sub_fold[0].upper()])
-				
-				if not os.path.exists(new_fold):
-					os.makedirs(new_fold)
-				else:
-					electrodes_output = [x for x in os.listdir(new_fold) if x.endswith('electrodes.tsv')]
-					if electrodes_output:
-						electrodes_input = [x for x in os.listdir(old_fold) if x.endswith('electrodes.tsv')]
-						os.remove(os.path.sep.join(old_fold, electrodes_input))
-						
-				moveAllFilesinDir(old_fold, new_fold)
-				shutil.make_archive(os.path.dirname(new_fold), 'zip', os.path.dirname(new_fold))
-				shutil.rmtree(os.path.dirname(new_fold))
-				
-				ses_cnt += 1
-			
-			sub_cnt += 1
 		
-		folders = [x for x in os.listdir(self.output_path) if 'SPReD' not in x]
+		# Set Qthread
+		self.worker = bids2spred()
+		self.worker.output_path = self.output_path
 		
-		if not os.path.exists(os.path.sep.join([self.output_path, 'bids_old'])):
-			os.makedirs(os.path.sep.join([self.output_path, 'bids_old']))
-							
-		for ifiles in folders:
-			old_file = os.path.sep.join([self.output_path, ifiles])
-			new_file = os.path.sep.join([self.output_path, 'bids_old', ifiles])
-			shutil.move(old_file, new_file)
-			
-		self.conversionStatus.appendPlainText('SPReD format conversion completed in output directory!')
-		self.updateStatus('SPReD conversion complete.')
+		# Set Qthread signals
+		self.worker.progressEvent.connect(self.conversionStatusUpdate)
+		self.worker.finished.connect(self.doneSPReDConversion)
 		
+		# Execute
+		self.worker.start()
+		
+		# Set button states
+		self.cancelButton.setEnabled(True)
+		self.cancelButton.setStyleSheet(self.cancel_button_color)
+		self.cancelButton.clicked.connect(self.onCancelButton)
 		self.spredButton.setEnabled(False)
 		self.spredButton.setStyleSheet(self.inactive_color)
-		if not self.convertButton.isEnabled():
-			self.convertButton.setEnabled(True)
-			self.convertButton.setStyleSheet(self.convert_button_color)
-		if self.cancelButton.isEnabled():
-			self.cancelButton.setEnabled(False)
-			self.convertButton.setStyleSheet(self.cancel_button_color)
+		
+	def doneSPReDConversion(self):
+		if self.userAborted:
+			self.conversionStatus.appendPlainText('\nAborted SPReD conversion at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+			self.conversionStatus.appendPlainText('SPReD coversion incomplete: Please delete output directory and close program.')
+			self.updateStatus("SPReD conversion aborted.")
+			self.treeViewOutput.clear()
+			self.treeViewLoad.clear()
+		else:
+			self.conversionStatus.appendPlainText('Completed SPReD conversion at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+			self.conversionStatus.appendPlainText('Your data has been SPReDified!\n')
+			self.updateStatus("SPReD conversion complete.")
+			
+		self.spredButton.setEnabled(False)
+		self.spredButton.setStyleSheet(self.inactive_color)
+		self.cancelButton.setEnabled(False)
+		self.cancelButton.setStyleSheet(self.inactive_color)
+		self.convertButton.setEnabled(False)
+		self.convertButton.setStyleSheet(self.inactive_color)
 			
 def main():
 	app = QtWidgets.QApplication(sys.argv)
