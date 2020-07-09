@@ -345,63 +345,6 @@ class EDFReader():
 			
 		return data
 	
-	def extract_annotations(self, callback, deidentify=True):
-		overwrite_strings = [self.header['meas_info']['firstname'], self.header['meas_info']['lastname']]
-		overwrite_strings = [x for x in overwrite_strings if x is not None]
-		remove_strings = ['XLSPIKE','XLEVENT']
-	
-		tal_indx = [i for i,x in enumerate(self.header['chan_info']['ch_names']) if x.endswith('Annotations')][0]
-		
-		start_time = 0
-		end_time = self.header['meas_info']['n_records']*self.header['meas_info']['record_length']
-		
-		begsample = int(self.header['meas_info']['sampling_frequency']*float(start_time))
-		endsample = int(self.header['meas_info']['sampling_frequency']*float(end_time))
-		
-		n_samps = max(set(list(self.header['chan_info']['n_samps'])), key = list(self.header['chan_info']['n_samps']).count)
-		
-		begblock = int(np.floor((begsample) / n_samps))
-		endblock = int(np.floor((endsample) / n_samps))
-		
-		update_cnt = int((endblock+1)/10)
-		annotations = []
-		for block in range(begblock, endblock):
-			data_temp = self.read_annotation_block(block, tal_indx)
-			if data_temp:
-					annotations.append(data_temp[0])
-			if block == update_cnt and block < (endblock-(int((endblock+1)/20))):
-				callback.emit('{}%'.format(int(np.ceil((update_cnt/endblock)*100))))
-				update_cnt += int((endblock+1)/10)
-		
-		callback.emit('annot100%')
-		events = self._read_annotations_apply_offset([item for sublist in annotations for item in sublist])
-		
-		if deidentify:
-			if overwrite_strings:
-				### Replace any identifier strings
-				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_strings)]
-				if identity_idx:
-					events = self.overwrite_annotations(events, identity_idx, tal_indx, overwrite_strings, 'replace')
-			
-			if remove_strings:
-				### Remove unwanted annoations
-				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() == x[2].lower() for substring in remove_strings)]
-				if identity_idx:
-					events = self.overwrite_annotations(events, identity_idx, tal_indx, remove_strings, 'remove')
-		
-		annot_df = pd.DataFrame({})
-		if events:
-			fulldate = datetime.datetime.strptime(self.header['meas_info']['meas_date'], '%Y-%m-%d %H:%M:%S')
-			for i, annot in enumerate(events):
-				data_temp = {'onset': annot[0],
-							 'duration': annot[1],
-							 'time_abs': (fulldate + datetime.timedelta(seconds=annot[0]+float(self.header['meas_info']['millisecond']))).strftime('%H:%M:%S.%f'),
-							 'time_rel': sec2time(annot[0], 6),
-							 'event': annot[2]}
-				annot_df = pd.concat([annot_df, pd.DataFrame([data_temp])], axis = 0)
-		
-		return annot_df
-	
 	def overwrite_annotations(self, events, identity_idx, tal_indx, strings, action='replace'):
 		pat = '([+-]\\d+\\.?\\d*)(\x15(\\d+\\.?\\d*))?(\x14.*?)\x14\x00'
 		indexes = []

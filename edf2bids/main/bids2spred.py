@@ -16,23 +16,53 @@ import datetime
 
 from helpers import moveAllFilesinDir
 
-class bids2spred(QtCore.QThread):
+class WorkerKilledException(Exception):
+	pass
+
+class WorkerSignals(QtCore.QObject):
+	'''
+	Defines the signals available from a running worker thread.
+
+	Supported signals are:
+
+	finished
+		No data
 	
+	error
+		`tuple` (exctype, value, traceback.format_exc() )
+	
+	result
+		`object` data returned from processing, anything
+
+	progress
+		`int` indicating % progress 
+
+	'''
+	finished = QtCore.Signal()
 	progressEvent = QtCore.Signal(str)
 	
+class bids2spred(QtCore.QRunnable):
+		
 	def __init__(self):	
-		QtCore.QThread.__init__(self)
+# 		QtCore.QThread.__init__(self)
+		super(bids2spred, self).__init__()
 		
 		self.output_path = []
 		self.script_path = []
-				
+		
+		self.signals = WorkerSignals()
+		
 		self.running = False
 		self.userAbort = False
+		self.is_killed = False
 		
 	def stop(self):
 		self.running = False
 		self.userAbort = True
-	
+		
+	def kill(self):
+		self.is_killed = True
+		
 	@QtCore.Slot()
 	def run(self):
 		"""
@@ -42,14 +72,19 @@ class bids2spred(QtCore.QThread):
 		if not self.userAbort:
 			self.running = True
 		
-		while self.running:
+		try:
 			self.conversionStatusText = 'Converting directory to SPReD format...\n'
-			self.progressEvent.emit(self.conversionStatusText)
+			self.signals.progressEvent.emit(self.conversionStatusText)
 			
 			folders = [x for x in os.listdir(self.output_path) if os.path.isdir(os.path.join(self.output_path, x)) and 'code' not in x]
 			output_folders = ['_'.join([''.join(' '.join(re.split('(\d+)', x.split('-')[-1])).split()[:2])] + ' '.join(re.split('(\d+)', x.split('-')[-1])).split()[2:]) for x in folders]
 			sub_cnt = 0
 			for isub in folders:
+				
+				if self.is_killed:
+					self.running = False
+					raise WorkerKilledException
+					
 				ses_folders = [x for x in os.listdir(os.path.sep.join([self.output_path, isub])) if os.path.isdir(os.path.sep.join([self.output_path, isub, x]))]
 				
 				session_split = [[x for x in i if x.isdigit()] for i in ses_folders]
@@ -57,7 +92,7 @@ class bids2spred(QtCore.QThread):
 				ses_cnt = 0
 				for ises in ses_folders:
 					self.conversionStatusText = 'Performing SPReD conversion: session {} of {} for {} at {}'.format(str(ses_cnt+1), str(len(ses_folders)), isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-					self.progressEvent.emit(self.conversionStatusText)
+					self.signals.progressEvent.emit(self.conversionStatusText)
 					
 					old_subfold = [x for x in os.listdir(os.path.sep.join([self.output_path, isub, ises])) if os.path.isdir(os.path.sep.join([self.output_path, isub, ises, x]))]
 					new_subfolder = '_'.join([output_folders[sub_cnt], ses_folders_output[ses_cnt]+'_'+ old_subfold[0].upper()])
@@ -78,7 +113,7 @@ class bids2spred(QtCore.QThread):
 					
 					if ises == ses_folders[-1]:
 						self.conversionStatusText = ''
-						self.progressEvent.emit(self.conversionStatusText)
+						self.signals.progressEvent.emit(self.conversionStatusText)
 					
 					ses_cnt += 1
 				
@@ -96,5 +131,12 @@ class bids2spred(QtCore.QThread):
 				new_file = os.path.sep.join([self.output_path, 'bids_old', ifiles])
 				shutil.move(old_file, new_file)
 			
+		except WorkerKilledException:
 			self.running = False
+			pass
+		
+		finally:
+			self.running = False
+			self.signals.finished.emit()
+			
 				

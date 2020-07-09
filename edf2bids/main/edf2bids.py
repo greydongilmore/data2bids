@@ -17,9 +17,34 @@ import time
 import sys
 import re
 
-from helpers import EDFReader, sorted_nicely, partition, determine_groups, fix_sessions, read_annotation_block, deidentify_edf
+from helpers import EDFReader, sorted_nicely, partition, determine_groups, fix_sessions, sec2time, deidentify_edf
 
-class edf2bids(QtCore.QThread):
+class WorkerKilledException(Exception):
+	pass
+
+class WorkerSignals(QtCore.QObject):
+	'''
+	Defines the signals available from a running worker thread.
+
+	Supported signals are:
+
+	finished
+		No data
+	
+	error
+		`tuple` (exctype, value, traceback.format_exc() )
+	
+	result
+		`object` data returned from processing, anything
+
+	progress
+		`int` indicating % progress 
+
+	'''
+	finished = QtCore.Signal()
+	progressEvent = QtCore.Signal(str)
+	
+class edf2bids(QtCore.QRunnable):
 	"""
 	This class is a thread, which manages one thread of control within the GUI.
 	
@@ -47,11 +72,10 @@ class edf2bids(QtCore.QThread):
 	:type compress: boolean
 	
 	"""
-
-	progressEvent = QtCore.Signal(str)
 	
 	def __init__(self):	
-		QtCore.QThread.__init__(self)
+# 		QtCore.QThread.__init__(self)
+		super(edf2bids, self).__init__()
 		
 		self.new_sessions = []
 		self.file_info = []
@@ -69,13 +93,19 @@ class edf2bids(QtCore.QThread):
 		self.bids_settings = []
 		self.test_conversion = []
 		self.annotations_only = []
-				
+		
+		self.signals = WorkerSignals()
+		
 		self.running = False
 		self.userAbort = False
+		self.is_killed = False
 		
 	def stop(self):
 		self.running = False
 		self.userAbort = True
+	
+	def kill(self):
+		self.is_killed = True
 		
 	def _write_tsv(self, fname, df, overwrite=False, verbose=False, append = False):
 		"""
@@ -495,6 +525,94 @@ class edf2bids(QtCore.QThread):
 		mainDF['units'] = mainDF['units'].str.replace('uV', 'μV')
 		self._write_tsv(channels_fname, mainDF, overwrite, verbose, append = False)
 	
+	def _read_annotations_apply_offset(self, triggers):
+		events = []
+		offset = 0.
+		for k, ev in enumerate(triggers):
+			onset = float(ev[0]) + offset
+			duration = float(ev[2]) if ev[2] else 0
+			for description in ev[3].split('\x14')[1:]:
+				if description:
+					events.append([onset, duration, description, ev[4]])
+				elif k==0:
+					# "The startdate/time of a file is specified in the EDF+ header
+					# fields 'startdate of recording' and 'starttime of recording'.
+					# These fields must indicate the absolute second in which the
+					# start of the first data record falls. So, the first TAL in
+					# the first data record always starts with +0.X2020, indicating
+					# that the first data record starts a fraction, X, of a second
+					# after the startdate/time that is specified in the EDF+
+					# header. If X=0, then the .X may be omitted."
+					offset = -onset
+					
+		return events if events else list()
+	
+	def read_annotation_block(self, block, tal_indx):
+		pat = '([+-]\\d+\\.?\\d*)(\x15(\\d+\\.?\\d*))?(\x14.*?)\x14\x00'
+		assert(block>=0)
+		data = []
+		with open(self.fname, 'rb') as fid:
+			assert(fid.tell() == 0)
+			blocksize = np.sum(self.header['chan_info']['n_samps']) * self.header['meas_info']['data_size']
+			fid.seek(np.int64(self.header['meas_info']['data_offset']) + np.int64(block) * np.int64(blocksize))
+			read_idx = 0
+			for i in range(self.header['meas_info']['nchan']):
+				read_idx += np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size'])
+				buf = fid.read(np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']))
+				if i==tal_indx:
+					raw = re.findall(pat, buf.decode('latin-1'))
+					if raw:
+						data.append(list(map(list, [x+(block,) for x in raw])))
+			
+		return data
+	
+	def overwrite_annotations(self, events, identity_idx, tal_indx, strings, action='replace'):
+		pat = '([+-]\\d+\\.?\\d*)(\x15(\\d+\\.?\\d*))?(\x14.*?)\x14\x00'
+		indexes = []
+		for ident in identity_idx:
+			block_chk = events[ident][-1]
+			replace_idx = [i for i,x in enumerate(strings) if x.lower() in events[ident][2].lower()]
+			for irep in replace_idx:
+				assert(block_chk>=0)
+				new_block=[]
+				with open(self.fname, 'rb') as fid:
+					assert(fid.tell() == 0)
+					blocksize = np.sum(self.header['chan_info']['n_samps']) * self.header['meas_info']['data_size']
+					fid.seek(np.int64(self.header['meas_info']['data_offset']) + np.int64(block_chk) * np.int64(blocksize))
+					for i in range(self.header['meas_info']['nchan']):
+						buf = fid.read(np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']))
+						if i==tal_indx:
+							if action == 'replace':
+								new_block = buf.lower().replace(bytes(strings[irep],'latin-1').lower(), bytes(''.join(np.repeat('X', len(strings[irep]))),'latin-1'))
+								events[ident][2] = events[ident][2].lower().replace(strings[irep].lower(), ''.join(np.repeat('X', len(strings[irep]))))
+								assert(len(new_block)==len(buf))
+								
+							elif action == 'remove':
+								raw = re.findall(pat, buf.decode('latin-1'))[0][0] +'\x14\x14'
+								new_block = raw + ('\x00'*(len(buf)-len(raw)))
+								indexes.append(ident)
+								assert(len(new_block)==len(buf))
+								
+				if new_block:
+					with open(self.fname, 'r+b') as fid:
+						assert(fid.tell() == 0)
+						blocksize = np.sum(self.header['chan_info']['n_samps']) * self.header['meas_info']['data_size']
+						fid.seek(np.int64(self.header['meas_info']['data_offset']) + np.int64(block_chk) * np.int64(blocksize))
+						read_idx = 0
+						for i in range(self.header['meas_info']['nchan']):
+							read_idx += np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size'])
+							buf = fid.read(np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']))
+							if i==tal_indx:
+								back = fid.seek(-np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']), 1)
+								assert(fid.tell()==back)
+								fid.write(new_block.encode('latin-1'))
+		
+		if indexes:
+			for index in sorted(indexes, reverse=True):
+				del events[index]
+		
+		return events
+	
 	def _annotations_data(self, file_info_run, annotation_fname, data_fname, source_name, overwrite, verbose):
 		"""
 		Constructs an annotations data tsv file about patient specific events from edf file.
@@ -511,9 +629,74 @@ class edf2bids(QtCore.QThread):
 		:type verbose: boolean
 		
 		"""
-		file_in = EDFReader(data_fname)
-		annotation_data = file_in.extract_annotations(self.progressEvent, deidentify=True)
+		deidentify=True
+		self.fname = data_fname
 		
+		file_in = EDFReader()
+		file_in.open(data_fname)
+		self.header = file_in.readHeader()
+		
+		overwrite_strings = [self.header['meas_info']['firstname'], self.header['meas_info']['lastname']]
+		overwrite_strings = [x for x in overwrite_strings if x is not None]
+		remove_strings = ['XLSPIKE','XLEVENT']
+	
+		tal_indx = [i for i,x in enumerate(self.header['chan_info']['ch_names']) if x.endswith('Annotations')][0]
+		
+		start_time = 0
+		end_time = self.header['meas_info']['n_records']*self.header['meas_info']['record_length']
+		
+		begsample = int(self.header['meas_info']['sampling_frequency']*float(start_time))
+		endsample = int(self.header['meas_info']['sampling_frequency']*float(end_time))
+		
+		n_samps = max(set(list(self.header['chan_info']['n_samps'])), key = list(self.header['chan_info']['n_samps']).count)
+		
+		begblock = int(np.floor((begsample) / n_samps))
+		endblock = int(np.floor((endsample) / n_samps))
+		
+		update_cnt = int((endblock+1)/10)
+		annotations = []
+		for block in range(begblock, endblock):
+			if self.is_killed:
+				self.running = False
+				raise WorkerKilledException
+			else:
+				data_temp = self.read_annotation_block(block, tal_indx)
+				if data_temp:
+						annotations.append(data_temp[0])
+				if block == update_cnt and block < (endblock-(int((endblock+1)/20))):
+					self.signals.progressEvent.emit('{}%'.format(int(np.ceil((update_cnt/endblock)*100))))
+					update_cnt += int((endblock+1)/10)
+		
+		self.signals.progressEvent.emit('annot100%')
+		events = self._read_annotations_apply_offset([item for sublist in annotations for item in sublist])
+		
+		if deidentify:
+			if overwrite_strings:
+				### Replace any identifier strings
+				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_strings)]
+				if identity_idx:
+					events = self.overwrite_annotations(events, identity_idx, tal_indx, overwrite_strings, 'replace')
+			
+			if remove_strings:
+				### Remove unwanted annoations
+				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() == x[2].lower() for substring in remove_strings)]
+				if identity_idx:
+					events = self.overwrite_annotations(events, identity_idx, tal_indx, remove_strings, 'remove')
+		
+		annotation_data = pd.DataFrame({})
+		if events:
+			fulldate = datetime.datetime.strptime(self.header['meas_info']['meas_date'], '%Y-%m-%d %H:%M:%S')
+			for i, annot in enumerate(events):
+				data_temp = {'onset': annot[0],
+							 'duration': annot[1],
+							 'time_abs': (fulldate + datetime.timedelta(seconds=annot[0]+float(self.header['meas_info']['millisecond']))).strftime('%H:%M:%S.%f'),
+							 'time_rel': sec2time(annot[0], 6),
+							 'event': annot[2]}
+				annotation_data = pd.concat([annotation_data, pd.DataFrame([data_temp])], axis = 0)
+		
+		return annotation_data
+	
+# 		annotation_data = se.extract_annotations(self.signals.progressEvent, deidentify=True)
 		annotation_data.to_csv(annotation_fname, sep='\t', index=False, na_rep='n/a', line_terminator="", float_format='%.3f')
 	
 	def _sidecar_json(self, file_info_run, sidecar_fname, session_id, overwrite=False, verbose=False):
@@ -889,21 +1072,21 @@ class edf2bids(QtCore.QThread):
 			with open(dest, 'wb') as fdest:
 				copied = 0
 				while 1:
-					if not self.userAbort:
-						if not self.running:
+					if self.is_killed:
+						self.running = False
+						raise WorkerKilledException
+					else:
+						buf = fsrc.read(buffer_size)
+						if not buf:
 							break
-						else:
-							buf = fsrc.read(buffer_size)
-							if not buf:
-								break
-							fdest.write(buf)
-							copied += len(buf)
-							if update_cnt < copied:
-								if update_cnt == int(total_size/10):
-									callback.emit('copy{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
-								elif copied < (total_size-(int((total_size)/20))):
-									callback.emit('{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
-								update_cnt += int(total_size/10)
+						fdest.write(buf)
+						copied += len(buf)
+						if update_cnt < copied:
+							if update_cnt == int(total_size/10):
+								callback.emit('copy{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
+							elif copied < (total_size-(int((total_size)/20))):
+								callback.emit('{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
+							update_cnt += int(total_size/10)
 
 				callback.emit('100%')
 	
@@ -919,11 +1102,16 @@ class edf2bids(QtCore.QThread):
 		participants_fname = self.make_bids_filename(None, session_id=None, task_id=None, run_num=None, suffix='participants.tsv', prefix=self.output_path)
 		if os.path.exists(participants_fname):
 			self.participant_tsv = pd.read_csv(participants_fname, sep='\t')
-		while self.running:
+			
+		try:
 			for isub, values in self.new_sessions.items():
 				subject_dir = self.file_info[isub][0][0]['SubDir']
 				raw_file_path = os.path.join(self.input_path, subject_dir)
 				
+				if self.is_killed:
+					self.running = False
+					raise WorkerKilledException
+					
 				if values['newSessions']:
 					sessions_fix = [x for x in values['session_changes'] if x[0] != x[1]]
 					if sessions_fix:
@@ -939,7 +1127,7 @@ class edf2bids(QtCore.QThread):
 							data_prefix = 'ieeg'
 						
 						self.conversionStatusText = '\nStarting conversion: session {} of {} for {} at {}'.format(str(ises+1), str(len(values['session_labels'])), isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-						self.progressEvent.emit(self.conversionStatusText)
+						self.signals.progressEvent.emit(self.conversionStatusText)
 						
 						data_path = self.make_bids_folders(isub, session_id, data_prefix, self.output_path, self.make_dir, self.overwrite)
 						
@@ -977,7 +1165,7 @@ class edf2bids(QtCore.QThread):
 										source_name, epochLength = deidentify_edf(source_name, isub, self.offset_date, True)
 										self.bids_settings['json_metadata']['EpochLength'] = epochLength
 										
-									self.copyLargeFile(source_name, data_fname, self.progressEvent)
+									self.copyLargeFile(source_name, data_fname, self.signals.progressEvent)
 									
 									if not self.deidentify_source:
 										temp_name, epochLength = deidentify_edf(data_fname, isub, self.offset_date, False)
@@ -1010,7 +1198,7 @@ class edf2bids(QtCore.QThread):
 						shutil.copy(os.path.join(self.script_path, 'helpers.py'), code_path)
 					
 						self.conversionStatusText = 'Finished conversion: session {} of {} for {} at {}'.format(str(ises+1), str(len(values['session_labels'])), isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-						self.progressEvent.emit(self.conversionStatusText)
+						self.signals.progressEvent.emit(self.conversionStatusText)
 					
 					time.sleep(0.1)
 					
@@ -1019,9 +1207,15 @@ class edf2bids(QtCore.QThread):
 						self.participant_tsv = pd.read_csv(participants_fname, sep='\t')
 				else:
 					self.conversionStatusText = 'Participant {} already exists in the dataset! \n'.format(isub)
-					self.progressEvent.emit(self.conversionStatusText)
+					self.signals.progressEvent.emit(self.conversionStatusText)
 			
+		except WorkerKilledException:
 			self.running = False
+			pass
+		
+		finally:
+			self.running = False
+			self.signals.finished.emit()
 
 
 

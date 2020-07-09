@@ -104,6 +104,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 # 		self.deidentifyInputDir.stateChanged.connect(self.onDeidentifyCheckbox)
 		self.offsetDate.stateChanged.connect(self.onOffsetdateCheckbox)
 		
+		self.threadpool = QtCore.QThreadPool()
+		
 		self.loadDirButton.clicked.connect(self.onLoadDirButton)
 		self.outDirButton.clicked.connect(self.onOutDirButton)
 		self.convertButton.clicked.connect(self.onConvertButton)
@@ -681,11 +683,12 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.worker.annotations_only = self.annotationsOnly.isChecked()
 		
 		# Set Qthread signals
-		self.worker.progressEvent.connect(self.conversionStatusUpdate)
-		self.worker.finished.connect(self.doneConversion)
+		self.worker.signals.progressEvent.connect(self.conversionStatusUpdate)
+		self.worker.signals.finished.connect(self.doneConversion)
 		
 		# Execute
-		self.worker.start()
+		self.threadpool.start(self.worker) 
+# 		self.worker.start()
 		
 		# Set button states
 		self.cancelButton.setEnabled(True)
@@ -718,7 +721,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		return buffer
 
 	def onCancelButton(self):
-		self.worker.stop()
+		self.worker.kill()
 		self.updateStatus("Conversion cancel requested...")
 		self.conversionStatus.appendPlainText('Cancelling data conversion...\n')
 		self.userAborted = True
@@ -754,17 +757,22 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.updateStatus("Conversion aborted.")
 			self.treeViewOutput.clear()
 			self.treeViewLoad.clear()
+			
+			self.spredButton.setEnabled(False)
+			self.spredButton.setStyleSheet(self.inactive_color)
+		
 		else:
 			self.conversionStatus.appendPlainText('\nCompleted conversion at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 			self.conversionStatus.appendPlainText('Your data has been BIDsified!\n')
 			self.updateStatus("BIDs conversion complete.")
 			
+			self.spredButton.setEnabled(True)
+			self.spredButton.setStyleSheet(self.spred_button_color)
+			
 		self.cancelButton.setEnabled(False)
 		self.cancelButton.setStyleSheet(self.inactive_color)
 		self.convertButton.setEnabled(False)
 		self.convertButton.setStyleSheet(self.inactive_color)
-		self.spredButton.setEnabled(True)
-		self.spredButton.setStyleSheet(self.spred_button_color)
 	
 	def onSpredButton(self):
 		self.updateStatus('Converting to SPReD format...')
@@ -775,11 +783,12 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.worker.output_path = self.output_path
 		
 		# Set Qthread signals
-		self.worker.progressEvent.connect(self.conversionStatusUpdate)
-		self.worker.finished.connect(self.doneSPReDConversion)
+		self.worker.signals.progressEvent.connect(self.conversionStatusUpdate)
+		self.worker.signals.finished.connect(self.doneSPReDConversion)
 		
 		# Execute
-		self.worker.start()
+		self.threadpool.start(self.worker)
+# 		self.worker.start()
 		
 		# Set button states
 		self.cancelButton.setEnabled(True)
