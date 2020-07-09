@@ -25,4 +25,5 @@ For a detailed description of how to use **edf2bids** refer to <a href="https://
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
-[MIT](https://choosealicense.com/licenses/mit/)
+
+[GNU General Public License](/LICENSE.md)
