@@ -62,7 +62,8 @@ class bids2spred(QtCore.QRunnable):
 		
 	def kill(self):
 		self.is_killed = True
-		
+	
+	output_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/output'
 	@QtCore.Slot()
 	def run(self):
 		"""
@@ -95,7 +96,22 @@ class bids2spred(QtCore.QRunnable):
 					self.signals.progressEvent.emit(self.conversionStatusText)
 					
 					old_subfold = [x for x in os.listdir(os.path.sep.join([self.output_path, isub, ises])) if os.path.isdir(os.path.sep.join([self.output_path, isub, ises, x]))]
-					new_subfolder = '_'.join([output_folders[sub_cnt], ses_folders_output[ses_cnt]+'_'+ old_subfold[0].upper()])
+					old_subfold = [x for x in os.listdir(os.path.sep.join([self.output_path, isub, ises])) if os.path.isdir(os.path.sep.join([self.output_path, isub, ises, x]))]
+					old_edf_name = [x.split('task-')[1].split('_')[0] for x in os.listdir(os.path.sep.join([self.output_path, isub, ises, old_subfold[0]])) if os.path.sep.join([self.output_path, isub, ises, old_subfold[0], x]).endswith('_eeg.json')]
+					suffix = ''
+					if 'full' in old_edf_name[0]:
+						suffix += '_FULL'
+					elif 'clip' in old_edf_name[0]:
+						suffix += '_CLIP'
+					elif 'stim' in old_edf_name[0]:
+						suffix += '_STIM'
+						
+					if any(x == old_edf_name[0] for x in {'full', 'clip','stim'}):
+						suffix += '_PRO'
+					elif any(x == old_edf_name[0] for x in {'fullret', 'clipret','stimret'}):
+						suffix += '_RET'
+					
+					new_subfolder = '_'.join([output_folders[sub_cnt], ses_folders_output[ses_cnt]+'_'+ old_subfold[0].upper() + suffix])
 					old_fold = os.path.sep.join([self.output_path, isub, ises, old_subfold[0]])
 					new_fold = os.path.sep.join([self.output_path, 'SPReD', output_folders[sub_cnt], new_subfolder, new_subfolder])
 					

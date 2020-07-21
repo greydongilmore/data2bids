@@ -19,6 +19,7 @@ from widgets import gui_layout
 from widgets import settings_panel
 from edf2bids import edf2bids
 from bids2spred import bids2spred
+from dicomAnon import dicomAnon
 
 from helpers import read_input_dir, read_output_dir, make_bids_filename, _dataset_json, _participants_data, _participants_json
 
@@ -110,6 +111,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.outDirButton.clicked.connect(self.onOutDirButton)
 		self.convertButton.clicked.connect(self.onConvertButton)
 		self.spredButton.clicked.connect(self.onSpredButton)
+		self.imagingButton.clicked.connect(self.onImagingButton)
+		
 		self.actionLoad_data.triggered.connect(self.onLoadDirButton)
 		self.actionSettings.triggered.connect(self.onSettingsButton)
 		self.settingsPanel.buttonBoxJson.accepted.connect(self.onSettingsAccept)
@@ -248,7 +251,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if dialog.exec_():
 			self.updateStatus("Loading input directory...")
 			self.input_path = dialog.selectedFiles()[0]
-			self.file_info, self.chan_label_file = read_input_dir(self.input_path, self.bids_settings)
+			self.file_info, self.chan_label_file, self.imaging_data = read_input_dir(self.input_path, self.bids_settings)
 			self.treeViewLoad.setEditTriggers(self.treeViewLoad.NoEditTriggers)
 			self.treeViewLoad.itemDoubleClicked.connect(self.checkEdit)
 			
@@ -257,6 +260,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 				parent.setText(0, "{}".format(str(isub)))
 				
 				parent.setText(10, 'Yes' if self.chan_label_file[isub] else 'No')
+				parent.setText(11, 'Yes' if self.imaging_data[isub]['imaging_dir'] else 'No')
 				parent.setTextAlignment(10, QtCore.Qt.AlignCenter)
 				for ises in range(len(values)):
 					for irun in range(len(values[ises])):
@@ -307,12 +311,11 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 						child.setText(10, 'Yes' if values[ises][irun]['ses_chan_label'] else 'No')
 						child.setTextAlignment(10, QtCore.Qt.AlignCenter)
 						
-			
 			header_padding = 12
 			self.treeViewLoad.setHeaderItem(QtWidgets.QTreeWidgetItem([self.padentry('Name', 25), self.padentry("Date", header_padding), self.padentry("Time", header_padding), 
 															  self.padentry("Size", header_padding), self.padentry("Frequency", header_padding), self.padentry("Duration", header_padding),
 															  self.padentry("EDF Type",header_padding), self.padentry('Type', header_padding), self.padentry('Task', header_padding),
-															  self.padentry('Ret/Pro', header_padding), self.padentry('Channel File', header_padding)]))
+															  self.padentry('Ret/Pro', header_padding), self.padentry('Channel File', header_padding), self.padentry('Imaging Data', header_padding)]))
 			
 			for icol in range(11):
 				self.treeViewLoad.header().setSectionResizeMode(icol,self.treeViewLoad.header().ResizeToContents)
@@ -379,6 +382,15 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			
 #			isub = list(new_sessions)[0]
 #			values = new_sessions[isub]
+			if len(self.imaging_data.items()) >0:
+				if not self.imagingButton.isEnabled():
+					self.imagingButton.setEnabled(True)
+					self.imagingButton.setStyleSheet(self.convert_button_color)
+			else:
+				if self.imagingButton.isEnabled():
+					self.imagingButton.setEnabled(False)
+					self.imagingButton.setStyleSheet(self.inactive_color)
+					
 			for isub, values in self.new_sessions.items():
 				if values['newSessions']:
 					parent = QtWidgets.QTreeWidgetItem(self.treeViewOutput)
@@ -815,7 +827,51 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.cancelButton.setStyleSheet(self.inactive_color)
 		self.convertButton.setEnabled(False)
 		self.convertButton.setStyleSheet(self.inactive_color)
+	
+	def onImagingButton(self):
+		self.updateStatus('De-identifying imaging data...')
+		QtGui.QGuiApplication.processEvents()
+		
+		# Set Qthread
+		self.worker = dicomAnon()
+		self.worker.input_path = self.input_path
+		self.worker.output_path = self.output_path
+		self.worker.imaging_data = self.imaging_data
+		
+		# Set Qthread signals
+		self.worker.signals.progressEvent.connect(self.conversionStatusUpdate)
+		self.worker.signals.finished.connect(self.doneImagingConversion)
+		
+		# Execute
+		self.threadpool.start(self.worker)
+# 		self.worker.start()
+		
+		# Set button states
+		self.cancelButton.setEnabled(True)
+		self.cancelButton.setStyleSheet(self.cancel_button_color)
+		self.cancelButton.clicked.connect(self.onCancelButton)
+		self.imagingButton.setEnabled(False)
+		self.imagingButton.setStyleSheet(self.inactive_color)
+	
+	def doneImagingConversion(self):
+		if self.userAborted:
+			self.conversionStatus.appendPlainText('\nAborted image de-identification at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+			self.conversionStatus.appendPlainText('Image de-identification incomplete: Please delete output directory and close program.')
+			self.updateStatus("Image de-identification aborted.")
+			self.treeViewOutput.clear()
+			self.treeViewLoad.clear()
+		else:
+			self.conversionStatus.appendPlainText('Completed image de-identification at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+			self.conversionStatus.appendPlainText('Your imaging data has been de-identified!\n')
+			self.updateStatus("Image de-identification complete.")
 			
+		self.imagingButton.setEnabled(False)
+		self.imagingButton.setStyleSheet(self.inactive_color)
+		self.cancelButton.setEnabled(False)
+		self.cancelButton.setStyleSheet(self.inactive_color)
+		self.convertButton.setEnabled(False)
+		self.convertButton.setStyleSheet(self.inactive_color)
+		
 def main():
 	app = QtWidgets.QApplication(sys.argv)
 	window = MainWindow()

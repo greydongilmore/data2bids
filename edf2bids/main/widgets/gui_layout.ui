@@ -845,6 +845,43 @@ color: black</string>
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="imagingButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>150</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Arial</family>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(0, 85, 255);
+color: black</string>
+            </property>
+            <property name="text">
+             <string>Imaging</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer_2">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -909,7 +946,7 @@ color: black</string>
      <x>0</x>
      <y>0</y>
      <width>1300</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="font">

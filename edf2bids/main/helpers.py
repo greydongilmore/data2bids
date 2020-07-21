@@ -822,16 +822,16 @@ def folders_in(path_to_parent):
 #%%
 
 # from bids_settings import ieeg_file_metadata, natus_info
-# raw_file_path = r'B:/projects/eplink/walkthrough_example/input'
-# output_path = r'B:/projects/eplink/walkthrough_example/out'
+# raw_file_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/input_test'
+# output_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/out'
 
 # bids_settings = {}
 # bids_settings['json_metadata'] = ieeg_file_metadata
 # bids_settings['natus_info'] = natus_info
 # bids_settings['settings_panel'] = {'Deidentify_source': False,
 # 									 'offset_dates': False}
-# input_dir = r'B:/projects/eplink/walkthrough_example/input'
-# file_info, chan_label_file = read_input_dir(raw_file_path, bids_settings)
+# input_dir = r'/media/veracrypt6/projects/eplink/walkthrough_example/input_test'
+# file_info, chan_label_file, imaging_data = read_input_dir(raw_file_path, bids_settings)
 
 # isub = list(file_info)[0]
 # values = file_info[isub]
@@ -853,6 +853,7 @@ def read_input_dir(input_dir, bids_settings):
 		
 	sub_file_info = {}
 	sub_chan_file = {}
+	imaging_dir = {}
 	for ifold in folders:
 		subject_id = ifold.replace('_','')
 		if not subject_id.startswith('sub-'):
@@ -862,9 +863,13 @@ def read_input_dir(input_dir, bids_settings):
 		file_info = get_file_info(raw_file_path_sub, bids_settings)
 		sub_file_info[subject_id] = file_info
 		chan_label_file = [x for x in os.listdir(raw_file_path_sub) if 'channel_label' in x]
+		imaging_data = [x for x in os.listdir(raw_file_path_sub) if 'imaging' in x]
 		sub_chan_file[subject_id] = chan_label_file
+		imaging_dir[subject_id] = {}
+		imaging_dir[subject_id]['imaging_dir'] = imaging_data
+		imaging_dir[subject_id]['orig_sub_dir'] = ifold
 		
-	return sub_file_info, sub_chan_file
+	return sub_file_info, sub_chan_file, imaging_dir
 
 def read_output_dir(output_path, file_info, offset_date, participants_fname):
 	"""
