@@ -693,9 +693,7 @@ class edf2bids(QtCore.QRunnable):
 							 'time_rel': sec2time(annot[0], 6),
 							 'event': annot[2]}
 				annotation_data = pd.concat([annotation_data, pd.DataFrame([data_temp])], axis = 0)
-		
-		return annotation_data
-	
+			
 # 		annotation_data = se.extract_annotations(self.signals.progressEvent, deidentify=True)
 		annotation_data.to_csv(annotation_fname, sep='\t', index=False, na_rep='n/a', line_terminator="", float_format='%.3f')
 	
