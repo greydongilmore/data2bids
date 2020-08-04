@@ -296,15 +296,6 @@ class EDFReader():
 		
 		return self.header
 	
-	def padtrim(buf, num):
-		num -= len(buf)
-		if num>=0:
-			# pad the input to the specified length
-			return (str(buf) + ' ' * num)
-		else:
-			# trim the input to the specified length
-			return (buf[0:num])
-	
 	def _read_annotations_apply_offset(self, triggers):
 		events = []
 		offset = 0.
@@ -346,7 +337,7 @@ class EDFReader():
 			
 		return data
 	
-	def overwrite_annotations(self, events, identity_idx, tal_indx, strings, action='replace'):
+	def overwrite_annotations(self, events, identity_idx, tal_indx, strings, action):
 		pat = '([+-]\\d+\\.?\\d*)(\x15(\\d+\\.?\\d*))?(\x14.*?)\x14\x00'
 		indexes = []
 		for ident in identity_idx:
@@ -366,7 +357,12 @@ class EDFReader():
 								new_block = buf.lower().replace(bytes(strings[irep],'latin-1').lower(), bytes(''.join(np.repeat('X', len(strings[irep]))),'latin-1'))
 								events[ident][2] = events[ident][2].lower().replace(strings[irep].lower(), ''.join(np.repeat('X', len(strings[irep]))))
 								assert(len(new_block)==len(buf))
-								
+							
+							elif action == 'replaceWhole':
+								new_block = buf.lower().replace(bytes(events[ident][2],'latin-1').lower(), bytes('Montage Event'+ ' '*(len(events[ident][2])-len('Montage Event')),'latin-1'))
+								events[ident][2] = 'Montage Event'
+								assert(len(new_block)==len(buf))
+							
 							elif action == 'remove':
 								raw = re.findall(pat, buf.decode('latin-1'))[0][0] +'\x14\x14'
 								new_block = raw + ('\x00'*(len(buf)-len(raw)))
