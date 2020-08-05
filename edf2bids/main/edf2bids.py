@@ -686,7 +686,7 @@ class edf2bids(QtCore.QRunnable):
 			if overwrite_whole:
 				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_whole) and x[2].lower() != 'montage event']
 				if identity_idx:
-					events = self.overwrite_annotations(events, identity_idx, tal_indx, 'montage', 'replaceWhole')
+					events = self.overwrite_annotations(events, identity_idx, tal_indx, overwrite_whole, 'replaceWhole')
 		
 			if remove_strings:
 				### Remove unwanted annoations
