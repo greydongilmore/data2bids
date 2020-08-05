@@ -4,3 +4,5 @@ pyside2>=5.14.2
 scipy>=1.3.2
 cx-Freeze>=6.1.0
 jsonlib>=1.6.0
+dicognito>=0.11.0
+pydicom>=2.0.0
