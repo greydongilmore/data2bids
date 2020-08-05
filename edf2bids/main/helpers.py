@@ -381,7 +381,7 @@ class EDFReader():
 							if i==tal_indx:
 								back = fid.seek(-np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']), 1)
 								assert(fid.tell()==back)
-								fid.write(new_block.encode('latin-1'))
+								fid.write(new_block)
 		
 		if indexes:
 			for index in sorted(indexes, reverse=True):
