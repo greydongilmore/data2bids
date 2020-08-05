@@ -61,6 +61,7 @@ class Ui_MainWindow(object):
         self.splitter.setMinimumSize(QSize(0, 600))
         self.splitter.setMidLineWidth(0)
         self.splitter.setOrientation(Qt.Vertical)
+        self.splitter.setOpaqueResize(False)
         self.splitter.setHandleWidth(4)
         self.splitter.setChildrenCollapsible(False)
         self.widget_6 = QWidget(self.splitter)
@@ -214,12 +215,9 @@ class Ui_MainWindow(object):
 
         self.formLayout.setWidget(0, QFormLayout.SpanningRole, self.splitter)
 
-        self.verticalSpacer_3 = QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Minimum)
-
-        self.formLayout.setItem(1, QFormLayout.FieldRole, self.verticalSpacer_3)
-
         self.widget_7 = QWidget(self.centralwidget)
         self.widget_7.setObjectName(u"widget_7")
+        self.widget_7.setMaximumSize(QSize(16777215, 300))
         self.gridLayout = QGridLayout(self.widget_7)
         self.gridLayout.setObjectName(u"gridLayout")
         self.groupBox = QGroupBox(self.widget_7)
@@ -402,6 +400,10 @@ class Ui_MainWindow(object):
 
 
         self.formLayout.setWidget(2, QFormLayout.FieldRole, self.widget_3)
+
+        self.verticalSpacer_3 = QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Minimum)
+
+        self.formLayout.setItem(1, QFormLayout.SpanningRole, self.verticalSpacer_3)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
