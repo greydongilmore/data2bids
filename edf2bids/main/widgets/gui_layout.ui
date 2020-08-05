@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1300</width>
-    <height>939</height>
+    <width>1319</width>
+    <height>936</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -23,7 +23,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>EpLink EDF Converter</string>
+   <string>edf2bids converter</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -42,7 +42,7 @@
       <property name="sizePolicy">
        <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
         <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
+        <verstretch>200</verstretch>
        </sizepolicy>
       </property>
       <property name="minimumSize">
@@ -56,6 +56,9 @@
       </property>
       <property name="orientation">
        <enum>Qt::Vertical</enum>
+      </property>
+      <property name="opaqueResize">
+       <bool>false</bool>
       </property>
       <property name="handleWidth">
        <number>4</number>
@@ -147,7 +150,7 @@
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
+            <verstretch>200</verstretch>
            </sizepolicy>
           </property>
           <property name="minimumSize">
@@ -331,7 +334,7 @@
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
+            <verstretch>200</verstretch>
            </sizepolicy>
           </property>
           <property name="minimumSize">
@@ -394,24 +397,14 @@
       </widget>
      </widget>
     </item>
-    <item row="1" column="1">
-     <spacer name="verticalSpacer_3">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeType">
-       <enum>QSizePolicy::Minimum</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>10</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
     <item row="2" column="0">
      <widget class="QWidget" name="widget_7" native="true">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>300</height>
+       </size>
+      </property>
       <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="0">
         <widget class="QGroupBox" name="groupBox">
@@ -914,6 +907,12 @@ color: black</string>
        </item>
        <item>
         <widget class="QPlainTextEdit" name="conversionStatus">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>300</height>
+          </size>
+         </property>
          <property name="font">
           <font>
            <family>Arial</family>
@@ -931,6 +930,22 @@ color: black</string>
       </layout>
      </widget>
     </item>
+    <item row="1" column="0" colspan="2">
+     <spacer name="verticalSpacer_3">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Minimum</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>10</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar">
@@ -945,7 +960,7 @@ color: black</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1300</width>
+     <width>1319</width>
      <height>20</height>
     </rect>
    </property>

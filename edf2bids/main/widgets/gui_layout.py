@@ -20,7 +20,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1300, 939)
+        MainWindow.resize(1319, 936)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -55,12 +55,13 @@ class Ui_MainWindow(object):
         self.splitter.setObjectName(u"splitter")
         sizePolicy1 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setVerticalStretch(200)
         sizePolicy1.setHeightForWidth(self.splitter.sizePolicy().hasHeightForWidth())
         self.splitter.setSizePolicy(sizePolicy1)
         self.splitter.setMinimumSize(QSize(0, 600))
         self.splitter.setMidLineWidth(0)
         self.splitter.setOrientation(Qt.Vertical)
+        self.splitter.setOpaqueResize(False)
         self.splitter.setHandleWidth(4)
         self.splitter.setChildrenCollapsible(False)
         self.widget_6 = QWidget(self.splitter)
@@ -109,8 +110,11 @@ class Ui_MainWindow(object):
 
         self.treeViewLoad = QTreeWidget(self.widget_6)
         self.treeViewLoad.setObjectName(u"treeViewLoad")
-        sizePolicy.setHeightForWidth(self.treeViewLoad.sizePolicy().hasHeightForWidth())
-        self.treeViewLoad.setSizePolicy(sizePolicy)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(200)
+        sizePolicy4.setHeightForWidth(self.treeViewLoad.sizePolicy().hasHeightForWidth())
+        self.treeViewLoad.setSizePolicy(sizePolicy4)
         self.treeViewLoad.setMinimumSize(QSize(0, 0))
         self.treeViewLoad.setMaximumSize(QSize(16777215, 16777215))
         self.treeViewLoad.setFont(font1)
@@ -160,11 +164,11 @@ class Ui_MainWindow(object):
         self.sText = QLabel(self.widget_5)
         self.sText.setObjectName(u"sText")
         self.sText.setEnabled(True)
-        sizePolicy4 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.sText.sizePolicy().hasHeightForWidth())
-        self.sText.setSizePolicy(sizePolicy4)
+        sizePolicy5 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.sText.sizePolicy().hasHeightForWidth())
+        self.sText.setSizePolicy(sizePolicy5)
         self.sText.setMinimumSize(QSize(175, 0))
         font3 = QFont()
         font3.setFamily(u"Arial")
@@ -186,8 +190,8 @@ class Ui_MainWindow(object):
 
         self.treeViewOutput = QTreeWidget(self.widget_8)
         self.treeViewOutput.setObjectName(u"treeViewOutput")
-        sizePolicy.setHeightForWidth(self.treeViewOutput.sizePolicy().hasHeightForWidth())
-        self.treeViewOutput.setSizePolicy(sizePolicy)
+        sizePolicy4.setHeightForWidth(self.treeViewOutput.sizePolicy().hasHeightForWidth())
+        self.treeViewOutput.setSizePolicy(sizePolicy4)
         self.treeViewOutput.setMinimumSize(QSize(0, 0))
         self.treeViewOutput.setFont(font1)
         self.treeViewOutput.setContextMenuPolicy(Qt.PreventContextMenu)
@@ -211,12 +215,9 @@ class Ui_MainWindow(object):
 
         self.formLayout.setWidget(0, QFormLayout.SpanningRole, self.splitter)
 
-        self.verticalSpacer_3 = QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Minimum)
-
-        self.formLayout.setItem(1, QFormLayout.FieldRole, self.verticalSpacer_3)
-
         self.widget_7 = QWidget(self.centralwidget)
         self.widget_7.setObjectName(u"widget_7")
+        self.widget_7.setMaximumSize(QSize(16777215, 300))
         self.gridLayout = QGridLayout(self.widget_7)
         self.gridLayout.setObjectName(u"gridLayout")
         self.groupBox = QGroupBox(self.widget_7)
@@ -283,11 +284,11 @@ class Ui_MainWindow(object):
 
         self.cancelButton = QPushButton(self.widget)
         self.cancelButton.setObjectName(u"cancelButton")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        sizePolicy5.setHorizontalStretch(0)
-        sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(self.cancelButton.sizePolicy().hasHeightForWidth())
-        self.cancelButton.setSizePolicy(sizePolicy5)
+        sizePolicy6 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.cancelButton.sizePolicy().hasHeightForWidth())
+        self.cancelButton.setSizePolicy(sizePolicy6)
         self.cancelButton.setMinimumSize(QSize(150, 0))
         self.cancelButton.setMaximumSize(QSize(150, 16777215))
         palette = QPalette()
@@ -338,8 +339,8 @@ class Ui_MainWindow(object):
 
         self.convertButton = QPushButton(self.widget)
         self.convertButton.setObjectName(u"convertButton")
-        sizePolicy5.setHeightForWidth(self.convertButton.sizePolicy().hasHeightForWidth())
-        self.convertButton.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.convertButton.sizePolicy().hasHeightForWidth())
+        self.convertButton.setSizePolicy(sizePolicy6)
         self.convertButton.setMinimumSize(QSize(150, 0))
         self.convertButton.setMaximumSize(QSize(150, 16777215))
         self.convertButton.setFont(font2)
@@ -350,8 +351,8 @@ class Ui_MainWindow(object):
 
         self.spredButton = QPushButton(self.widget)
         self.spredButton.setObjectName(u"spredButton")
-        sizePolicy5.setHeightForWidth(self.spredButton.sizePolicy().hasHeightForWidth())
-        self.spredButton.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.spredButton.sizePolicy().hasHeightForWidth())
+        self.spredButton.setSizePolicy(sizePolicy6)
         self.spredButton.setMinimumSize(QSize(150, 0))
         self.spredButton.setMaximumSize(QSize(150, 16777215))
         self.spredButton.setFont(font4)
@@ -362,8 +363,8 @@ class Ui_MainWindow(object):
 
         self.imagingButton = QPushButton(self.widget)
         self.imagingButton.setObjectName(u"imagingButton")
-        sizePolicy5.setHeightForWidth(self.imagingButton.sizePolicy().hasHeightForWidth())
-        self.imagingButton.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.imagingButton.sizePolicy().hasHeightForWidth())
+        self.imagingButton.setSizePolicy(sizePolicy6)
         self.imagingButton.setMinimumSize(QSize(150, 0))
         self.imagingButton.setMaximumSize(QSize(150, 16777215))
         self.imagingButton.setFont(font4)
@@ -387,6 +388,7 @@ class Ui_MainWindow(object):
 
         self.conversionStatus = QPlainTextEdit(self.widget_3)
         self.conversionStatus.setObjectName(u"conversionStatus")
+        self.conversionStatus.setMaximumSize(QSize(16777215, 300))
         font6 = QFont()
         font6.setFamily(u"Arial")
         font6.setPointSize(9)
@@ -399,6 +401,10 @@ class Ui_MainWindow(object):
 
         self.formLayout.setWidget(2, QFormLayout.FieldRole, self.widget_3)
 
+        self.verticalSpacer_3 = QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Minimum)
+
+        self.formLayout.setItem(1, QFormLayout.SpanningRole, self.verticalSpacer_3)
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -408,7 +414,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.menuBar = QMenuBar(MainWindow)
         self.menuBar.setObjectName(u"menuBar")
-        self.menuBar.setGeometry(QRect(0, 0, 1300, 20))
+        self.menuBar.setGeometry(QRect(0, 0, 1319, 20))
         self.menuBar.setFont(font1)
         self.menuFile = QMenu(self.menuBar)
         self.menuFile.setObjectName(u"menuFile")
@@ -427,7 +433,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"EpLink EDF Converter", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"edf2bids converter", None))
         self.actionLoad_data.setText(QCoreApplication.translate("MainWindow", u"Load data", None))
         self.actionQuit.setText(QCoreApplication.translate("MainWindow", u"Quit", None))
         self.actionSettings.setText(QCoreApplication.translate("MainWindow", u"Settings", None))

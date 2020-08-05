@@ -566,7 +566,7 @@ class edf2bids(QtCore.QRunnable):
 			
 		return data
 	
-	def overwrite_annotations(self, events, identity_idx, tal_indx, strings, action='replace'):
+	def overwrite_annotations(self, events, identity_idx, tal_indx, strings, action):
 		pat = '([+-]\\d+\\.?\\d*)(\x15(\\d+\\.?\\d*))?(\x14.*?)\x14\x00'
 		indexes = []
 		for ident in identity_idx:
@@ -586,10 +586,15 @@ class edf2bids(QtCore.QRunnable):
 								new_block = buf.lower().replace(bytes(strings[irep],'latin-1').lower(), bytes(''.join(np.repeat('X', len(strings[irep]))),'latin-1'))
 								events[ident][2] = events[ident][2].lower().replace(strings[irep].lower(), ''.join(np.repeat('X', len(strings[irep]))))
 								assert(len(new_block)==len(buf))
-								
+							
+							elif action == 'replaceWhole':
+								new_block = buf.lower().replace(bytes(events[ident][2],'latin-1').lower(), bytes('Montage Event'+ ' '*(len(events[ident][2])-len('Montage Event')),'latin-1'))
+								events[ident][2] = 'Montage Event'
+								assert(len(new_block)==len(buf))
+							
 							elif action == 'remove':
 								raw = re.findall(pat, buf.decode('latin-1'))[0][0] +'\x14\x14'
-								new_block = raw + ('\x00'*(len(buf)-len(raw)))
+								new_block = bytes(raw + ('\x00'*(len(buf)-len(raw))),'latin-1')
 								indexes.append(ident)
 								assert(len(new_block)==len(buf))
 								
@@ -605,7 +610,7 @@ class edf2bids(QtCore.QRunnable):
 							if i==tal_indx:
 								back = fid.seek(-np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']), 1)
 								assert(fid.tell()==back)
-								fid.write(new_block.encode('latin-1'))
+								fid.write(new_block)
 		
 		if indexes:
 			for index in sorted(indexes, reverse=True):
@@ -638,6 +643,7 @@ class edf2bids(QtCore.QRunnable):
 		
 		overwrite_strings = [self.header['meas_info']['firstname'], self.header['meas_info']['lastname']]
 		overwrite_strings = [x for x in overwrite_strings if x is not None]
+		overwrite_whole=['montage']
 		remove_strings = ['XLSPIKE','XLEVENT']
 	
 		tal_indx = [i for i,x in enumerate(self.header['chan_info']['ch_names']) if x.endswith('Annotations')][0]
@@ -673,10 +679,15 @@ class edf2bids(QtCore.QRunnable):
 		if deidentify:
 			if overwrite_strings:
 				### Replace any identifier strings
-				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_strings)]
+				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_strings) and 'montage' not in x[2].lower()]
 				if identity_idx:
 					events = self.overwrite_annotations(events, identity_idx, tal_indx, overwrite_strings, 'replace')
 			
+			if overwrite_whole:
+				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_whole) and x[2].lower() != 'montage event']
+				if identity_idx:
+					events = self.overwrite_annotations(events, identity_idx, tal_indx, 'montage', 'replaceWhole')
+		
 			if remove_strings:
 				### Remove unwanted annoations
 				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() == x[2].lower() for substring in remove_strings)]
@@ -693,10 +704,7 @@ class edf2bids(QtCore.QRunnable):
 							 'time_rel': sec2time(annot[0], 6),
 							 'event': annot[2]}
 				annotation_data = pd.concat([annotation_data, pd.DataFrame([data_temp])], axis = 0)
-		
-		return annotation_data
-	
-# 		annotation_data = se.extract_annotations(self.signals.progressEvent, deidentify=True)
+			
 		annotation_data.to_csv(annotation_fname, sep='\t', index=False, na_rep='n/a', line_terminator="", float_format='%.3f')
 	
 	def _sidecar_json(self, file_info_run, sidecar_fname, session_id, overwrite=False, verbose=False):

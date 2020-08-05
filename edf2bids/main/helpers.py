@@ -157,7 +157,7 @@ class EDFReader():
 		self.fname = fname
 		
 		return self.readHeader()
-
+	
 	def readHeader(self):
 		# the following is copied over from MNE-Python and subsequently modified
 		# to more closely reflect the native EDF standard
@@ -176,7 +176,8 @@ class EDFReader():
 			meas_info['firstname'] = None
 			meas_info['lastname'] = None
 			if not any(substring in meas_info['subject_id'].lower() for substring in {'x,x','x_x','x'}):
-				meas_info['lastname'],meas_info['firstname'] = meas_info['subject_id'].replace('_',',').replace('-',',').split(',')
+				meas_info['firstname'] = meas_info['subject_id'].replace('_',',').replace('-',',').split(',')[-1]
+				meas_info['lastname'] = meas_info['subject_id'].replace('_',',').replace('-',',').split(',')[0]
 				if meas_info['lastname'] == 'sub':
 					meas_info['lastname']=meas_info['firstname']
 					meas_info['firstname']='sub'
@@ -295,15 +296,6 @@ class EDFReader():
 		
 		return self.header
 	
-	def padtrim(buf, num):
-		num -= len(buf)
-		if num>=0:
-			# pad the input to the specified length
-			return (str(buf) + ' ' * num)
-		else:
-			# trim the input to the specified length
-			return (buf[0:num])
-	
 	def _read_annotations_apply_offset(self, triggers):
 		events = []
 		offset = 0.
@@ -345,7 +337,7 @@ class EDFReader():
 			
 		return data
 	
-	def overwrite_annotations(self, events, identity_idx, tal_indx, strings, action='replace'):
+	def overwrite_annotations(self, events, identity_idx, tal_indx, strings, action):
 		pat = '([+-]\\d+\\.?\\d*)(\x15(\\d+\\.?\\d*))?(\x14.*?)\x14\x00'
 		indexes = []
 		for ident in identity_idx:
@@ -365,7 +357,12 @@ class EDFReader():
 								new_block = buf.lower().replace(bytes(strings[irep],'latin-1').lower(), bytes(''.join(np.repeat('X', len(strings[irep]))),'latin-1'))
 								events[ident][2] = events[ident][2].lower().replace(strings[irep].lower(), ''.join(np.repeat('X', len(strings[irep]))))
 								assert(len(new_block)==len(buf))
-								
+							
+							elif action == 'replaceWhole':
+								new_block = buf.lower().replace(bytes(events[ident][2],'latin-1').lower(), bytes('Montage Event'+ ' '*(len(events[ident][2])-len('Montage Event')),'latin-1'))
+								events[ident][2] = 'Montage Event'
+								assert(len(new_block)==len(buf))
+							
 							elif action == 'remove':
 								raw = re.findall(pat, buf.decode('latin-1'))[0][0] +'\x14\x14'
 								new_block = raw + ('\x00'*(len(buf)-len(raw)))
@@ -1073,69 +1070,6 @@ def moveAllFilesinDir(old_fold, new_fold):
 		for filePath in glob.glob(old_fold + os.path.sep + '*'):
 			# Move each file to destination Directory
 			shutil.move(filePath, new_fold)
-
-def read_annotation_block(block, data_fname, header, tal_indx):
-		pat = '([+-]\\d+\\.?\\d*)(\x15(\\d+\\.?\\d*))?(\x14.*?)\x14\x00'
-		assert(block>=0)
-		data = []
-		with open(data_fname, 'rb') as fid:
-			assert(fid.tell() == 0)
-			blocksize = np.sum(header['chan_info']['n_samps']) * header['meas_info']['data_size']
-			fid.seek(np.int64(header['meas_info']['data_offset']) + np.int64(block) * np.int64(blocksize))
-			read_idx = 0
-			for i in range(header['meas_info']['nchan']):
-				read_idx += np.int64(header['chan_info']['n_samps'][i]*header['meas_info']['data_size'])
-				buf = fid.read(np.int64(header['chan_info']['n_samps'][i]*header['meas_info']['data_size']))
-				if i==tal_indx:
-					raw = re.findall(pat, buf.decode('latin-1'))
-					if raw:
-						data.append(list(map(list, [x+(block,) for x in raw])))
-		return data
-	
-def read_annotation_block(block, data_fname, header, chanindx):
-	assert(block>=0)
-	data = []
-	data_overwrite = []
-	with open(data_fname, 'rb') as fid:
-		assert(fid.tell() == 0)
-		blocksize = np.sum(header['chan_info']['n_samps']) * header['meas_info']['data_size']
-		fid.seek(np.int64(header['meas_info']['data_offset']) + np.int64(block) * np.int64(blocksize))
-		read_idx = 0
-		for i in range(header['meas_info']['nchan']):
-			read_idx += np.int64(header['chan_info']['n_samps'][i]*header['meas_info']['data_size'])
-			buf = fid.read(np.int64(header['chan_info']['n_samps'][i]*header['meas_info']['data_size']))
-			if i == chanindx:
-				raw = buf.decode('latin-1', 'ignore')
-				raw = [x for x in re.split(r'[^\x20-\x7e]', raw) if len(x) >0]
-				if len(raw) > 3:
-					raw = [raw[0], raw[1], ' '.join(raw[2:])]
-				if len(raw)>2:
-					if header['meas_info']['firstname'] is not None:
-						if 'Montage' in raw[2] and 'Montage Event' not in raw[2]:
-							 fid_loc = [(np.int64(header['meas_info']['data_offset']) + np.int64(block) * np.int64(blocksize)) + read_idx, np.int64(header['chan_info']['n_samps'][i]*header['meas_info']['data_size'])]
-							 data_overwrite.append(['Montage'] + fid_loc + raw+ [block])
-						elif any(x.lower() in raw[2].lower() for x in {header['meas_info']['firstname'], header['meas_info']['lastname']}):
-							 fid_loc = [(np.int64(header['meas_info']['data_offset']) + np.int64(block) * np.int64(blocksize)) + read_idx, np.int64(header['chan_info']['n_samps'][i]*header['meas_info']['data_size'])]
-							 data_overwrite.append(['Name'] + fid_loc + raw+ [block])
-# 						elif any(x in raw[2] for x in {'values.append', 'self.offset[i]', 'n/a 0.0 512'}):
-# 							 fid_loc = [(np.int64(header['meas_info']['data_offset']) + np.int64(block) * np.int64(blocksize)) + read_idx, np.int64(header['chan_info']['n_samps'][i]*header['meas_info']['data_size'])]
-# 							 data_overwrite.append(['Other'] + fid_loc + raw+ [block])
-						else:
-							 data.append(raw)
-					else:
-						if 'Montage' in raw[2] and 'Montage Event' not in raw[2]:
-							 fid_loc = [(np.int64(header['meas_info']['data_offset']) + np.int64(block) * np.int64(blocksize)) + read_idx, np.int64(header['chan_info']['n_samps'][i]*header['meas_info']['data_size'])]
-							 data_overwrite.append(['Montage'] + fid_loc + raw + [block])
-						elif any(x in raw[2] for x in {'values.append', 'self.offset[i]', 'n/a 0.0 512','callback.emit','Constructs a participant','w r x o k d'}):
-							 fid_loc = [(np.int64(header['meas_info']['data_offset']) + np.int64(block) * np.int64(blocksize)) + read_idx, np.int64(header['chan_info']['n_samps'][i]*header['meas_info']['data_size'])]
-							 data_overwrite.append(['Other'] + fid_loc + raw+ [block])
-						elif 'Montage' in raw[2] and any(x in raw[0] for x in {'np.asarray(', 'item.startswith', 'SEEG','callback.emit','Constructs a participant','w r x o k d'}):
-							 fid_loc = [(np.int64(header['meas_info']['data_offset']) + np.int64(block) * np.int64(blocksize)) + read_idx, np.int64(header['chan_info']['n_samps'][i]*header['meas_info']['data_size'])]
-							 data_overwrite.append(['Other'] + fid_loc + raw+ [block])
-						else:
-							data.append(raw)
-						 
-	return data, data_overwrite
 
 def deidentify_edf(fname, isub, offset_date, rename):
 	file_in = EDFReader()
