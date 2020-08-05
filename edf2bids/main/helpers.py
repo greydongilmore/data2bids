@@ -359,8 +359,11 @@ class EDFReader():
 								assert(len(new_block)==len(buf))
 							
 							elif action == 'replaceWhole':
-								new_block = buf.lower().replace(bytes(events[ident][2],'latin-1').lower(), bytes('Montage Event'+ ' '*(len(events[ident][2])-len('Montage Event')),'latin-1'))
-								events[ident][2] = 'Montage Event'
+								_idx = [i for i,x in enumerate(strings.keys()) if x.lower() in events[ident][2].lower()]
+								replace_string = strings[list(strings.keys())[_idx[0]]]
+								new_block = buf.lower().replace(bytes(events[ident][2],'latin-1').lower(), bytes(replace_string,'latin-1'))
+								events[ident][2] = replace_string
+								new_block = new_block+bytes('\x00'*(len(buf)-len(new_block)),'latin-1')
 								assert(len(new_block)==len(buf))
 							
 							elif action == 'remove':

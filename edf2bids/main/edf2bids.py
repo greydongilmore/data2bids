@@ -571,7 +571,10 @@ class edf2bids(QtCore.QRunnable):
 		indexes = []
 		for ident in identity_idx:
 			block_chk = events[ident][-1]
-			replace_idx = [i for i,x in enumerate(strings) if x.lower() in events[ident][2].lower()]
+			if isinstance(strings, dict):
+				replace_idx = [i for i,x in enumerate(strings.keys()) if x.lower() in events[ident][2].lower()]
+			else:
+				replace_idx = [i for i,x in enumerate(strings) if x.lower() in events[ident][2].lower()]
 			for irep in replace_idx:
 				assert(block_chk>=0)
 				new_block=[]
@@ -588,8 +591,11 @@ class edf2bids(QtCore.QRunnable):
 								assert(len(new_block)==len(buf))
 							
 							elif action == 'replaceWhole':
-								new_block = buf.lower().replace(bytes(events[ident][2],'latin-1').lower(), bytes('Montage Event'+ ' '*(len(events[ident][2])-len('Montage Event')),'latin-1'))
-								events[ident][2] = 'Montage Event'
+								_idx = [i for i,x in enumerate(strings.keys()) if x.lower() in events[ident][2].lower()]
+								replace_string = strings[list(strings.keys())[_idx[0]]]
+								new_block = buf.lower().replace(bytes(events[ident][2],'latin-1').lower(), bytes(replace_string,'latin-1'))
+								events[ident][2] = replace_string
+								new_block = new_block+bytes('\x00'*(len(buf)-len(new_block)),'latin-1')
 								assert(len(new_block)==len(buf))
 							
 							elif action == 'remove':
@@ -643,7 +649,9 @@ class edf2bids(QtCore.QRunnable):
 		
 		overwrite_strings = [self.header['meas_info']['firstname'], self.header['meas_info']['lastname']]
 		overwrite_strings = [x for x in overwrite_strings if x is not None]
-		overwrite_whole=['montage']
+		overwrite_whole={
+						'montage': 'Montage Event'
+						}
 		remove_strings = ['XLSPIKE','XLEVENT']
 	
 		tal_indx = [i for i,x in enumerate(self.header['chan_info']['ch_names']) if x.endswith('Annotations')][0]
@@ -684,7 +692,7 @@ class edf2bids(QtCore.QRunnable):
 					events = self.overwrite_annotations(events, identity_idx, tal_indx, overwrite_strings, 'replace')
 			
 			if overwrite_whole:
-				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_whole) and x[2].lower() != 'montage event']
+				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_whole.keys()) and x[2].lower() != 'montage event']
 				if identity_idx:
 					events = self.overwrite_annotations(events, identity_idx, tal_indx, overwrite_whole, 'replaceWhole')
 		
