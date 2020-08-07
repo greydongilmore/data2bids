@@ -43,7 +43,7 @@ def padtrim(buf, num):
 		# trim the input to the specified length
 		buffer = (buf[0:num])
 	
-	return buffer
+	return bytes(buffer, 'latin-1')
 
 def sorted_nicely(lst):
 	"""
@@ -391,7 +391,38 @@ class EDFReader():
 				del events[index]
 		
 		return events
-
+	
+	def chnames_update(self, channel_file, bids_settings, write=False):
+		with open(self.fname, 'r+b') as fid:
+			fid.seek(252)
+			channels = list(range(int(fid.read(4).decode())))
+			ch_names_orig= [fid.read(16).strip().decode() for ch in channels]
+			
+		chan_idx = [i for i, x in enumerate(ch_names_orig) if not any(x.startswith(substring) for substring in list(bids_settings['natus_info']['ChannelInfo'].keys()))]
+		
+		chan_label_new = np.genfromtxt(channel_file, dtype='str')
+		
+		if chan_label_new.shape[1] >1:
+			chan_label_new=[x[1] for x in chan_label_new]
+		
+		if len(chan_label_new)!=len(chan_idx):
+			replace_chan = [str(x) for x in list(range(len(chan_label_new)+1,len(chan_idx)+1))]
+			chan_label_new.extend([''.join(list(item)) for item in list(zip(['C']*len(replace_chan), replace_chan))])
+			assert len(chan_label_new)==len(chan_idx)
+		
+		ch_names_new=ch_names_orig
+		for (index, replacement) in zip(chan_idx, chan_label_new):
+			ch_names_new[index] = replacement
+			
+		if write:
+			with open(self.fname, 'r+b') as fid:
+				assert(fid.tell() == 0)
+				fid.seek(256)
+				for ch in ch_names_new:
+					fid.write(padtrim(ch,16))
+					
+		return ch_names_new
+		
 	def readBlock(self, block):
 		assert(block>=0)
 		data = []
@@ -673,9 +704,7 @@ def get_file_info(raw_file_path_sub, bids_settings):
 			file_list.append(files)
 			
 	chan_label_filename = [x for x in os.listdir(raw_file_path_sub) if 'channel_label' in x]
-	if chan_label_filename:
-		chan_label_file_temp = np.genfromtxt(os.path.join(raw_file_path_sub, chan_label_filename[0]), dtype='str')
-		
+	
 	filesInfo = []
 	for ises in file_list:
 		filesInfo_ses = []
@@ -691,15 +720,14 @@ def get_file_info(raw_file_path_sub, bids_settings):
 				
 				if not chan_label_file_ses:
 					if chan_label_filename:
-						values = partition(chan_label_file_temp[:,1])
-						chan_label_file = chan_label_file_temp[:,1]
+						chan_label_file=file_in.chnames_update(os.path.join(raw_file_path_sub, chan_label_filename[0]), bids_settings, write=False)
+						values = partition(chan_label_file)
 					else:
 						chan_label_file = header['chan_info']['ch_names']
 						values = partition(header['chan_info']['ch_names'])
 				else:
-					chan_label_file_ses_temp = np.genfromtxt(os.path.join(os.path.dirname(filen), chan_label_file_ses[0]), dtype='str')
-					values = partition(chan_label_file_ses_temp[:,1])
-					chan_label_file = chan_label_file_ses_temp[:,1]
+					chan_label_file=file_in.chnames_update(os.path.join(os.path.dirname(filen), chan_label_file_ses[0]), bids_settings, write=False)
+					values = partition(chan_label_file)
 						
 				eeg_chan_idx = [i for i, x in enumerate(values) if x[0] not in list(bids_settings['natus_info']['ChannelInfo'].keys())]
 				group_info = determine_groups(np.array(chan_label_file)[eeg_chan_idx])
@@ -727,7 +755,8 @@ def get_file_info(raw_file_path_sub, bids_settings):
 						('Lowpass', header['meas_info']['lowpass']),
 						('Groups', group_info),
 						('EDF_type', header['meas_info']['subtype']),
-						('ses_chan_label', chan_label_file_ses)]
+						('ses_chan_label', chan_label_file_ses),
+						('chan_label', chan_label_filename)]
 				
 				file_info = OrderedDict(file_info)
 					
@@ -822,7 +851,7 @@ def folders_in(path_to_parent):
 #%%
 
 # from bids_settings import ieeg_file_metadata, natus_info
-# raw_file_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/input_test'
+# raw_file_path = r'/media/veracrypt6/projects/iEEG/ieeg/out/input'
 # output_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/out'
 
 # bids_settings = {}
@@ -1015,8 +1044,8 @@ def fix_sessions(session_list, num_sessions, output_path, isub):
 				with open(new_filename, 'r+b') as fid:
 					assert(fid.tell() == 0)
 					fid.seek(8)
-					fid.write(padtrim(isub, 80).encode('utf-8')) # subject id
-					fid.write(padtrim(make_bids_filename(isub, ises[1], f.split('_')[2].split('-')[-1], f.split('_')[-1], prefix=''), 80).encode('utf-8')) # recording id
+					fid.write(padtrim(isub, 80)) # subject id
+					fid.write(padtrim(make_bids_filename(isub, ises[1], f.split('_')[2].split('-')[-1], f.split('_')[-1], prefix=''), 80)) # recording id
 			elif 'ieeg.json' in f:
 				new_filename = os.path.join(new_fold,'_'.join([f.split('_')[0],ises[1],f.split('_')[2], f.split('_')[3]]))
 				os.rename(os.path.join(new_fold,f), new_filename)
@@ -1099,19 +1128,19 @@ def deidentify_edf(fname, isub, offset_date, rename):
 		fid.seek(8)
 		
 		if any(x for x in edf_deidentify.items() if x != None):
-			fid.write(padtrim('X X X X', 80).encode('latin-1'))
+			fid.write(padtrim('X X X X', 80))
 		else:
 			fid.seek(80+8)
 			assert(fid.tell() == 80+8)
 		
 		if recording_id is not None:
-			fid.write(padtrim(recording_id, 80).encode('latin-1'))
+			fid.write(padtrim(recording_id, 80))
 		else:
 			fid.seek(80+80+8)
 			assert(fid.tell() == 80+80+8)
 			
 		if new_date:
-			fid.write(padtrim(new_date, 8).encode('latin-1'))
+			fid.write(padtrim(new_date, 8))
 		else:
 			fid.seek(80+80+8+8)
 			assert(fid.tell() == 80+80+8+8)

@@ -808,8 +808,6 @@ class edf2bids(QtCore.QRunnable):
 					file_list.append(os.path.sep.join([ifold, files[0]]))
 					
 		chan_label_filename = [x for x in os.listdir(raw_file_path) if 'channel_label' in x]
-		if chan_label_filename:
-			chan_label_file_temp = np.genfromtxt(os.path.join(raw_file_path, chan_label_filename[0]), dtype='str')
 		
 		filesInfo = []
 		for ises in file_list:
@@ -826,15 +824,14 @@ class edf2bids(QtCore.QRunnable):
 					
 					if not chan_label_file_ses:
 						if chan_label_filename:
-							values = partition(chan_label_file_temp[:,1])
-							chan_label_file = chan_label_file_temp[:,1]
+							chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, chan_label_filename[0]), bids_settings, write=False)
+							values = partition(chan_label_file)
 						else:
 							chan_label_file = header['chan_info']['ch_names']
 							values = partition(header['chan_info']['ch_names'])
 					else:
-						chan_label_file_ses_temp = np.genfromtxt(os.path.join(os.path.dirname(filen), chan_label_file_ses[0]), dtype='str')
-						values = partition(chan_label_file_ses_temp[:,1])
-						chan_label_file = chan_label_file_ses_temp[:,1]
+						chan_label_file=file_in.chnames_update(os.path.join(os.path.dirname(filen), chan_label_file_ses[0]), bids_settings, write=False)
+						values = partition(chan_label_file)
 						
 					eeg_chan_idx = [i for i, x in enumerate(values) if x[0] not in list(self.bids_settings['natus_info']['ChannelInfo'].keys())]
 					group_info = determine_groups(np.array(chan_label_file)[eeg_chan_idx])
@@ -862,7 +859,9 @@ class edf2bids(QtCore.QRunnable):
 							('Lowpass', header['meas_info']['lowpass']),
 							('Groups', group_info),
 							('EDF_type', header['meas_info']['subtype']),
-							('ses_chan_label', chan_label_file_ses)]
+							('ses_chan_label', chan_label_file_ses),
+							('chan_label', chan_label_filename)
+							]
 					
 					file_info = OrderedDict(file_info)
 						
@@ -1189,6 +1188,15 @@ class edf2bids(QtCore.QRunnable):
 									
 									annotation_fname = self.make_bids_filename(isub, session_id, task_id, run_num, suffix='annotations.tsv', prefix=data_path)
 									self._annotations_data(file_data[0][irun], annotation_fname, data_fname, source_name, self.overwrite, self.verbose)
+								
+									if file_data[0][irun]['chan_label']:
+										file_in = EDFReader()
+										file_in.open(data_fname)
+										chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[0][irun]['chan_label'][0]), self.bids_settings, write=True)
+									elif file_data[0][irun]['ses_chan_label']:
+										file_in = EDFReader()
+										file_in.open(data_fname)
+										chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[0][irun]['ses_chan_label'][0]), self.bids_settings, write=True)
 								else:
 									annotation_fname = self.make_bids_filename(isub, session_id, task_id, run_num, suffix='annotations.tsv', prefix=data_path)
 									self._annotations_data(file_data[0][irun], annotation_fname, source_name, source_name, self.overwrite, self.verbose)
