@@ -21,7 +21,7 @@ from edf2bids import edf2bids
 from bids2spred import bids2spred
 from dicomAnon import dicomAnon
 
-from helpers import read_input_dir, read_output_dir, make_bids_filename, _dataset_json, _participants_data, _participants_json
+from helpers import read_input_dir, read_output_dir, bidsHelper
 
 class SettingsDialog(QtWidgets.QDialog, settings_panel.Ui_Dialog):
 	def __init__(self):
@@ -378,7 +378,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 									self.file_info[sub][ses_cnt][irun]['Retro_Pro'] = self.treeViewLoad.itemWidget(item, 9).currentText()
 								
 						
-			self.new_sessions = read_output_dir(self.output_path, self.file_info, self.offsetDate.isChecked(), participants_fname=None)
+			self.new_sessions = read_output_dir(self.output_path, self.file_info, self.offsetDate.isChecked(), self.bids_settings, participants_fname=None)
 			
 #			isub = list(new_sessions)[0]
 #			values = new_sessions[isub]
@@ -648,9 +648,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.updateStatus("Converting files...")
 		
 		### convert script
-		dataset_fname = make_bids_filename(None, session_id=None, run_num=None, suffix='dataset_description.json', prefix=self.output_path)
+		dataset_fname = bidsHelper(output_path=self.output_path).write_dataset(return_fname=True)
 		if not os.path.exists(dataset_fname):
-			_dataset_json(dataset_fname, self.bids_settings)
+			bidsHelper(output_path=self.output_path, bids_settings=self.bids_settings).write_dataset()
 
 		# Add a bidsignore file
 		if '.bidsignore' not in os.listdir(self.output_path):
@@ -663,17 +663,13 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 						os.path.join(self.output_path,'README'))
 			
 		# Add a participants tsv file
-		participants_fname = make_bids_filename(None, session_id=None, run_num=None, suffix='participants.tsv', prefix=self.output_path)
+		participants_fname = bidsHelper(output_path=self.output_path).write_participants(return_fname=True)
 		if os.path.exists(participants_fname):
 			self.participant_tsv = pd.read_csv(participants_fname, sep='\t')
 		else:
-			_participants_data(None, None, participants_fname)
+			bidsHelper(output_path=self.output_path).write_participants()
 			self.participant_tsv = pd.read_csv(participants_fname, sep='\t')
 		
-		# Add a participants json file
-		if not os.path.exists(participants_fname.split('.tsv')[0]+'.json'):
-			_participants_json(participants_fname.split('.tsv')[0]+'.json')
-			
 		# Set Qthread
 		self.worker = edf2bids()
 

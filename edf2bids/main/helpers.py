@@ -495,11 +495,24 @@ class bidsHelper():
 		
 		self.participants_fname = self.make_bids_filename(suffix='participants.tsv', exclude_sub=True, exclude_ses=True, 
 													exclude_task=True, exclude_run=True, path_override=self.output_path)
+		self.participants_json_fname = self.make_bids_filename(suffix='participants.json', exclude_sub=True, exclude_ses=True, 
+													exclude_task=True, exclude_run=True, path_override=self.output_path)
 		if not return_fname:
 			self._participants_data(data)
+			if not os.path.exists(self.participants_json_fname):
+				self._participants_json()
 		else:
 			return self.participants_fname
 	
+	def write_dataset(self, return_fname=False):
+		
+		self.dataset_fname = self.make_bids_filename(suffix='dataset_description.json', exclude_sub=True, exclude_ses=True, 
+													exclude_task=True, exclude_run=True, path_override=self.output_path)
+		if not return_fname:
+			self._dataset_json()
+		else:
+			return self.dataset_fname
+		
 	def make_bids_filename(self, suffix, exclude_sub=False, exclude_ses=False, exclude_task=False, exclude_run=False, path_override=None):
 		"""
 		Constructs a BIDsified filename.
@@ -609,7 +622,7 @@ class bidsHelper():
 				
 		return path
 	
-	def _write_tsv(self, fname, data, overwrite=False, verbose=False, append = False):
+	def _write_tsv(self, fname, data, float_form=None, overwrite=False, verbose=False, append = False):
 		"""
 		Writes input dataframe to a .tsv file
 		
@@ -630,29 +643,41 @@ class bidsHelper():
 				pass
 			if os.path.exists(fname) and append:
 				with open(fname,'a') as f:
-					data.to_csv(f, sep='\t', index=False, header = False, na_rep='n/a', mode='a', line_terminator="")
+					if float_form is not None:
+						data.to_csv(f, sep='\t', index=False, header = False, na_rep='n/a', mode='a', line_terminator="", float_format=float_form)
+					else:
+						data.to_csv(f, sep='\t', index=False, header = False, na_rep='n/a', mode='a', line_terminator="")
 				with open(fname) as f:
 					lines = f.readlines()
 					last = len(lines) - 1
 					lines[last] = lines[last].replace('\r','').replace('\n','')
 				with open(fname, 'w') as wr:
-					wr.writelines(lines) 
+					wr.writelines(lines)
 			else:
 				data1 = data.iloc[0:len(data)-1]
 				data2 = data.iloc[[len(data)-1]]
 				data1.to_csv(fname, sep='\t', encoding='utf-8', index = False)
-				data2.to_csv(fname, sep='\t', encoding='utf-8', header= False, index = False, mode='a', line_terminator="")
+				if float_form is not None:
+					data2.to_csv(fname, sep='\t', encoding='utf-8', index=False, header = False, na_rep='n/a', mode='a', line_terminator="", float_format=float_form)
+				else:
+					data2.to_csv(fname, sep='\t', encoding='utf-8', index=False, header = False, na_rep='n/a', mode='a', line_terminator="")
 		else:
 			if os.path.exists(fname) and not overwrite:
 				pass
 			if os.path.exists(fname) and append:
 				with open(fname,'a') as f:
-					data.to_csv(f, sep='\t', index=False, header = False, na_rep='n/a', mode='a', line_terminator="")
+					if float_form is not None:
+						data.to_csv(f, sep='\t', encoding='utf-8', index=False, header = False, na_rep='n/a', mode='a', line_terminator="", float_format=float_form)
+					else:
+						data.to_csv(f, sep='\t', encoding='utf-8', index=False, header = False, na_rep='n/a', mode='a', line_terminator="")
 			else:
 				data1 = data.iloc[0:len(data)-1]
 				data2 = data.iloc[[len(data)-1]]
 				data1.to_csv(fname, sep='\t', encoding='utf-8', index = False)
-				data2.to_csv(fname, sep='\t', encoding='utf-8', header= False, index = False, mode='a',line_terminator="")
+				if float_form is not None:
+					data2.to_csv(fname, sep='\t', encoding='utf-8', header= False, index = False, na_rep='n/a', mode='a',line_terminator="", float_format=float_form)
+				else:
+					data2.to_csv(fname, sep='\t', encoding='utf-8', header= False, index = False, na_rep='n/a', mode='a',line_terminator="")
 
 	def _write_json(self, data, fname, overwrite=False, verbose=False):
 		"""
@@ -677,7 +702,7 @@ class bidsHelper():
 			print(os.linesep + "Writing '%s'..." % fname + os.linesep)
 			print(json_output)
 	
-	def _dataset_json(self, dataset_fname):
+	def _dataset_json(self):
 		"""
 		Constructs a dataset description JSON file.
 		
@@ -696,9 +721,9 @@ class bidsHelper():
 			('ReferencesAndLinks', ["a data paper", "a resource to be cited when using the data"]),
 			('DatasetDOI', '')])
 		
-		self._write_json(info_dataset_json, dataset_fname)
+		self._write_json(info_dataset_json, self.dataset_fname)
 
-	def _participants_json(self, participants_fname):
+	def _participants_json(self):
 		"""
 		Constructs a participant description JSON file.
 		
@@ -719,7 +744,7 @@ class bidsHelper():
 					  })
 			])
 	
-		self._write_json(info_participant_json, participants_fname)
+		self._write_json(info_participant_json, self.participants_json_fname)
 	
 	def _participants_data(self, file_info_sub):
 		"""
@@ -734,7 +759,7 @@ class bidsHelper():
 		
 		"""
 		if self.subject_id is None:
-			with open(participants_fname, 'w') as writeFile:
+			with open(self.participants_fname, 'w') as writeFile:
 				writeFile.write("\t".join(['participant_id','age','sex','group']))
 				writeFile.write( "\n" )
 				
@@ -754,7 +779,7 @@ class bidsHelper():
 							  ('sex', gender if gender else 'n/a'),
 							  ('group', 'patient')]), index= [0])
 			
-			self._write_tsv(self.participants_fname, df, overwrite=False, verbose=False, append = True) 
+			self._write_tsv(self.participants_fname, df, overwrite=False, verbose=False, append = True)
 
 	def _scans_json(self):
 		"""
@@ -799,7 +824,7 @@ class bidsHelper():
 					  ('edf_type', file_info_run['EDF_type'])
 					  ]), index=[0])
 		
-		self._write_tsv(self.scans_fname, df, overwrite=False, verbose=False, append = True)
+		self._write_tsv(self.scans_fname, df, float_form='%.3f', overwrite=False, verbose=False, append = True)
 	
 	def _electrodes_data(self, file_info_run, coordinates, overwrite, verbose):
 		"""
@@ -883,7 +908,7 @@ class bidsHelper():
 				
 		df_electrodes = pd.DataFrame(OrderedDict(df_electrodes))
 		
-		self._write_tsv(self.electrodes_fname, df_electrodes, overwrite, verbose, append = True)
+		self._write_tsv(self.electrodes_fname, df_electrodes, overwrite=False, verbose=False, append = True)
 
 	def _channels_data(self, file_info_run, overwrite, verbose):
 		"""
@@ -938,7 +963,7 @@ class bidsHelper():
 			mainDF = pd.concat([mainDF, df], ignore_index = True, axis = 0) 
 		
 		mainDF['units'] = mainDF['units'].str.replace('uV', 'μV')
-		self._write_tsv(self.channels_fname, mainDF, overwrite, verbose, append = False)
+		self._write_tsv(self.channels_fname, mainDF, overwrite=False, verbose=False, append = False)
 	
 	def _sidecar_json(self, file_info_run, overwrite, verbose):
 		"""
@@ -1010,221 +1035,6 @@ class bidsHelper():
 			del info_sidecar_json['ElectricalStimulationParameters']
 			
 		self._write_json(info_sidecar_json, self.sidecar_fname, overwrite, verbose)
-
-def _write_tsv(fname, df, overwrite=False, verbose=False, append = False):
-	"""
-	Writes input dataframe to a .tsv file
-	
-	:param fname: Filename given to the output tsv file.
-	:type fname: string
-	:param df: Dataframe containing the information to write.
-	:type df: dataframe
-	:param overwrite: If duplicate data is present in the output directory overwrite it.
-	:type overwrite: boolean
-	:param verbose: Print out process steps.
-	:type verbose: boolean
-	:param append: Append data to file if it exists.
-	:type append: boolean
-
-	"""
-	if os.path.exists(fname) and not overwrite:
-		pass
-	if os.path.exists(fname) and append:
-		with open(fname,'a') as f:
-			df.to_csv(f, sep='\t', index=False, header = False, na_rep='n/a', mode='a', line_terminator="")
-	else:
-		data1 = df.iloc[0:len(df)-1]
-		data2 = df.iloc[[len(df)-1]]
-		data1.to_csv(fname, sep='\t', encoding='utf-8', index = False)
-		data2.to_csv(fname, sep='\t', encoding='utf-8', header= False, index = False, mode='a',line_terminator="")
-
-def _write_json(dictionary, fname, overwrite=False, verbose=False):
-	"""
-	Writes input data to a .json file
-	
-	:param fname: Filename given to the output json file.
-	:type fname: string
-	:param dictionary: Dictionary containing the information to write.
-	:type dictionary: dictionary
-	:param overwrite: If duplicate data is present in the output directory overwrite it.
-	:type overwrite: boolean
-	:param verbose: Print out process steps.
-	:type verbose: boolean
-
-	"""
-	json_output = json.dumps(dictionary, indent=4)
-	with open(fname, 'w') as fid:
-		fid.write(json_output)
-		fid.write('\n')
-
-	if verbose is True:
-		print(os.linesep + "Writing '%s'..." % fname + os.linesep)
-		print(json_output)
-		
-def make_bids_filename(subject_id, session_id, run_num, suffix, prefix):
-	"""
-	Constructs a BIDsified filename.
-	
-	:param subject_id: Subject identifier.
-	:type subject_id: string or None
-	:param session_id: Session identifier.
-	:type session_id: string or None
-	:param run_num: Run identifier.
-	:type run_num: string or None
-	:param suffix: Extension for the file.
-	:type suffix: string
-	:param prefix: Path to where the file is to be saved.
-	:type prefix: string
-	
-	:return filename: BIDsified filename.
-	:type filename: string
-	
-	"""
-	if isinstance(session_id, str):
-		if 'ses' in session_id:
-			session_id = session_id.split('-')[1]
-			
-	order = OrderedDict([('ses', session_id if session_id is not None else None),
-						 ('run', run_num if run_num is not None else None)])
-
-	filename = []
-	if subject_id is not None:
-		filename.append(subject_id)
-	for key, val in order.items():
-		if val is not None:
-			filename.append('%s-%s' % (key, val))
-
-	if isinstance(suffix, str):
-		filename.append(suffix)
-
-	filename = '_'.join(filename)
-	if isinstance(prefix, str):
-		filename = os.path.join(prefix, filename)
-		
-	return filename
-
-def make_bids_folders(subject_id, session_id, kind, output_path, make_dir, overwrite):
-	"""
-	Constructs a BIDsified folder structure.
-	
-	:param subject_id: Subject identifier.
-	:type subject_id: string or None
-	:param session_id: Session identifier.
-	:type session_id: string or None
-	:param kind: Type of input data (e.g. anat, ieeg etc.).
-	:type kind: string
-	:param output_path: Path to where the file is to be saved.
-	:type output_path: string
-	:param make_dir: Make the directory
-	:type make_dir: boolean
-	:param overwrite: If duplicate data is present in the output directory overwrite it.
-	:type overwrite: boolean
-	
-	:return path: BIDsified folder path.
-	:type path: string
-	
-	"""
-	path = []
-	path.append(subject_id)
-		
-	if isinstance(session_id, str):
-		if 'ses' not in session_id:
-			path.append('ses-%s' % session_id)
-		else:
-			path.append(session_id)
-			
-	if isinstance(kind, str):
-		path.append(kind)
-	
-	path = os.path.join(*path)  
-	path = os.path.join(output_path, path)
-		
-	if make_dir == True:
-		if not os.path.exists(path):
-			os.makedirs(path)
-		elif not overwrite:
-			os.makedirs(path)
-			
-	return path
-
-def _dataset_json(dataset_fname, bids_settings):
-	"""
-	Constructs a dataset description JSON file.
-	
-	:param dataset_fname: Filename for the BIDS dataset description.
-	:type dataset_fname: string
-	
-	"""
-	info_dataset_json = OrderedDict([
-		('Name', bids_settings['json_metadata']['DatasetName']),
-		('BIDSVersion', ''),
-		('License', ''),
-		('Authors', bids_settings['json_metadata']['Experimenter']),
-		('Acknowledgements', 'say here what are your acknowledgments'),
-		('HowToAcknowledge', 'say here how you would like to be acknowledged'),
-		('Funding', ["list your funding sources"]),
-		('ReferencesAndLinks', ["a data paper", "a resource to be cited when using the data"]),
-		('DatasetDOI', '')])
-	
-	_write_json(info_dataset_json, dataset_fname)
-
-def _participants_json(participants_fname):
-	"""
-	Constructs a participant description JSON file.
-	
-	:param participants_fname: Filename for the BIDS participant description.
-	:type participants_fname: string
-	
-	"""
-	info_participant_json = OrderedDict([
-		('age', 
-				 {'Description': 'age of the participants.', 
-				  'Units': 'years.'}),
-		('sex', 
-				 {'Description': 'sex of the participants.', 
-				  'Levels': {'m': 'male',
-							  'f': 'female'}}),
-		('group', 
-				 {'Description': 'group the patient belongs to', 
-				  })
-		])
-
-	_write_json(info_participant_json, participants_fname)
-	
-def _participants_data(subject_id, file_info_sub, participants_fname):
-	"""
-	Constructs a participant tsv file.
-	
-	:param subject_id: Subject identifier.
-	:type subject_id: string or None
-	:param file_info_sub: File header information from subjects recordings.
-	:type file_info_sub: dictionary
-	:param participants_fname: Filename for the BIDS participant description.
-	:type participants_fname: string
-	
-	"""
-	if subject_id is None:
-		with open(participants_fname, 'w') as writeFile:
-			writeFile.write("\t".join(['participant_id','age','sex','group']))
-			writeFile.write( "\n" )
-			
-	else:
-		# Parse edf files for age and gender (not all files will contain this info)
-		age = []
-		gender = []
-		for ifile in file_info_sub:
-			if isinstance(ifile['Age'], int):
-				age = ifile['Age']
-			if isinstance(ifile['Gender'], str):
-				gender = ifile['Gender']
-
-		df = pd.DataFrame(OrderedDict([
-						  ('participant_id', subject_id if subject_id is not None else ''),
-						  ('age', age if age else 'n/a'),
-						  ('sex', gender if gender else 'n/a'),
-						  ('group', 'patient')]), index= [0])
-		
-		_write_tsv(participants_fname, df, overwrite=False, verbose=False, append = True) 
 
 def get_file_info(raw_file_path_sub, bids_settings):
 	"""
@@ -1442,7 +1252,7 @@ def read_input_dir(input_dir, bids_settings):
 		
 	return sub_file_info, sub_chan_file, imaging_dir
 
-def read_output_dir(output_path, file_info, offset_date, participants_fname):
+def read_output_dir(output_path, file_info, offset_date, bids_settings, participants_fname):
 	"""
 	Reads data within the specified output path.
 	
@@ -1550,7 +1360,8 @@ def read_output_dir(output_path, file_info, offset_date, participants_fname):
 			all_labels = session_labels
 			
 			if participants_fname is not None:
-				_participants_data(isub, values[0][0], participants_fname)
+				bids_helper = bidsHelper(subject_id=isub, output_path=output_path, bids_settings=bids_settings)
+				bids_helper.write_participants(values[0][0])
 			
 		sub_sessions['newSessions'] = newSessions
 		sub_sessions['session_done'] = session_start
@@ -1587,7 +1398,8 @@ def fix_sessions(session_list, num_sessions, output_path, isub):
 					assert(fid.tell() == 0)
 					fid.seek(8)
 					fid.write(padtrim(isub, 80)) # subject id
-					fid.write(padtrim(make_bids_filename(isub, ises[1], f.split('_')[2].split('-')[-1], f.split('_')[-1], prefix=''), 80)) # recording id
+					fid.write(padtrim('Startdate X X X X', 80)) # recording id
+					
 			elif 'ieeg.json' in f:
 				new_filename = os.path.join(new_fold,'_'.join([f.split('_')[0],ises[1],f.split('_')[2], f.split('_')[3]]))
 				os.rename(os.path.join(new_fold,f), new_filename)
@@ -1621,7 +1433,7 @@ def fix_sessions(session_list, num_sessions, output_path, isub):
 		new_name = 'ieeg/' + '_'.join([old_name.split('_')[0], ises[1]] + old_name.split('_')[2:])
 		scans_tsv.loc[name_idx, 'filename'] = new_name
 		
-		_write_tsv(os.path.join(output_path, isub, isub + '_scans.tsv'), scans_tsv, overwrite=True)
+		bidsHelper._write_tsv(os.path.join(output_path, isub, isub + '_scans.tsv'), scans_tsv, float_form='%.3f', overwrite=True, verbose=False, append = False)
 
 	temp_dir = os.path.join(output_path, isub, 'temp')
 	final_dir = os.path.join(output_path, isub)
