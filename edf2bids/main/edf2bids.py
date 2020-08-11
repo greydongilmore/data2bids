@@ -417,7 +417,8 @@ class edf2bids(QtCore.QRunnable):
 								else:
 									self.bids_settings['json_metadata']['EpochLength'] = 0
 							
-							bids_helper.write_scans(data_fname.split(isub+os.path.sep)[-1], file_data[0][irun], self.offset_date)
+							scan_fname=data_fname.split(isub+os.path.sep)[-1].replace(os.path.sep,'/')
+							bids_helper.write_scans(scan_fname, file_data[0][irun], self.offset_date)
 							
 							bids_helper.write_channels(file_data[0][irun])
 							bids_helper.write_sidecar(file_data[0][irun])
