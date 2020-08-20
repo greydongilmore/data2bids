@@ -132,13 +132,6 @@ def sec2time(sec, n_msec=3):
 		
 	return ('%d days, ' + pattern) % (d, h, m, s)
 
-class bidsHelper():
-	def __init__(self):
-		self.fname = None
-		self.meas_info = None
-		self.chan_info = None
-		self.calibrate = None
-		
 ##############################################################################
 #                              EDF READER                                    #
 ##############################################################################
@@ -399,6 +392,64 @@ class EDFReader():
 		
 		return events
 	
+	def annotations(self):
+		"""
+		Constructs an annotations data tsv file about patient specific events from edf file.
+		
+		:param file_info_run: File header information for specific recording.
+		:type file_info_run: dictionary
+		:param annotation_fname: Filename for the annotations tsv file.
+		:type annotation_fname: string
+		:param data_fname: Path to the raw data file for specific recording.
+		:type data_fname: string
+		:param overwrite: If duplicate data is present in the output directory overwrite it.
+		:type overwrite: boolean
+		:param verbose: Print out process steps.
+		:type verbose: boolean
+		
+		"""
+		
+		file_in = EDFReader()
+		self.header = file_in.open(self.fname)
+		
+		tal_indx = [i for i,x in enumerate(self.header['chan_info']['ch_names']) if x.endswith('Annotations')][0]
+		
+		start_time = 0
+		end_time = self.header['meas_info']['n_records']*self.header['meas_info']['record_length']
+		
+		begsample = int(self.header['meas_info']['sampling_frequency']*float(start_time))
+		endsample = int(self.header['meas_info']['sampling_frequency']*float(end_time))
+		
+		n_samps = max(set(list(self.header['chan_info']['n_samps'])), key = list(self.header['chan_info']['n_samps']).count)
+		
+		begblock = int(np.floor((begsample) / n_samps))
+		endblock = int(np.floor((endsample) / n_samps))
+		
+		update_cnt = int((endblock+1)/10)
+		annotations = []
+		for block in range(begblock, endblock):
+			data_temp = self.read_annotation_block(block, tal_indx)
+			if data_temp:
+				annotations.append(data_temp[0])
+			if block == update_cnt and block < (endblock-(int((endblock+1)/20))):
+				print('{}%'.format(int(np.ceil((update_cnt/endblock)*100))))
+				update_cnt += int((endblock+1)/10)
+		
+		events = self._read_annotations_apply_offset([item for sublist in annotations for item in sublist])
+		
+		annotation_data = pd.DataFrame({})
+		if events:
+			fulldate = datetime.datetime.strptime(self.header['meas_info']['meas_date'], '%Y-%m-%d %H:%M:%S')
+			for i, annot in enumerate(events):
+				data_temp = {'onset': annot[0],
+							 'duration': annot[1],
+							 'time_abs': (fulldate + datetime.timedelta(seconds=annot[0]+float(self.header['meas_info']['millisecond']))).strftime('%H:%M:%S.%f'),
+							 'time_rel': sec2time(annot[0], 6),
+							 'event': annot[2]}
+				annotation_data = pd.concat([annotation_data, pd.DataFrame([data_temp])], axis = 0)
+		
+		return annotation_data
+		
 	def chnames_update(self, channel_file, bids_settings, write=False):
 		with open(self.fname, 'r+b') as fid:
 			fid.seek(252)
