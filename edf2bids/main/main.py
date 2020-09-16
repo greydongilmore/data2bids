@@ -748,13 +748,13 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			if text == 'copy10%':
 				self.conversionStatus.appendPlainText('Copying File: ' + text.strip('copy'))
 				self.conversionStatus.moveCursor(QtGui.QTextCursor.End)
-			elif text == '10%':
-				self.conversionStatus.appendPlainText('Extract/Scrub Annotations: ' + text)
-				self.conversionStatus.moveCursor(QtGui.QTextCursor.End)
 			elif 'annot' in text:
 				self.conversionStatus.insertPlainText(' ' + text.strip('annot'))
 			else:
 				self.conversionStatus.insertPlainText(' ' + text)
+		elif text == '...':
+				self.conversionStatus.appendPlainText('Extract/Scrub Annotations: ' + text)
+				self.conversionStatus.moveCursor(QtGui.QTextCursor.End)
 		else:
 			self.conversionStatus.appendPlainText(text)
 	

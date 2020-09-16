@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 Created on Sat Dec 29 13:49:51 2018
@@ -8,16 +9,16 @@ import os
 import numpy as np
 import pandas as pd
 pd.set_option('precision', 6)
-import json
-from collections import OrderedDict
 import datetime
 import shutil
 from PySide2 import QtCore
 import time
-import sys
 import re
+import io
 
-from helpers import EDFReader, bidsHelper, sorted_nicely, partition, determine_groups, fix_sessions, sec2time, deidentify_edf
+
+from edflibpy import EDFreader
+from helpers import EDFReader, bidsHelper, fix_sessions, sec2time, deidentify_edf
 
 class WorkerKilledException(Exception):
 	pass
@@ -103,109 +104,56 @@ class edf2bids(QtCore.QRunnable):
 	def kill(self):
 		self.is_killed = True
 	
-	def write_annotations(self, data, data_fname, deidentify=False):
+	def write_annotations(self, data, data_fname, deidentify=True):
 		self._annotations_data(data, data_fname, deidentify)
 	
-	def _read_annotations_apply_offset(self, triggers):
-		events = []
-		offset = 0.
-		for k, ev in enumerate(triggers):
-			onset = float(ev[0]) + offset
-			duration = float(ev[2]) if ev[2] else 0
-			for description in ev[3].split('\x14')[1:]:
-				if description:
-					events.append([onset, duration, description, ev[4]])
-				elif k==0:
-					# "The startdate/time of a file is specified in the EDF+ header
-					# fields 'startdate of recording' and 'starttime of recording'.
-					# These fields must indicate the absolute second in which the
-					# start of the first data record falls. So, the first TAL in
-					# the first data record always starts with +0.X2020, indicating
-					# that the first data record starts a fraction, X, of a second
-					# after the startdate/time that is specified in the EDF+
-					# header. If X=0, then the .X may be omitted."
-					offset = -onset
-					
-		return events if events else list()
-	
-	def read_annotation_block(self, block, tal_indx):
-		pat = '([+-]\\d+\\.?\\d*)(\x15(\\d+\\.?\\d*))?(\x14.*?)\x14\x00'
-		assert(block>=0)
-		data = []
-		with open(self.fname, 'rb') as fid:
-			assert(fid.tell() == 0)
-			blocksize = np.sum(self.header['chan_info']['n_samps']) * self.header['meas_info']['data_size']
-			fid.seek(np.int64(self.header['meas_info']['data_offset']) + np.int64(block) * np.int64(blocksize))
-			read_idx = 0
-			for i in range(self.header['meas_info']['nchan']):
-				read_idx += np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size'])
-				buf = fid.read(np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']))
-				if i==tal_indx:
-					raw = re.findall(pat, buf.decode('latin-1'))
-					if raw:
-						data.append(list(map(list, [x+(block,) for x in raw])))
-			
-		return data
-	
-	def overwrite_annotations(self, events, identity_idx, tal_indx, strings, action):
-		pat = '([+-]\\d+\\.?\\d*)(\x15(\\d+\\.?\\d*))?(\x14.*?)\x14\x00'
-		indexes = []
+	def overwrite_annotations(self, events, data_fname, identity_idx, tal_indx, strings, action):
+		
 		for ident in identity_idx:
 			block_chk = events[ident][-1]
+			assert(block_chk>=0)
+			
+			with open(data_fname, 'rb') as fid:
+				assert(fid.tell() == 0)
+				fid.seek((block_chk-(self.header['chan_info']['n_samps'][tal_indx]*2)), io.SEEK_SET)
+				cnv_buf=bytearray(self.header['chan_info']['n_samps'][tal_indx]*2)
+				fid.readinto(cnv_buf)
+					
 			if isinstance(strings, dict):
 				replace_idx = [i for i,x in enumerate(strings.keys()) if x.lower() in events[ident][2].lower()]
 			else:
 				replace_idx = [i for i,x in enumerate(strings) if x.lower() in events[ident][2].lower()]
+			
+			new_block=[]
 			for irep in replace_idx:
-				assert(block_chk>=0)
-				new_block=[]
-				with open(self.fname, 'rb') as fid:
+				if action == 'replaceExact':
+					if new_block:
+						new_block = bytearray(re.sub(bytes(strings[irep],'latin-1').lower(),bytes(''.join(np.repeat('X', len(strings[irep]))),'latin-1'),new_block.lower()))
+						events[ident][2] = re.sub(strings[irep].lower(),''.join(np.repeat('X', len(strings[irep]))),events[ident][2].lower())
+					else:
+						new_block = bytearray(re.sub(bytes(strings[irep],'latin-1').lower(),bytes(''.join(np.repeat('X', len(strings[irep]))),'latin-1'),cnv_buf.lower()))
+						events[ident][2] = re.sub(strings[irep].lower(),''.join(np.repeat('X', len(strings[irep]))),events[ident][2].lower())
+					
+					assert(len(new_block)==len(cnv_buf))
+				
+				elif action == 'replaceMatch':
+					replace_string = list(strings.values())[irep]
+					new_block = cnv_buf.replace(bytes(events[ident][2],'latin-1'),bytes(replace_string,'latin-1'))
+					events[ident][2] = replace_string
+					new_block = new_block+bytes('\x00'*(len(cnv_buf)-len(new_block)),'latin-1')
+					
+					assert(len(new_block)==len(cnv_buf))
+					
+			if new_block:
+				with open(data_fname, 'r+b') as fid:
 					assert(fid.tell() == 0)
-					blocksize = np.sum(self.header['chan_info']['n_samps']) * self.header['meas_info']['data_size']
-					fid.seek(np.int64(self.header['meas_info']['data_offset']) + np.int64(block_chk) * np.int64(blocksize))
-					for i in range(self.header['meas_info']['nchan']):
-						buf = fid.read(np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']))
-						if i==tal_indx:
-							if action == 'replace':
-								new_block = buf.lower().replace(bytes(strings[irep],'latin-1').lower(), bytes(''.join(np.repeat('X', len(strings[irep]))),'latin-1'))
-								events[ident][2] = events[ident][2].lower().replace(strings[irep].lower(), ''.join(np.repeat('X', len(strings[irep]))))
-								assert(len(new_block)==len(buf))
-							
-							elif action == 'replaceWhole':
-								_idx = [i for i,x in enumerate(strings.keys()) if x.lower() in events[ident][2].lower()]
-								replace_string = list(strings.values())[_idx[0]]
-								new_block = buf.lower().replace(bytes(events[ident][2],'latin-1').lower(), bytes(replace_string,'latin-1'))
-								events[ident][2] = replace_string
-								new_block = new_block+bytes('\x00'*(len(buf)-len(new_block)),'latin-1')
-								assert(len(new_block)==len(buf))
-							
-							elif action == 'remove':
-								raw = re.findall(pat, buf.decode('latin-1'))[0][0] +'\x14\x14'
-								new_block = bytes(raw + ('\x00'*(len(buf)-len(raw))),'latin-1')
-								indexes.append(ident)
-								assert(len(new_block)==len(buf))
-								
-				if new_block:
-					with open(self.fname, 'r+b') as fid:
-						assert(fid.tell() == 0)
-						blocksize = np.sum(self.header['chan_info']['n_samps']) * self.header['meas_info']['data_size']
-						fid.seek(np.int64(self.header['meas_info']['data_offset']) + np.int64(block_chk) * np.int64(blocksize))
-						read_idx = 0
-						for i in range(self.header['meas_info']['nchan']):
-							read_idx += np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size'])
-							buf = fid.read(np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']))
-							if i==tal_indx:
-								back = fid.seek(-np.int64(self.header['chan_info']['n_samps'][i]*self.header['meas_info']['data_size']), 1)
-								assert(fid.tell()==back)
-								fid.write(new_block)
-		
-		if indexes:
-			for index in sorted(indexes, reverse=True):
-				del events[index]
+					fid.seek((block_chk-(self.header['chan_info']['n_samps'][tal_indx]*2)), io.SEEK_SET)
+					if fid.tell()==(block_chk-(self.header['chan_info']['n_samps'][tal_indx]*2)):
+						fid.write(new_block)
 		
 		return events
 	
-	def _annotations_data(self, file_info_run, data_fname, deidentify):
+	def _annotations_data(self, file_info_run, data_fname, callback, deidentify):
 		"""
 		Constructs an annotations data tsv file about patient specific events from edf file.
 		
@@ -227,74 +175,136 @@ class edf2bids(QtCore.QRunnable):
 		file_in.open(data_fname)
 		self.header = file_in.readHeader()
 		
-		overwrite_strings = [self.header['meas_info']['firstname'], self.header['meas_info']['lastname']]
-		overwrite_strings = [x for x in overwrite_strings if x is not None]
-		overwrite_whole={
+		overwrite_exact = [self.header['meas_info']['firstname'], self.header['meas_info']['lastname']]
+# 		overwrite_exact = [header['meas_info']['firstname'], header['meas_info']['lastname']]
+		overwrite_exact = [x for x in overwrite_exact if x is not None]
+		overwrite_match={
 						'montage': 'Montage Event'
 						}
-		remove_strings = ['XLSPIKE','XLEVENT']
+		remove_strings = []
 	
 		tal_indx = [i for i,x in enumerate(self.header['chan_info']['ch_names']) if x.endswith('Annotations')][0]
+# 		tal_indx = [i for i,x in enumerate(header['chan_info']['ch_names']) if x.endswith('Annotations')][0]
 		
-		start_time = 0
-		end_time = self.header['meas_info']['n_records']*self.header['meas_info']['record_length']
+		callback.emit('...')
 		
-		begsample = int(self.header['meas_info']['sampling_frequency']*float(start_time))
-		endsample = int(self.header['meas_info']['sampling_frequency']*float(end_time))
-		
-		n_samps = max(set(list(self.header['chan_info']['n_samps'])), key = list(self.header['chan_info']['n_samps']).count)
-		
-		begblock = int(np.floor((begsample) / n_samps))
-		endblock = int(np.floor((endsample) / n_samps))
-		
-		update_cnt = int((endblock+1)/10)
-		annotations = []
-		for block in range(begblock, endblock):
-			if self.is_killed:
-				self.running = False
-				raise WorkerKilledException
-			else:
-				data_temp = self.read_annotation_block(block, tal_indx)
-				if data_temp:
-						annotations.append(data_temp[0])
-				if block == update_cnt and block < (endblock-(int((endblock+1)/20))):
-					self.signals.progressEvent.emit('{}%'.format(int(np.ceil((update_cnt/endblock)*100))))
-					update_cnt += int((endblock+1)/10)
-		
-		self.signals.progressEvent.emit('annot100%')
-		events = self._read_annotations_apply_offset([item for sublist in annotations for item in sublist])
+		hdl=EDFreader(data_fname)
+		events=hdl.annotationslist
+		events=[list(x) for x in events]
 		
 		if deidentify:
-			if overwrite_strings:
+			if overwrite_exact:
 				### Replace any identifier strings
-				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_strings) and 'montage' not in x[2].lower()]
+				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_exact) and 'montage' not in x[2].lower()]
 				if identity_idx:
-					events = self.overwrite_annotations(events, identity_idx, tal_indx, overwrite_strings, 'replace')
+					events = self.overwrite_annotations(events, data_fname, identity_idx, tal_indx, overwrite_exact, 'replaceExact')
 			
-			if overwrite_whole:
-				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_whole.keys()) and not any(substring.lower() == x[2].lower() for substring in list(overwrite_whole.values()))]
+			if overwrite_match:
+				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_match.keys()) and not any(substring.lower() == x[2].lower() for substring in list(overwrite_match.values()))]
 				if identity_idx:
-					events = self.overwrite_annotations(events, identity_idx, tal_indx, overwrite_whole, 'replaceWhole')
+					events = self.overwrite_annotations(events, data_fname, identity_idx, tal_indx, overwrite_match, 'replaceMatch')
 		
 			if remove_strings:
 				### Remove unwanted annoations
 				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() == x[2].lower() for substring in remove_strings)]
 				if identity_idx:
-					events = self.overwrite_annotations(events, identity_idx, tal_indx, remove_strings, 'remove')
+					events = self.overwrite_annotations(events, data_fname, identity_idx, tal_indx, remove_strings, 'remove')
 		
 		annotation_data = pd.DataFrame({})
 		if events:
 			fulldate = datetime.datetime.strptime(self.header['meas_info']['meas_date'], '%Y-%m-%d %H:%M:%S')
-			for i, annot in enumerate(events):
-				data_temp = {'onset': annot[0],
-							 'duration': annot[1],
-							 'time_abs': (fulldate + datetime.timedelta(seconds=annot[0]+float(self.header['meas_info']['millisecond']))).strftime('%H:%M:%S.%f'),
-							 'time_rel': sec2time(annot[0], 6),
-							 'event': annot[2]}
+			for iannot in events:
+				data_temp = {'onset': iannot[0]/10000000,
+							 'duration': iannot[1],
+							 'time_abs': (fulldate + datetime.timedelta(seconds=(iannot[0]/10000000)+float(self.header['meas_info']['millisecond']))).strftime('%H:%M:%S.%f'),
+							 'time_rel': sec2time(iannot[0]/10000000, 6),
+							 'event': iannot[2]}
 				annotation_data = pd.concat([annotation_data, pd.DataFrame([data_temp])], axis = 0)
 			
 		annotation_data.to_csv(self.annotation_fname, sep='\t', index=False, na_rep='n/a', line_terminator="", float_format='%.3f')
 	
+# 	def copyLargeFile(self, src: str, dest: str, callback):
+# 		total_size = os.path.getsize(src)
+# 		update_cnt = int(total_size/10)
+# 		try:
+# 			# check for optimisation opportunity
+# 			if "b" in open(src).mode and "b" in open(dest).mode and open(src).readinto:
+# 				return self._copyfileobj_readinto(src, dest, callback)
+# 		except AttributeError:
+# 			# one or both file objects do not support a .mode or .readinto attribute
+# 			pass
+# 	
+# 		length = 1024 * 1024
+# 		
+# 		with open(src, 'rb') as fsrc:
+# 			with open(dest, 'wb') as fdest:
+# 				fsrc_read = fsrc.read
+# 				fdst_write = fdest.write
+# 			
+# 				copied = 0
+# 				while True:
+# 					if self.is_killed:
+# 						self.running = False
+# 						raise WorkerKilledException
+# 					else:
+# 						buf = fsrc_read(length)
+# 						if not buf:
+# 							break
+# 						fdst_write(buf)
+# 						copied += len(buf)
+# 						if update_cnt < copied:
+# 							if update_cnt == int(total_size/10):
+# 								callback.emit('copy{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
+# 							elif copied < (total_size-(int((total_size)/20))):
+# 								callback.emit('{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
+# 							update_cnt += int(total_size/10)
+# 				
+# 				callback.emit('100%')
+# 	
+# 	def _copyfileobj_readinto(self, src: str, dest: str, callback):
+# 		"""readinto()/memoryview() based variant of copyfileobj().
+# 		*fsrc* must support readinto() method and both files must be
+# 		open in binary mode.
+# 		"""
+# 		total_size = os.path.getsize(src)
+# 		update_cnt = int(total_size/10)
+# 		
+# 		with open(src, 'rb') as fsrc:
+# 			with open(dest, 'wb') as fdst:
+# 				fsrc_readinto = fsrc.readinto
+# 				fdst_write = fdst.write
+# 			
+# 				try:
+# 					file_size = os.stat(fsrc.fileno()).st_size
+# 				except OSError:
+# 					file_size = 1024 * 1024
+# 				length = min(file_size, 1024 * 1024)
+# 			
+# 				copied = 0
+# 				with memoryview(bytearray(length)) as mv:
+# 					while True:
+# 						if self.is_killed:
+# 							self.running = False
+# 							raise WorkerKilledException
+# 						else:
+# 							n = fsrc_readinto(mv)
+# 							if not n:
+# 								break
+# 							elif n < length:
+# 								with mv[:n] as smv:
+# 									fdst.write(smv)
+# 							else:
+# 								fdst_write(mv)
+# 							copied += n
+# 							if update_cnt < copied:
+# 								if update_cnt == int(total_size/10):
+# 									callback.emit('copy{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
+# 								elif copied < (total_size-(int((total_size)/20))):
+# 									callback.emit('{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
+# 								update_cnt += int(total_size/10)
+# 					
+# 					callback.emit('100%')
+				
 	def copyLargeFile(self, src, dest, callback, buffer_size=16*1024):
 		total_size = os.path.getsize(src)
 		update_cnt = int(total_size/10)
@@ -348,31 +358,30 @@ class edf2bids(QtCore.QRunnable):
 						fix_sessions(sessions_fix, values['num_sessions'], self.output_path, isub)
 					
 					for ises in range(len(values['session_labels'])):
-						file_data = [self.file_info[isub][ises]]
+						file_data = self.file_info[isub][ises]
 						session_id = values['session_labels'][ises].split('-')[-1]
 						
-						if 'Scalp' in file_data[0][0]['RecordingType']:
+						if 'Scalp' in file_data[0]['RecordingType']:
 							kind = 'eeg'
-						elif 'iEEG' in file_data[0][0]['RecordingType']:
+						elif 'iEEG' in file_data[0]['RecordingType']:
 							kind = 'ieeg'
 						
 						self.conversionStatusText = '\nStarting conversion: session {} of {} for {} at {}'.format(str(ises+1), str(len(values['session_labels'])), isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 						self.signals.progressEvent.emit(self.conversionStatusText)
 						
-						bids_helper = bidsHelper(subject_id=isub, session_id=session_id, kind=kind, output_path=self.output_path, bids_settings=self.bids_settings, make_sub_dir=True)
-# 						bids_helper = bidsHelper(subject_id=isub, session_id=session_id, kind=kind, output_path=output_path, bids_settings=bids_settings, make_sub_dir=True)
+						bids_helper = bidsHelper(subject_id=isub, session_id=session_id, kind='ieeg', output_path=self.output_path, bids_settings=self.bids_settings, make_sub_dir=True)
 						
-						num_runs = len(file_data[0])
+						num_runs = len(file_data)
 						
 						for irun in range(num_runs):
-							if 'Full' in file_data[0][irun]['RecordingLength']:
+							if 'Full' in file_data[irun]['RecordingLength']:
 								task_id = 'full'
-							elif 'Clip' in file_data[0][irun]['RecordingLength']:
+							elif 'Clip' in file_data[irun]['RecordingLength']:
 								task_id = 'clip'
-							elif 'CS' in file_data[0][irun]['RecordingLength']:
+							elif 'CS' in file_data[irun]['RecordingLength']:
 								task_id = 'stim'
 							
-							if 'Ret' in file_data[0][irun]['Retro_Pro']:
+							if 'Ret' in file_data[irun]['Retro_Pro']:
 								task_id = task_id + 'ret'
 								
 							run_num = str(irun+1).zfill(2)
@@ -383,7 +392,7 @@ class edf2bids(QtCore.QRunnable):
 							data_fname = bids_helper.make_bids_filename(suffix = kind + '.edf')
 							
 							if not self.test_conversion:
-								source_name = os.path.join(raw_file_path, file_data[0][irun]['FileName'])
+								source_name = os.path.join(raw_file_path, file_data[irun]['FileName'])
 								self.annotation_fname = bids_helper.make_bids_filename(suffix='annotations.tsv')
 								if not self.annotations_only:
 									if self.deidentify_source:
@@ -396,34 +405,34 @@ class edf2bids(QtCore.QRunnable):
 										temp_name, epochLength = deidentify_edf(data_fname, isub, self.offset_date, False)
 										self.bids_settings['json_metadata']['EpochLength'] = epochLength
 									
-									self.write_annotations(file_data[0][irun], data_fname, deidentify=True)
+									self.write_annotations(file_data[irun], data_fname, self.signals.progressEvent, deidentify=True)
 									
-									if file_data[0][irun]['chan_label']:
+									if file_data[irun]['chan_label']:
 										file_in = EDFReader()
 										file_in.open(data_fname)
-										chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[0][irun]['chan_label'][0]), self.bids_settings, write=True)
-									elif file_data[0][irun]['ses_chan_label']:
+										chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[irun]['chan_label'][0]), self.bids_settings, write=True)
+									elif file_data[irun]['ses_chan_label']:
 										file_in = EDFReader()
 										file_in.open(data_fname)
-										chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[0][irun]['ses_chan_label'][0]), self.bids_settings, write=True)
+										chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[irun]['ses_chan_label'][0]), self.bids_settings, write=True)
 								else:
-									self.write_annotations(file_data[0][irun], source_name, deidentify=False)
+									self.write_annotations(file_data[irun], source_name, self.signals.progressEvent, deidentify=False)
 							
 							else:
 								if self.deidentify_source:
-									source_name = os.path.join(raw_file_path, file_data[0][irun]['FileName'])
+									source_name = os.path.join(raw_file_path, file_data[irun]['FileName'])
 									source_name, epochLength = deidentify_edf(source_name, isub, self.offset_date, True)
 									self.bids_settings['json_metadata']['EpochLength'] = epochLength
 								else:
 									self.bids_settings['json_metadata']['EpochLength'] = 0
 							
 							scan_fname=data_fname.split(isub+os.path.sep)[-1].replace(os.path.sep,'/')
-							bids_helper.write_scans(scan_fname, file_data[0][irun], self.offset_date)
+							bids_helper.write_scans(scan_fname, file_data[irun], self.offset_date)
 							
-							bids_helper.write_channels(file_data[0][irun])
-							bids_helper.write_sidecar(file_data[0][irun])
+							bids_helper.write_channels(file_data[irun])
+							bids_helper.write_sidecar(file_data[irun])
 						
-						bids_helper.write_electrodes(file_data[0][0], coordinates=None)
+						bids_helper.write_electrodes(file_data[0], coordinates=None)
 						
 						code_output_path = os.path.join(self.output_path, 'code', 'edf2bids')
 						code_path = bids_helper.make_bids_folders(path_override=code_output_path, make_dir=True)

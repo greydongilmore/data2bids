@@ -158,6 +158,8 @@ class EDFReader():
 		
 		return self.readHeader()
 	
+# 	fname=r'/media/greydon/Aegis DT/iEEG_study/edf_data/working_dir/input/sub-041/NAYLER~ MARITS_74f82c61-1719-4b93-b0e3-39842719b394.EDF'
+# 	fid=open(fname, 'r+b')
 	def readHeader(self):
 		# the following is copied over from MNE-Python and subsequently modified
 		# to more closely reflect the native EDF standard
@@ -183,7 +185,7 @@ class EDFReader():
 					meas_info['firstname']='sub'
 			else:
 				filen = os.path.basename(self.fname).replace(' ','')
-				if any(substring in filen for substring in {'~','_'}):
+				if any(substring in filen for substring in {'~','_'}) and not filen.startswith('sub'):
 					firstname = filen.replace('_',' ').replace('~',' ').split()[1]
 					meas_info['firstname'] = firstname if firstname.lower() != 'x' else None
 					lastname = filen.replace('_',' ').replace('~',' ').split()[0]
@@ -897,6 +899,14 @@ class bidsHelper():
 		"""
 		include_chans = ['SEEG','EEG']
 		chan_idx = [i for i, x in enumerate(list(file_info_run['ChanInfo'].keys())) if x in include_chans]
+		check_cnt=0
+		for ichan in chan_idx:
+			check_cnt += file_info_run['ChanInfo'][list(file_info_run['ChanInfo'].keys())[ichan]]['ChannelCount']
+			
+		if check_cnt==0:
+			chan_idx = [i for i, x in enumerate(list(file_info_run['ChanInfo'].keys())) if x in {'C'}]
+			
+			
 		mainDF = pd.DataFrame([])
 		for ichan in range(len(chan_idx)):
 			info_temp = file_info_run['ChanInfo'][list(file_info_run['ChanInfo'].keys())[chan_idx[ichan]]]
@@ -977,6 +987,13 @@ class bidsHelper():
 		"""
 		include_chans = ['SEEG','EEG']
 		chan_idx = [i for i, x in enumerate(list(file_info_run['ChanInfo'].keys())) if x in include_chans]
+		check_cnt=0
+		for ichan in chan_idx:
+			check_cnt += file_info_run['ChanInfo'][list(file_info_run['ChanInfo'].keys())[ichan]]['ChannelCount']
+			
+		if check_cnt==0:
+			chan_idx = [i for i, x in enumerate(list(file_info_run['ChanInfo'].keys())) if x in {'C'}]
+			
 		mainDF = pd.DataFrame([])
 		for ichan in chan_idx:
 			info_temp = file_info_run['ChanInfo'][list(file_info_run['ChanInfo'].keys())[ichan]]
@@ -1255,8 +1272,8 @@ def folders_in(path_to_parent):
 
 #%%
 
-# input_path = r'/media/veracrypt6/projects/iEEG/ieeg/int'
-# output_path = r'/media/veracrypt6/projects/iEEG/ieeg/out2'
+# input_path = r'/media/greydon/Aegis DT/iEEG_study/edf_data/working_dir/test/in'
+# output_path = r'/media/greydon/Aegis DT/iEEG_study/edf_data/working_dir/test/out'
 
 # bids_settings = {}
 # bids_settings['json_metadata'] = ieeg_file_metadata
