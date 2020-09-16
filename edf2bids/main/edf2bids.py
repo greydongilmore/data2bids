@@ -17,7 +17,7 @@ import re
 import io
 
 
-from edflibpy import EDFreader
+from ext_lib.edflibpy import EDFreader
 from helpers import EDFReader, bidsHelper, fix_sessions, sec2time, deidentify_edf
 
 class WorkerKilledException(Exception):
@@ -104,8 +104,8 @@ class edf2bids(QtCore.QRunnable):
 	def kill(self):
 		self.is_killed = True
 	
-	def write_annotations(self, data, data_fname, deidentify=True):
-		self._annotations_data(data, data_fname, deidentify)
+	def write_annotations(self, data, data_fname, callback, deidentify=True):
+		self._annotations_data(data, data_fname, callback, deidentify)
 	
 	def overwrite_annotations(self, events, data_fname, identity_idx, tal_indx, strings, action):
 		

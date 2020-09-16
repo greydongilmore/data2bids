@@ -15,7 +15,7 @@ from cx_Freeze import setup, Executable
 
 base = 'Win32GUI' if sys.platform=='win32' else None
 
-includefiles = ['edf2bids.py', 'helpers.py', 'bids2spred.py', 'dicomAnon.py', 'widgets/', 'static/']
+includefiles = ['edf2bids.py', 'helpers.py', 'bids2spred.py', 'dicomAnon.py', 'widgets/', 'static/', 'ext_lib/']
 
 buildOptions = {
 		'build_exe': {
