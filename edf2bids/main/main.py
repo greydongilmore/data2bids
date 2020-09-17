@@ -234,8 +234,26 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			fid.write('\n')
 				
 	def onLoadDirButton(self):
-		dialog = QtWidgets.QFileDialog(self)
-		dialog.setFileMode(QtWidgets.QFileDialog.Directory)
+		bids_file = os.path.join(self.application_path, 'bids_settings.json')
+		with open(bids_file) as settings_file:
+			bids_settings_json_temp = json.load(settings_file)
+		
+		if 'lastInputDirectory' not in bids_settings_json_temp.keys():
+			bids_settings_json_temp['lastInputDirectory']=[]
+			json_output = json.dumps(bids_settings_json_temp, indent=4)
+			with open(bids_file, 'w') as fid:
+				fid.write(json_output)
+				fid.write('\n')
+			
+			with open(bids_file) as settings_file:
+				bids_settings_json_temp = json.load(settings_file)
+		
+		if bids_settings_json_temp['lastInputDirectory']:
+			dialog = QtWidgets.QFileDialog(self, directory=bids_settings_json_temp['lastInputDirectory'])
+		else:
+			dialog = QtWidgets.QFileDialog(self)
+			
+		dialog.setFileMode(QtWidgets.QFileDialog.DirectoryOnly)
 		self.treeViewLoad.clear()
 		self.treeViewOutput.clear()
 		self.sText.setVisible(0)
@@ -251,6 +269,13 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if dialog.exec_():
 			self.updateStatus("Loading input directory...")
 			self.input_path = dialog.selectedFiles()[0]
+			if self.input_path != bids_settings_json_temp['lastInputDirectory']:
+				bids_settings_json_temp['lastInputDirectory']=self.input_path
+				json_output = json.dumps(bids_settings_json_temp, indent=4)
+				with open(bids_file, 'w') as fid:
+					fid.write(json_output)
+					fid.write('\n')
+			
 			self.file_info, self.chan_label_file, self.imaging_data = read_input_dir(self.input_path, self.bids_settings)
 			self.treeViewLoad.setEditTriggers(self.treeViewLoad.NoEditTriggers)
 			self.treeViewLoad.itemDoubleClicked.connect(self.checkEdit)
@@ -341,8 +366,26 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.treeViewLoad.editItem(item, column)
 			
 	def onOutDirButton(self):
+		bids_file = os.path.join(self.application_path, 'bids_settings.json')
+		with open(bids_file) as settings_file:
+			bids_settings_json_temp = json.load(settings_file)
+		
+		if 'lastOutputDirectory' not in bids_settings_json_temp.keys():
+			bids_settings_json_temp['lastOutputDirectory']=[]
+			json_output = json.dumps(bids_settings_json_temp, indent=4)
+			with open(bids_file, 'w') as fid:
+				fid.write(json_output)
+				fid.write('\n')
+			
+			with open(bids_file) as settings_file:
+				bids_settings_json_temp = json.load(settings_file)
+		
+		if bids_settings_json_temp['lastOutputDirectory']:
+			dialog = QtWidgets.QFileDialog(self, directory=bids_settings_json_temp['lastOutputDirectory'])
+		else:
+			dialog = QtWidgets.QFileDialog(self)
+			
 		padding = 8
-		dialog = QtWidgets.QFileDialog(self)
 		dialog.setFileMode(QtWidgets.QFileDialog.Directory)
 		self.treeViewOutput.clear()
 		self.conversionStatus.clear()
@@ -360,6 +403,13 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if dialog.exec_():
 			self.updateStatus("Loading output directory...")
 			self.output_path = dialog.selectedFiles()[0]
+			if self.output_path != bids_settings_json_temp['lastOutputDirectory']:
+				bids_settings_json_temp['lastOutputDirectory']=self.output_path
+				json_output = json.dumps(bids_settings_json_temp, indent=4)
+				with open(bids_file, 'w') as fid:
+					fid.write(json_output)
+					fid.write('\n')
+					
 			root = self.treeViewLoad.invisibleRootItem()
 			parent_count = root.childCount()
 			
@@ -701,6 +751,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		# Set Qthread signals
 		self.worker.signals.progressEvent.connect(self.conversionStatusUpdate)
 		self.worker.signals.finished.connect(self.doneConversion)
+		self.worker.signals.errorEvent.connect(self.errorConversion)
 		
 		# Execute
 		self.threadpool.start(self.worker) 
@@ -790,6 +841,23 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.convertButton.setEnabled(False)
 		self.convertButton.setStyleSheet(self.inactive_color)
 	
+	def errorConversion(self, errorInfo):
+		self.conversionStatus.appendPlainText('\n')
+		self.conversionStatus.appendPlainText('Error occured: {}'.format(errorInfo[1]))
+		self.conversionStatus.appendPlainText('{}'.format(errorInfo[2]))
+		
+		self.updateStatus("Error occured...")
+		
+		self.treeViewOutput.clear()
+		self.treeViewLoad.clear()
+			
+		self.spredButton.setEnabled(False)
+		self.spredButton.setStyleSheet(self.inactive_color)
+		self.cancelButton.setEnabled(False)
+		self.cancelButton.setStyleSheet(self.inactive_color)
+		self.convertButton.setEnabled(False)
+		self.convertButton.setStyleSheet(self.inactive_color)
+		
 	def onSpredButton(self):
 		self.updateStatus('Converting to SPReD format...')
 		QtGui.QGuiApplication.processEvents()

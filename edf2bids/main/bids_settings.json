@@ -90,5 +90,7 @@
     "settings_panel": {
         "Deidentify_source": true,
         "offset_dates": false
-    }
+    },
+    "lastInputDirectory": "B:/projects/eplink/walkthrough_example/working_dir/input",
+    "lastOutputDirectory": "B:/projects/eplink/walkthrough_example/working_dir/output"
 }

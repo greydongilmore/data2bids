@@ -15,12 +15,15 @@ from PySide2 import QtCore
 import time
 import re
 import io
-
+import traceback, sys
 
 from ext_lib.edflibpy import EDFreader
 from helpers import EDFReader, bidsHelper, fix_sessions, sec2time, deidentify_edf
 
 class WorkerKilledException(Exception):
+	pass
+
+class WorkerErrorEvent(Exception):
 	pass
 
 class WorkerSignals(QtCore.QObject):
@@ -44,6 +47,7 @@ class WorkerSignals(QtCore.QObject):
 	'''
 	finished = QtCore.Signal()
 	progressEvent = QtCore.Signal(str)
+	errorEvent = QtCore.Signal(tuple)
 	
 class edf2bids(QtCore.QRunnable):
 	"""
@@ -96,6 +100,7 @@ class edf2bids(QtCore.QRunnable):
 		self.running = False
 		self.userAbort = False
 		self.is_killed = False
+		self.isError=False
 		
 	def stop(self):
 		self.running = False
@@ -462,6 +467,10 @@ class edf2bids(QtCore.QRunnable):
 			
 		except WorkerKilledException:
 			self.running = False
+			self.isError=True
+			
+			exctype, value = sys.exc_info()[:2]
+			self.signals.errorEvent.emit((exctype, value, traceback.format_exc()))
 			pass
 		
 		finally:
