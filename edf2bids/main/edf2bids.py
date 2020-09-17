@@ -305,7 +305,7 @@ class edf2bids(QtCore.QRunnable):
 # 					
 # 					callback.emit('100%')
 				
-	def copyLargeFile(self, src, dest, callback, buffer_size=16*1024):
+	def copyLargeFile(self, src, dest, callback=None, buffer_size=16*1024):
 		total_size = os.path.getsize(src)
 		update_cnt = int(total_size/10)
 		with open(src, 'rb') as fsrc:
@@ -321,15 +321,16 @@ class edf2bids(QtCore.QRunnable):
 							break
 						fdest.write(buf)
 						copied += len(buf)
-						if update_cnt < copied:
+						if update_cnt < copied and not callback is None:
 							if update_cnt == int(total_size/10):
 								callback.emit('copy{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
 							elif copied < (total_size-(int((total_size)/20))):
 								callback.emit('{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
 							update_cnt += int(total_size/10)
-
-				callback.emit('100%')
-	
+				if not callback is None:
+					callback.emit('100%')
+					
+# 	edf2b=edf2bids()
 	@QtCore.Slot()
 	def run(self):
 		"""
@@ -347,6 +348,8 @@ class edf2bids(QtCore.QRunnable):
 			for isub, values in self.new_sessions.items():
 				subject_dir = self.file_info[isub][0][0]['SubDir']
 				raw_file_path = os.path.join(self.input_path, subject_dir)
+# 				subject_dir = file_info[isub][0][0]['SubDir']
+# 				raw_file_path = os.path.join(input_path, subject_dir)
 				
 				if self.is_killed:
 					self.running = False
@@ -361,6 +364,9 @@ class edf2bids(QtCore.QRunnable):
 						file_data = self.file_info[isub][ises]
 						session_id = values['session_labels'][ises].split('-')[-1]
 						
+# 						file_data = file_info[isub][ises]
+# 						session_id = 'V01SE01'
+						
 						if 'Scalp' in file_data[0]['RecordingType']:
 							kind = 'eeg'
 						elif 'iEEG' in file_data[0]['RecordingType']:
@@ -369,7 +375,8 @@ class edf2bids(QtCore.QRunnable):
 						self.conversionStatusText = '\nStarting conversion: session {} of {} for {} at {}'.format(str(ises+1), str(len(values['session_labels'])), isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 						self.signals.progressEvent.emit(self.conversionStatusText)
 						
-						bids_helper = bidsHelper(subject_id=isub, session_id=session_id, kind='ieeg', output_path=self.output_path, bids_settings=self.bids_settings, make_sub_dir=True)
+						bids_helper = bidsHelper(subject_id=isub, session_id=session_id, kind=kind, output_path=self.output_path, bids_settings=self.bids_settings, make_sub_dir=True)
+# 						bids_helper = bidsHelper(subject_id=isub, session_id=session_id, kind=kind, output_path=output_path, bids_settings=bids_settings, make_sub_dir=True)
 						
 						num_runs = len(file_data)
 						
@@ -400,6 +407,7 @@ class edf2bids(QtCore.QRunnable):
 										self.bids_settings['json_metadata']['EpochLength'] = epochLength
 										
 									self.copyLargeFile(source_name, data_fname, self.signals.progressEvent)
+# 									edf2b.copyLargeFile(source_name, data_fname)
 									
 									if not self.deidentify_source:
 										temp_name, epochLength = deidentify_edf(data_fname, isub, self.offset_date, False)

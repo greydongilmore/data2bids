@@ -1272,8 +1272,8 @@ def folders_in(path_to_parent):
 
 #%%
 
-# input_path = r'/media/greydon/Aegis DT/iEEG_study/edf_data/working_dir/test/in'
-# output_path = r'/media/greydon/Aegis DT/iEEG_study/edf_data/working_dir/test/out'
+# input_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/input'
+# output_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/output'
 
 # bids_settings = {}
 # bids_settings['json_metadata'] = ieeg_file_metadata
