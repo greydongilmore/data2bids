@@ -21,6 +21,7 @@ from ext_lib.edflibpy import EDFreader
 from helpers import EDFReader, bidsHelper, fix_sessions, sec2time, deidentify_edf
 
 class WorkerKilledException(Exception):
+	
 	pass
 
 class WorkerErrorEvent(Exception):
@@ -465,17 +466,21 @@ class edf2bids(QtCore.QRunnable):
 					self.conversionStatusText = 'Participant {} already exists in the dataset! \n'.format(isub)
 					self.signals.progressEvent.emit(self.conversionStatusText)
 			
-		except WorkerKilledException:
-			self.running = False
-			self.isError=True
-			
-			exctype, value = sys.exc_info()[:2]
-			self.signals.errorEvent.emit((exctype, value, traceback.format_exc()))
-			pass
+		except:
+			if not self.is_killed:
+				self.running = False
+				self.isError=True
+				
+				exctype, value = sys.exc_info()[:2]
+				self.signals.errorEvent.emit((exctype, value, traceback.format_exc()))
+				pass
+			else:
+				raise WorkerKilledException
 		
 		finally:
 			self.running = False
-			self.signals.finished.emit()
+			if not self.isError:
+				self.signals.finished.emit()
 
 
 
