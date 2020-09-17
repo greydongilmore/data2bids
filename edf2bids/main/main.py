@@ -255,12 +255,16 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.treeViewLoad.setEditTriggers(self.treeViewLoad.NoEditTriggers)
 			self.treeViewLoad.itemDoubleClicked.connect(self.checkEdit)
 			
+			imaging_data=False
 			for isub, values in self.file_info.items():
 				parent = QtWidgets.QTreeWidgetItem(self.treeViewLoad)
 				parent.setText(0, "{}".format(str(isub)))
 				
 				parent.setText(10, 'Yes' if self.chan_label_file[isub] else 'No')
 				parent.setText(11, 'Yes' if self.imaging_data[isub]['imaging_dir'] else 'No')
+				if self.imaging_data[isub]['imaging_dir']:
+					imaging_data=True
+				
 				parent.setTextAlignment(10, QtCore.Qt.AlignCenter)
 				for ises in range(len(values)):
 					for irun in range(len(values[ises])):
@@ -326,6 +330,10 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			font.setBold(True)
 			self.treeViewLoad.header().setFont(font)
 			
+			if not imaging_data:
+				self.imagingButton.setEnabled(False)
+				self.imagingButton.setStyleSheet(self.inactive_color)
+		
 		self.updateStatus("Input directory loaded. Select output directory.")
 	
 	def checkEdit(self, item, column):
@@ -382,14 +390,14 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			
 #			isub = list(new_sessions)[0]
 #			values = new_sessions[isub]
-			if len(self.imaging_data.items()) >0:
-				if not self.imagingButton.isEnabled():
-					self.imagingButton.setEnabled(True)
-					self.imagingButton.setStyleSheet(self.convert_button_color)
-			else:
-				if self.imagingButton.isEnabled():
-					self.imagingButton.setEnabled(False)
-					self.imagingButton.setStyleSheet(self.inactive_color)
+# 			if len(self.imaging_data.items()) >0:
+# 				if not self.imagingButton.isEnabled():
+# 					self.imagingButton.setEnabled(True)
+# 					self.imagingButton.setStyleSheet(self.convert_button_color)
+# 			else:
+# 				if self.imagingButton.isEnabled():
+# 					self.imagingButton.setEnabled(False)
+# 					self.imagingButton.setStyleSheet(self.inactive_color)
 					
 			for isub, values in self.new_sessions.items():
 				if values['newSessions']:

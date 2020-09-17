@@ -63,7 +63,7 @@ class bids2spred(QtCore.QRunnable):
 	def kill(self):
 		self.is_killed = True
 	
-	output_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/output'
+# 	output_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/output'
 	@QtCore.Slot()
 	def run(self):
 		"""
@@ -78,6 +78,7 @@ class bids2spred(QtCore.QRunnable):
 			self.signals.progressEvent.emit(self.conversionStatusText)
 			
 			folders = [x for x in os.listdir(self.output_path) if os.path.isdir(os.path.join(self.output_path, x)) and 'code' not in x]
+# 			folders = [x for x in os.listdir(output_path) if os.path.isdir(os.path.join(output_path, x)) and 'code' not in x]
 			output_folders = ['_'.join([''.join(' '.join(re.split('(\d+)', x.split('-')[-1])).split()[:2])] + ' '.join(re.split('(\d+)', x.split('-')[-1])).split()[2:]) for x in folders]
 			sub_cnt = 0
 			for isub in folders:
@@ -87,6 +88,7 @@ class bids2spred(QtCore.QRunnable):
 					raise WorkerKilledException
 					
 				ses_folders = [x for x in os.listdir(os.path.sep.join([self.output_path, isub])) if os.path.isdir(os.path.sep.join([self.output_path, isub, x]))]
+# 				ses_folders = [x for x in os.listdir(os.path.sep.join([output_path, isub])) if os.path.isdir(os.path.sep.join([output_path, isub, x]))]
 				
 				session_split = [[x for x in i if x.isdigit()] for i in ses_folders]
 				ses_folders_output = ['_'.join([x[0]+x[1],'SE'+x[2]+x[3]]) for x in session_split]
@@ -97,8 +99,14 @@ class bids2spred(QtCore.QRunnable):
 					
 					old_subfold = [x for x in os.listdir(os.path.sep.join([self.output_path, isub, ises])) if os.path.isdir(os.path.sep.join([self.output_path, isub, ises, x]))]
 					old_subfold = [x for x in os.listdir(os.path.sep.join([self.output_path, isub, ises])) if os.path.isdir(os.path.sep.join([self.output_path, isub, ises, x]))]
-					old_edf_name = [x.split('task-')[1].split('_')[0] for x in os.listdir(os.path.sep.join([self.output_path, isub, ises, old_subfold[0]])) if os.path.sep.join([self.output_path, isub, ises, old_subfold[0], x]).endswith('_eeg.json')]
+					old_edf_name = [x.split('task-')[1].split('_')[0] for x in os.listdir(os.path.sep.join([self.output_path, isub, ises, old_subfold[0]])) if x.endswith('.json')]
 					suffix = ''
+					
+# 					old_subfold = [x for x in os.listdir(os.path.sep.join([output_path, isub, ises])) if os.path.isdir(os.path.sep.join([output_path, isub, ises, x]))]
+# 					old_subfold = [x for x in os.listdir(os.path.sep.join([output_path, isub, ises])) if os.path.isdir(os.path.sep.join([output_path, isub, ises, x]))]
+# 					old_edf_name = [x.split('task-')[1].split('_')[0] for x in os.listdir(os.path.sep.join([output_path, isub, ises, old_subfold[0]])) if x.endswith('.json')]
+# 					suffix = ''
+
 					if 'full' in old_edf_name[0]:
 						suffix += '_FULL'
 					elif 'clip' in old_edf_name[0]:
@@ -115,6 +123,9 @@ class bids2spred(QtCore.QRunnable):
 					old_fold = os.path.sep.join([self.output_path, isub, ises, old_subfold[0]])
 					new_fold = os.path.sep.join([self.output_path, 'SPReD', output_folders[sub_cnt], new_subfolder, new_subfolder])
 					
+#                   old_fold = os.path.sep.join([output_path, isub, ises, old_subfold[0]])
+# 					new_fold = os.path.sep.join([output_path, 'SPReD', output_folders[sub_cnt], new_subfolder, new_subfolder])
+
 					if not os.path.exists(new_fold):
 						os.makedirs(new_fold)
 					else:
