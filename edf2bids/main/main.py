@@ -99,6 +99,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.spredButton.setEnabled(False)
 		self.spredButton.setStyleSheet(self.inactive_color)
 		self.userAborted = False
+		self.imagingConversionDone=False
+		self.imagingDataPresent=False
 		
 		self.l1 = QtWidgets.QTreeWidgetItem(["Check items are already present in output directory."])
 		
@@ -280,7 +282,6 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.treeViewLoad.setEditTriggers(self.treeViewLoad.NoEditTriggers)
 			self.treeViewLoad.itemDoubleClicked.connect(self.checkEdit)
 			
-			imaging_data=False
 			for isub, values in self.file_info.items():
 				parent = QtWidgets.QTreeWidgetItem(self.treeViewLoad)
 				parent.setText(0, "{}".format(str(isub)))
@@ -288,7 +289,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 				parent.setText(10, 'Yes' if self.chan_label_file[isub] else 'No')
 				parent.setText(11, 'Yes' if self.imaging_data[isub]['imaging_dir'] else 'No')
 				if self.imaging_data[isub]['imaging_dir']:
-					imaging_data=True
+					self.imagingDataPresent=True
 				
 				parent.setTextAlignment(10, QtCore.Qt.AlignCenter)
 				for ises in range(len(values)):
@@ -355,7 +356,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			font.setBold(True)
 			self.treeViewLoad.header().setFont(font)
 			
-			if not imaging_data:
+			if not self.imagingDataPresent:
 				self.imagingButton.setEnabled(False)
 				self.imagingButton.setStyleSheet(self.inactive_color)
 		
@@ -763,6 +764,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.cancelButton.clicked.connect(self.onCancelButton)
 		self.convertButton.setEnabled(False)
 		self.convertButton.setStyleSheet(self.inactive_color)
+		self.imagingButton.setEnabled(False)
+		self.imagingButton.setStyleSheet(self.inactive_color)
 	
 	def padentry(self, buf, num):
 		"""
@@ -840,6 +843,10 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.cancelButton.setStyleSheet(self.inactive_color)
 		self.convertButton.setEnabled(False)
 		self.convertButton.setStyleSheet(self.inactive_color)
+		
+		if self.imagingDataPresent and not self.imagingConversionDone:
+			self.imagingButton.setEnabled(True)
+			self.imagingButton.setStyleSheet(self.convert_button_color)
 	
 	def errorConversion(self, errorInfo):
 		self.conversionStatus.appendPlainText('\n')
@@ -857,6 +864,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.cancelButton.setStyleSheet(self.inactive_color)
 		self.convertButton.setEnabled(False)
 		self.convertButton.setStyleSheet(self.inactive_color)
+		self.imagingButton.setEnabled(False)
+		self.imagingButton.setStyleSheet(self.inactive_color)
 		
 	def onSpredButton(self):
 		self.updateStatus('Converting to SPReD format...')
@@ -880,6 +889,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.cancelButton.clicked.connect(self.onCancelButton)
 		self.spredButton.setEnabled(False)
 		self.spredButton.setStyleSheet(self.inactive_color)
+		self.imagingButton.setEnabled(False)
+		self.imagingButton.setStyleSheet(self.inactive_color)
 		
 	def doneSPReDConversion(self):
 		if self.userAborted:
@@ -899,6 +910,10 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.cancelButton.setStyleSheet(self.inactive_color)
 		self.convertButton.setEnabled(False)
 		self.convertButton.setStyleSheet(self.inactive_color)
+		
+		if self.imagingDataPresent and not self.imagingConversionDone:
+			self.imagingButton.setEnabled(True)
+			self.imagingButton.setStyleSheet(self.convert_button_color)
 	
 	def onImagingButton(self):
 		self.updateStatus('De-identifying imaging data...')
@@ -936,7 +951,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.conversionStatus.appendPlainText('Completed image de-identification at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 			self.conversionStatus.appendPlainText('Your imaging data has been de-identified!\n')
 			self.updateStatus("Image de-identification complete.")
-			
+		
+		self.imagingConversionDone=True
 		self.imagingButton.setEnabled(False)
 		self.imagingButton.setStyleSheet(self.inactive_color)
 		self.cancelButton.setEnabled(False)

@@ -158,8 +158,6 @@ class EDFReader():
 		
 		return self.readHeader()
 	
-# 	fname=r'/media/greydon/Aegis DT/iEEG_study/edf_data/working_dir/input/sub-041/NAYLER~ MARITS_74f82c61-1719-4b93-b0e3-39842719b394.EDF'
-# 	fid=open(fname, 'r+b')
 	def readHeader(self):
 		# the following is copied over from MNE-Python and subsequently modified
 		# to more closely reflect the native EDF standard
@@ -1281,7 +1279,7 @@ def folders_in(path_to_parent):
 # bids_settings['settings_panel'] = {'Deidentify_source': False,
 # 									 'offset_dates': False}
 # file_info, chan_label_file, imaging_data = read_input_dir(input_path, bids_settings)
-
+# new_sessions = read_output_dir(output_path, file_info, False, bids_settings, participants_fname=None)
 # isub = list(file_info)[0]
 # values = file_info[isub]
 # offset_date = False
@@ -1525,9 +1523,9 @@ def moveAllFilesinDir(old_fold, new_fold):
 			# Move each file to destination Directory
 			shutil.move(filePath, new_fold)
 
-def deidentify_edf(fname, isub, offset_date, rename):
+def deidentify_edf(data_fname, isub, offset_date, rename):
 	file_in = EDFReader()
-	header = file_in.open(fname)
+	header = file_in.open(data_fname)
 	
 	edf_deidentify = {}
 	edf_deidentify['subject_code'] = 'X' if not header['meas_info']['subject_code'] == 'X' else None
@@ -1545,7 +1543,7 @@ def deidentify_edf(fname, isub, offset_date, rename):
 		new_date = (date_offset + days_offset).strftime('%d.%m.%y')
 		days_off = days_offset.days
 	
-	with open(fname, 'r+b') as fid:
+	with open(data_fname, 'r+b') as fid:
 		assert(fid.tell() == 0)
 		fid.seek(8)
 		
@@ -1568,14 +1566,14 @@ def deidentify_edf(fname, isub, offset_date, rename):
 			assert(fid.tell() == 80+80+8+8)
 			
 	if rename:
-		if any(substring in fname.split(os.path.sep)[-1] for substring in {'~','_','-'}):
-			new_name = fname.split(os.path.sep)[-1].replace(' ','').replace('~','_').replace('-','_').split('_')
+		if any(substring in data_fname.split(os.path.sep)[-1] for substring in {'~','_','-'}):
+			new_name = data_fname.split(os.path.sep)[-1].replace(' ','').replace('~','_').replace('-','_').split('_')
 			if len(new_name)>2:
-				new_name = os.path.join(os.path.dirname(fname), '_'.join([isub, ''.join(new_name[2:])]))
-				os.rename(fname, new_name)
+				new_name = os.path.join(os.path.dirname(data_fname), '_'.join([isub, ''.join(new_name[2:])]))
+				os.rename(data_fname, new_name)
 		else:
-			new_name = fname
+			new_name = data_fname
 	else:
-		new_name = fname
+		new_name = data_fname
 	
 	return new_name, days_off

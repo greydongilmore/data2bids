@@ -80,7 +80,7 @@ class edf2bids(QtCore.QRunnable):
 	def __init__(self):	
 		super(edf2bids, self).__init__()
 		
-		self.new_sessions = []
+		self.new_sessions = {}
 		self.file_info = []
 		self.chan_label_file = []
 		self.input_path = []
@@ -92,7 +92,7 @@ class edf2bids(QtCore.QRunnable):
 		self.verbose = []
 		self.deidentify_source = []
 		self.offset_date = []
-		self.bids_settings = []
+		self.bids_settings = {}
 		self.test_conversion = []
 		self.annotations_only = []
 		
@@ -126,19 +126,19 @@ class edf2bids(QtCore.QRunnable):
 				fid.readinto(cnv_buf)
 					
 			if isinstance(strings, dict):
-				replace_idx = [i for i,x in enumerate(strings.keys()) if x.lower() in events[ident][2].lower()]
+				replace_idx = [i for i,x in enumerate(strings.keys()) if re.search(x, events[ident][2], re.IGNORECASE)]
 			else:
-				replace_idx = [i for i,x in enumerate(strings) if x.lower() in events[ident][2].lower()]
+				replace_idx = [i for i,x in enumerate(strings) if re.search(x, events[ident][2], re.IGNORECASE)]
 			
 			new_block=[]
 			for irep in replace_idx:
 				if action == 'replaceExact':
 					if new_block:
-						new_block = bytearray(re.sub(bytes(strings[irep],'latin-1').lower(),bytes(''.join(np.repeat('X', len(strings[irep]))),'latin-1'),new_block.lower()))
-						events[ident][2] = re.sub(strings[irep].lower(),''.join(np.repeat('X', len(strings[irep]))),events[ident][2].lower())
+						new_block = bytearray(re.sub(bytes(strings[irep],'latin-1'),bytes(''.join(np.repeat('X', len(strings[irep]))),'latin-1'),new_block,flags=re.I))
+						events[ident][2] = re.sub(strings[irep],''.join(np.repeat('X', len(strings[irep]))),events[ident][2],flags=re.I)
 					else:
-						new_block = bytearray(re.sub(bytes(strings[irep],'latin-1').lower(),bytes(''.join(np.repeat('X', len(strings[irep]))),'latin-1'),cnv_buf.lower()))
-						events[ident][2] = re.sub(strings[irep].lower(),''.join(np.repeat('X', len(strings[irep]))),events[ident][2].lower())
+						new_block = bytearray(re.sub(bytes(strings[irep],'latin-1'),bytes(''.join(np.repeat('X', len(strings[irep]))),'latin-1'),cnv_buf,flags=re.I))
+						events[ident][2] = re.sub(strings[irep],''.join(np.repeat('X', len(strings[irep]))),events[ident][2],flags=re.I)
 					
 					assert(len(new_block)==len(cnv_buf))
 				
@@ -174,9 +174,7 @@ class edf2bids(QtCore.QRunnable):
 		:param verbose: Print out process steps.
 		:type verbose: boolean
 		
-		"""
-		self.fname=data_fname
-		
+		"""		
 		file_in = EDFReader()
 		file_in.open(data_fname)
 		self.header = file_in.readHeader()
@@ -201,18 +199,18 @@ class edf2bids(QtCore.QRunnable):
 		if deidentify:
 			if overwrite_exact:
 				### Replace any identifier strings
-				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_exact) and 'montage' not in x[2].lower()]
+				identity_idx = [i for i,x in enumerate(events) if any(re.search(substring, x[2], re.IGNORECASE) for substring in overwrite_exact) and not re.search('montage', x[2], re.IGNORECASE)]
 				if identity_idx:
 					events = self.overwrite_annotations(events, data_fname, identity_idx, tal_indx, overwrite_exact, 'replaceExact')
 			
 			if overwrite_match:
-				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() in x[2].lower() for substring in overwrite_match.keys()) and not any(substring.lower() == x[2].lower() for substring in list(overwrite_match.values()))]
+				identity_idx = [i for i,x in enumerate(events) if any(re.search(substring, x[2], re.IGNORECASE) for substring in overwrite_match.keys()) and not any(re.match(substring, x[2], re.IGNORECASE) for substring in list(overwrite_match.values()))]
 				if identity_idx:
 					events = self.overwrite_annotations(events, data_fname, identity_idx, tal_indx, overwrite_match, 'replaceMatch')
 		
 			if remove_strings:
 				### Remove unwanted annoations
-				identity_idx = [i for i,x in enumerate(events) if any(substring.lower() == x[2].lower() for substring in remove_strings)]
+				identity_idx = [i for i,x in enumerate(events) if any(re.search(substring, x[2], re.IGNORECASE) for substring in remove_strings)]
 				if identity_idx:
 					events = self.overwrite_annotations(events, data_fname, identity_idx, tal_indx, remove_strings, 'remove')
 		
@@ -409,6 +407,7 @@ class edf2bids(QtCore.QRunnable):
 								self.annotation_fname = bids_helper.make_bids_filename(suffix='annotations.tsv')
 								if not self.annotations_only:
 									if self.deidentify_source:
+										self.write_annotations(file_data[irun], data_fname, self.signals.progressEvent, deidentify=True)
 										source_name, epochLength = deidentify_edf(source_name, isub, self.offset_date, True)
 										self.bids_settings['json_metadata']['EpochLength'] = epochLength
 										
@@ -416,10 +415,9 @@ class edf2bids(QtCore.QRunnable):
 # 									edf2b.copyLargeFile(source_name, data_fname)
 									
 									if not self.deidentify_source:
+										self.write_annotations(file_data[irun], data_fname, self.signals.progressEvent, deidentify=True)
 										temp_name, epochLength = deidentify_edf(data_fname, isub, self.offset_date, False)
 										self.bids_settings['json_metadata']['EpochLength'] = epochLength
-									
-									self.write_annotations(file_data[irun], data_fname, self.signals.progressEvent, deidentify=True)
 									
 									if file_data[irun]['chan_label']:
 										file_in = EDFReader()
