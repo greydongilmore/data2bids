@@ -24,9 +24,6 @@ class WorkerKilledException(Exception):
 	
 	pass
 
-class WorkerErrorEvent(Exception):
-	pass
-
 class WorkerSignals(QtCore.QObject):
 	'''
 	Defines the signals available from a running worker thread.
@@ -227,88 +224,6 @@ class edf2bids(QtCore.QRunnable):
 			
 		annotation_data.to_csv(self.annotation_fname, sep='\t', index=False, na_rep='n/a', line_terminator="", float_format='%.3f')
 	
-# 	def copyLargeFile(self, src: str, dest: str, callback):
-# 		total_size = os.path.getsize(src)
-# 		update_cnt = int(total_size/10)
-# 		try:
-# 			# check for optimisation opportunity
-# 			if "b" in open(src).mode and "b" in open(dest).mode and open(src).readinto:
-# 				return self._copyfileobj_readinto(src, dest, callback)
-# 		except AttributeError:
-# 			# one or both file objects do not support a .mode or .readinto attribute
-# 			pass
-# 	
-# 		length = 1024 * 1024
-# 		
-# 		with open(src, 'rb') as fsrc:
-# 			with open(dest, 'wb') as fdest:
-# 				fsrc_read = fsrc.read
-# 				fdst_write = fdest.write
-# 			
-# 				copied = 0
-# 				while True:
-# 					if self.is_killed:
-# 						self.running = False
-# 						raise WorkerKilledException
-# 					else:
-# 						buf = fsrc_read(length)
-# 						if not buf:
-# 							break
-# 						fdst_write(buf)
-# 						copied += len(buf)
-# 						if update_cnt < copied:
-# 							if update_cnt == int(total_size/10):
-# 								callback.emit('copy{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
-# 							elif copied < (total_size-(int((total_size)/20))):
-# 								callback.emit('{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
-# 							update_cnt += int(total_size/10)
-# 				
-# 				callback.emit('100%')
-# 	
-# 	def _copyfileobj_readinto(self, src: str, dest: str, callback):
-# 		"""readinto()/memoryview() based variant of copyfileobj().
-# 		*fsrc* must support readinto() method and both files must be
-# 		open in binary mode.
-# 		"""
-# 		total_size = os.path.getsize(src)
-# 		update_cnt = int(total_size/10)
-# 		
-# 		with open(src, 'rb') as fsrc:
-# 			with open(dest, 'wb') as fdst:
-# 				fsrc_readinto = fsrc.readinto
-# 				fdst_write = fdst.write
-# 			
-# 				try:
-# 					file_size = os.stat(fsrc.fileno()).st_size
-# 				except OSError:
-# 					file_size = 1024 * 1024
-# 				length = min(file_size, 1024 * 1024)
-# 			
-# 				copied = 0
-# 				with memoryview(bytearray(length)) as mv:
-# 					while True:
-# 						if self.is_killed:
-# 							self.running = False
-# 							raise WorkerKilledException
-# 						else:
-# 							n = fsrc_readinto(mv)
-# 							if not n:
-# 								break
-# 							elif n < length:
-# 								with mv[:n] as smv:
-# 									fdst.write(smv)
-# 							else:
-# 								fdst_write(mv)
-# 							copied += n
-# 							if update_cnt < copied:
-# 								if update_cnt == int(total_size/10):
-# 									callback.emit('copy{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
-# 								elif copied < (total_size-(int((total_size)/20))):
-# 									callback.emit('{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
-# 								update_cnt += int(total_size/10)
-# 					
-# 					callback.emit('100%')
-				
 	def copyLargeFile(self, src, dest, callback=None, buffer_size=16*1024):
 		total_size = os.path.getsize(src)
 		update_cnt = int(total_size/10)

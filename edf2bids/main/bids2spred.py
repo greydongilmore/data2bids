@@ -123,7 +123,7 @@ class bids2spred(QtCore.QRunnable):
 					old_fold = os.path.sep.join([self.output_path, isub, ises, old_subfold[0]])
 					new_fold = os.path.sep.join([self.output_path, 'SPReD', output_folders[sub_cnt], new_subfolder, new_subfolder])
 					
-#                   old_fold = os.path.sep.join([output_path, isub, ises, old_subfold[0]])
+# 					old_fold = os.path.sep.join([output_path, isub, ises, old_subfold[0]])
 # 					new_fold = os.path.sep.join([output_path, 'SPReD', output_folders[sub_cnt], new_subfolder, new_subfolder])
 
 					if not os.path.exists(new_fold):

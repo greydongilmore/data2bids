@@ -91,6 +91,6 @@
         "Deidentify_source": true,
         "offset_dates": false
     },
-    "lastInputDirectory": "/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/input",
-    "lastOutputDirectory": "/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/output"
+    "lastInputDirectory": "N:/iEEG_study/edf_data/working_dir/input",
+    "lastOutputDirectory": "N:/iEEG_study/edf_data/working_dir/output"
 }
