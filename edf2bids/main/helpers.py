@@ -457,7 +457,7 @@ class EDFReader():
 			ch_names_orig= [fid.read(16).strip().decode() for ch in channels]
 			
 		chan_idx = [i for i, x in enumerate(ch_names_orig) if not any(x.startswith(substring) for substring in list(bids_settings['natus_info']['ChannelInfo'].keys()))]
-		
+			
 		chan_label_new = np.genfromtxt(channel_file, dtype='str')
 		
 		if len(chan_label_new) >1:
@@ -467,9 +467,13 @@ class EDFReader():
 			replace_chan = [str(x) for x in list(range(len(chan_label_new)+1,len(chan_idx)+1))]
 			chan_label_new.extend([''.join(list(item)) for item in list(zip(['C']*len(replace_chan), replace_chan))])
 			assert len(chan_label_new)==len(chan_idx)
+		
 		elif len(chan_label_new)>len(chan_idx):
 			add_chans = (len(chan_label_new)-len(chan_idx))+1
-			chan_idx+=list(range(chan_idx[-1]+1, (chan_idx[-1]+add_chans)))
+			if not chan_idx:
+				chan_idx=list(range(1, add_chans))
+			else:
+				chan_idx+=list(range(chan_idx[-1]+1, (chan_idx[-1]+add_chans)))
 			assert len(chan_label_new)==len(chan_idx)
 	
 		ch_names_new=ch_names_orig
@@ -1127,7 +1131,7 @@ def get_file_info(raw_file_path_sub, bids_settings):
 			files = [os.path.sep.join([ifold, x]) for x in os.listdir(os.path.join(raw_file_path_sub, ifold)) if x.lower().endswith('.edf')]
 			file_list.append(files)
 			
-	chan_label_filename = [x for x in os.listdir(raw_file_path_sub) if 'channel_label' in x]
+	chan_label_filename = [x for x in os.listdir(raw_file_path_sub) if re.search('channel_label', x, re.IGNORECASE)]
 	
 	filesInfo = []
 	for ises in file_list:
@@ -1140,7 +1144,7 @@ def get_file_info(raw_file_path_sub, bids_settings):
 				
 				chan_label_file_ses = []
 				if sub_dir:
-					chan_label_file_ses = [x for x in os.listdir(os.path.dirname(filen)) if 'channel_label' in x]
+					chan_label_file_ses = [x for x in os.listdir(os.path.dirname(filen)) if re.search('channel_label', x, re.IGNORECASE)]
 				
 				if not chan_label_file_ses:
 					if chan_label_filename:
@@ -1313,7 +1317,7 @@ def read_input_dir(input_dir, bids_settings):
 		raw_file_path_sub = os.path.join(input_dir, ifold)
 		file_info = get_file_info(raw_file_path_sub, bids_settings)
 		sub_file_info[subject_id] = file_info
-		chan_label_file = [x for x in os.listdir(raw_file_path_sub) if 'channel_label' in x]
+		chan_label_file = [x for x in os.listdir(raw_file_path_sub) if re.search('channel_label', x, re.IGNORECASE)]
 		imaging_data = [x for x in os.listdir(raw_file_path_sub) if 'imaging' in x]
 		sub_chan_file[subject_id] = chan_label_file
 		imaging_dir[subject_id] = {}
