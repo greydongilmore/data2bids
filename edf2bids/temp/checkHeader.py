@@ -1216,6 +1216,7 @@ class checkEDFheader:
 				'__plus_technician': self.__plus_technician,
 				'__recording': self.__recording,
 				'__recordsize': self.__recordsize,
+				'__reserved': self.__reserved,
 				'__startdate_day': self.__startdate_day,
 				'__startdate_month': self.__startdate_month,
 				'__startdate_year': self.__startdate_year,
@@ -1238,9 +1239,8 @@ json.dump(hdl)=vars(hdl)[dir(hdl)[0]]
 
 with open(filen, 'r+b') as fid:
 	assert(fid.tell() == 0)
-	fid.seek(192)
-	fid.write(bytes("EDF+C", encoding="ascii"))
-		else:
+	fid.seek(192)	
+	fid.write(bytes(str("EDF+D") + ' ' * (44-len("EDF+C")), encoding="ascii"))
 
 header[192 : 192 + 5] = bytes("EDF+C", encoding="ascii")
 
