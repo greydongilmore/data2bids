@@ -460,14 +460,18 @@ class EDFReader():
 		
 		chan_label_new = np.genfromtxt(channel_file, dtype='str')
 		
-		if chan_label_new.shape[1] >1:
-			chan_label_new=[x[1] for x in chan_label_new]
+		if len(chan_label_new) >1:
+			chan_label_new=[x[1] if isinstance(x,np.ndarray) else x.split(',')[1] for x in chan_label_new]
 		
-		if len(chan_label_new)!=len(chan_idx):
+		if len(chan_label_new)<len(chan_idx):
 			replace_chan = [str(x) for x in list(range(len(chan_label_new)+1,len(chan_idx)+1))]
 			chan_label_new.extend([''.join(list(item)) for item in list(zip(['C']*len(replace_chan), replace_chan))])
 			assert len(chan_label_new)==len(chan_idx)
-		
+		elif len(chan_label_new)>len(chan_idx):
+			add_chans = (len(chan_label_new)-len(chan_idx))+1
+			chan_idx+=list(range(chan_idx[-1]+1, (chan_idx[-1]+add_chans)))
+			assert len(chan_label_new)==len(chan_idx)
+	
 		ch_names_new=ch_names_orig
 		for (index, replacement) in zip(chan_idx, chan_label_new):
 			ch_names_new[index] = replacement
