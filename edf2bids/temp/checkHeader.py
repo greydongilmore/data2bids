@@ -1230,17 +1230,21 @@ class checkEDFheader:
 #%%
 import json
 
-filen = r'/media/veracrypt6/projects/iEEG/ieeg/sub-042/Janzen~ Meliss_5c3e769b-60e8-4393-b657-b6c12cd9092f.EDF'
+filen = r'F:/iEEG_study/edf_data/new/sub-042/Janzen~ Meliss_5c3e769b-60e8-4393-b657-b6c12cd9092f.EDF'
 
 hdl=checkEDFheader(filen)
 
 tempdict=hdl.as_dict()
-json.dump(hdl)=vars(hdl)[dir(hdl)[0]]
 
-with open(filen, 'r+b') as fid:
-	assert(fid.tell() == 0)
-	fid.seek(192)	
-	fid.write(bytes(str("EDF+D") + ' ' * (44-len("EDF+C")), encoding="ascii"))
+data_path=r'F:\iEEG_study\edf_data\new\sub-042'
+
+files = [x for x in os.listdir(data_path) if x.lower().endswith('.edf')]
+for ifile in files:
+	with open(os.path.join(data_path,ifile), 'r+b') as fid:
+		assert(fid.tell() == 0)
+		fid.seek(192)
+	# 	print(fid.read(44))
+		fid.write(bytes(str("EDF+D") + ' ' * (44-len("EDF+C")), encoding="ascii"))
 
 header[192 : 192 + 5] = bytes("EDF+C", encoding="ascii")
 
