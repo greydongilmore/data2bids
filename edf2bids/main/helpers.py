@@ -463,7 +463,7 @@ class EDFReader():
 		if len(chan_label_new) >1:
 			chan_label_new=[x[1] if isinstance(x,np.ndarray) else x.split(',')[1] for x in chan_label_new]
 		
-		if len(chan_label_new)<len(chan_idx):
+		if len(chan_label_new)<=len(chan_idx):
 			replace_chan = [str(x) for x in list(range(len(chan_label_new)+1,len(chan_idx)+1))]
 			chan_label_new.extend([''.join(list(item)) for item in list(zip(['C']*len(replace_chan), replace_chan))])
 			assert len(chan_label_new)==len(chan_idx)
