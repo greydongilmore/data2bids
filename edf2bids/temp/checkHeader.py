@@ -1236,7 +1236,7 @@ hdl=checkEDFheader(filen)
 
 tempdict=hdl.as_dict()
 
-data_path=r'F:\iEEG_study\edf_data\new\sub-042'
+data_path=r'F:\iEEG_study\edf_data\new\sub-043'
 
 files = [x for x in os.listdir(data_path) if x.lower().endswith('.edf')]
 for ifile in files:
