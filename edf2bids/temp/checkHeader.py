@@ -6,13 +6,15 @@ import io
 import os
 import string
 import array
+from datetime import datetime
+from collections import namedtuple
 
 class EDFexception(Exception):
 	def __init__(self, message):
 		self.message = message
 		super().__init__(self.message)
 
-class checkEDFheader:
+class EDFfileCheck:
 	EDFLIB_TIME_DIMENSION     = 10000000
 	EDFLIB_MAXSIGNALS               = 640
 	EDFLIB_MAX_ANNOTATION_LEN       = 512
@@ -25,6 +27,9 @@ class checkEDFheader:
 	EDFLIB_FILETYPE_EDFPLUS             = 1
 	EDFLIB_FILETYPE_BDF                 = 2
 	EDFLIB_FILETYPE_BDFPLUS             = 3
+	
+	
+	
 	EDFLIB_MALLOC_ERROR                = -1
 	EDFLIB_NO_SUCH_FILE_OR_DIRECTORY   = -2
 	EDFLIB_FILE_CONTAINS_FORMAT_ERRORS = -3
@@ -53,7 +58,9 @@ class checkEDFheader:
 	EDFLIB_DATARECORD_SIZE_TOO_BIG    = -26
 
 	EDFLIB_VERSION = 100
-  
+	
+	EDFAnnotationStruct = namedtuple("annotation", ["onset", "duration", "description"])
+	
 	def __init__(self, path: str):
 		self.__path = path
 		self.__status_ok = 0
@@ -77,17 +84,50 @@ class checkEDFheader:
 		self.__reserved = ""
 		self.__starttime_offset = 0
 		self.annotationslist = []
-	
+		
+		self.error_types={
+			-1:'EDFLIB_MALLOC_ERROR',
+			-2:'EDFLIB_NO_SUCH_FILE_OR_DIRECTORY',
+			-3:'EDFLIB_FILE_CONTAINS_FORMAT_ERRORS',
+			-4:'EDFLIB_MAXFILES_REACHED',
+			-5:'EDFLIB_FILE_READ_ERROR',
+			-6:'EDFLIB_FILE_ALREADY_OPENED',
+			-7:'EDFLIB_FILETYPE_ERROR',
+			-8:'EDFLIB_FILE_WRITE_ERROR',
+			-9:'EDFLIB_NUMBER_OF_SIGNALS_INVALID',
+			-10:'EDFLIB_FILE_IS_DISCONTINUOUS',
+			-11:'EDFLIB_INVALID_READ_ANNOTS_VALUE',
+			-12:'EDFLIB_INVALID_ARGUMENT',
+			-13:'EDFLIB_FILE_CLOSED',
+			-20:'EDFLIB_NO_SIGNALS',
+			-21:'EDFLIB_TOO_MANY_SIGNALS',
+			-22:'EDFLIB_NO_SAMPLES_IN_RECORD',
+			-23:'EDFLIB_DIGMIN_IS_DIGMAX',
+			-24:'EDFLIB_DIGMAX_LOWER_THAN_DIGMIN',
+			-25:'EDFLIB_PHYSMIN_IS_PHYSMAX',
+			-26:'EDFLIB_DATARECORD_SIZE_TOO_BIG'
+			}
+		
 		try:
 			self.__file_in = open(path, "rb")
 		except OSError as e:
 			raise EDFexception("Can not open file for reading: %s" %(e.strerror))
-		
+	
+	def checkEDFheader(self):
 		self.__err = self._checkHeader()
 		if self.__err:
 			self.__file_in.close()
-			raise EDFexception(f"File is not valid EDF(+) or BDF(+). {self.__err}")
-			
+			raise EDFexception(f"File is not valid EDF(+) or BDF(+). {self.error_types[self.__err]}")
+	
+	def checkAnnotations(self):
+		self.__annotlist_sz = 0
+		self.__annots_in_file = 0
+		self.__err = self.__get_annotations()
+		if self.__err != 0:
+			self.__file_in.close()
+			raise EDFexception("File is not valid EDF+ or BDF+.")
+
+
 	def _checkHeader(self):
 	
 		str4 = bytearray(4)
@@ -769,6 +809,177 @@ class checkEDFheader:
 			self.__param_sample_pntr.append(0)
 	
 		return 0
+	
+	def __get_annotations(self):
+		i = 0
+		j = 0
+		k = 0
+		p = 0
+		r = 0
+		n = 0
+		max_ = 0
+		onset = 0
+		duration = 0
+		duration_start = 0
+		zero = 0
+		max_tal_ln = 0
+		error = 0
+		annots_in_record = 0
+		annots_in_tal = 0
+		elapsedtime = 0
+		time_tmp = 0
+		samplesize = 2
+
+		data_record_duration = self.__long_data_record_duration
+
+		if self.__bdfplus != 0:
+			samplesize = 3
+
+		cnv_buf = bytearray(self.__recordsize)
+
+		for i in range(0, self.__nr_annot_chns):
+			if max_tal_ln < (self.__param_smp_per_record[self.__annot_ch[i]] * samplesize):
+				max_tal_ln = self.__param_smp_per_record[self.__annot_ch[i]] * samplesize
+
+		if max_tal_ln < 128:
+			max_tal_ln = 128
+
+		scratchpad = bytearray(max_tal_ln + 3)
+		time_in_txt = bytearray(max_tal_ln + 3)
+		duration_in_txt = bytearray(max_tal_ln + 3)
+
+		self.__file_in.seek((self.__edfsignals + 1) * 256, io.SEEK_SET)
+
+		for i in range(0, self.__datarecords):
+			self.__file_in.readinto(cnv_buf)
+
+################ process annotationsignals (if any) ############################
+
+			error = 0
+
+			for r in range(0, self.__nr_annot_chns):
+				n = 0
+				zero = 0
+				onset = 0
+				duration = 0
+				duration_start = 0
+				annots_in_tal = 0
+				annots_in_record = 0
+
+				p = self.__param_buf_offset[self.__annot_ch[r]]
+				max_ = self.__param_smp_per_record[self.__annot_ch[r]] * samplesize
+
+################ process one annotation signal #################################
+
+				if cnv_buf[p + max_ - 1] != 0:
+					return 5
+
+				if r == 0:  # if it's the first annotation signal, then check the timekeeping annotation
+					error = 1
+
+					for k in range(0, max_ - 2):
+						scratchpad[k] = cnv_buf[p + k]
+						if scratchpad[k] == 20:
+							if cnv_buf[p + k + 1] != 20:
+								return 6
+							scratchpad[k] = 0
+							if self.__is_onset_number(scratchpad) != 0:
+								return 36
+							else:
+								time_tmp = self.__get_long_time(scratchpad)
+
+								if i != 0:
+									if self.__discontinuous != 0:
+										if (time_tmp - elapsedtime) < data_record_duration:
+											return 4
+									else:
+										if (time_tmp - elapsedtime) != data_record_duration:
+											return 3
+								else:
+									if (time_tmp >= self.EDFLIB_TIME_DIMENSION) or (time_tmp < 0):
+										return 2
+									else:
+										self.__starttime_offset = int(time_tmp)
+										self.__filestart_dt = datetime(self.__startdate_year, self.__startdate_month, self.__startdate_day, self.__starttime_hour, self.__starttime_minute, self.__starttime_second, self.__starttime_offset // 10)
+
+								elapsedtime = time_tmp
+								error = 0
+								break
+
+
+				for k in range(0, max_):
+					scratchpad[n] = cnv_buf[p + k]
+
+					if scratchpad[n] == 0:
+						if zero == 0:
+							if k != 0:
+								if cnv_buf[p + k - 1] != 20:
+									return 33
+							n = 0
+							onset = 0
+							duration = 0
+							duration_start = 0
+							scratchpad[0] = 0
+							annots_in_tal = 0
+						zero += 1
+						continue
+					if zero > 1:
+						return 34
+					zero = 0
+
+					if (scratchpad[n] == 20) or (scratchpad[n] == 21):
+						if scratchpad[n] == 21:
+							if (duration != 0) or (duration_start != 0) or (onset != 0) or (annots_in_tal != 0):
+								return 35   # it's not allowed to have multiple duration fields in one TAL or to have a duration field which is
+														# not immediately behind the onsetfield
+							duration_start = 1
+
+						if (scratchpad[n] == 20) and (onset != 0) and (duration_start == 0):
+							if (r != 0) or (annots_in_record != 0):
+								if duration != 0:
+									tmp = self.__atof_nonlocalized(duration_in_txt) * self.EDFLIB_TIME_DIMENSION
+									if tmp < -1:
+										tmp = -1
+								else:
+									tmp = -1
+								if n > self.EDFLIB_MAX_ANNOTATION_LEN:
+									n = self.EDFLIB_MAX_ANNOTATION_LEN
+								tmp_str = scratchpad[0 : n].decode("utf-8")
+								self.__annots_in_file += 1
+								self.annotationslist.append(self.EDFAnnotationStruct(onset = (self.__get_long_time(time_in_txt) - self.__starttime_offset), duration = tmp, description = tmp_str))
+							annots_in_tal += 1
+							annots_in_record += 1
+							n = 0
+							continue
+
+						if onset == 0:
+							scratchpad[n] = 0
+							if self.__is_onset_number(scratchpad) != 0:
+								return 36
+							onset = 1
+							n = 0
+							self.__strcpy(time_in_txt, scratchpad)
+							continue
+
+						if duration_start != 0:
+							scratchpad[n] = 0
+							if self.__is_duration_number(scratchpad) != 0:
+								return 37
+
+							for j in range(0, n):
+								if j == 15:
+									break
+								duration_in_txt[j] = scratchpad[j]
+								if (duration_in_txt[j] < 32) or (duration_in_txt[j] > 126):
+									duration_in_txt[j] = 46
+							duration_in_txt[j] = 0
+
+							duration = 1
+							duration_start = 0
+							n = 0
+							continue
+					n += 1
+		return 0
 
 
 	# Converts a number in ASCII to integer
@@ -1230,10 +1441,12 @@ class checkEDFheader:
 #%%
 import json
 
-filen = r'F:/iEEG_study/edf_data/new/sub-042/Janzen~ Meliss_5c3e769b-60e8-4393-b657-b6c12cd9092f.EDF'
+filen = r'/home/greydon/Downloads/edf_data/WEST~ SCOTT_f4f79c81-d899-49dc-ba25-b3c2728fb288_1.edf'
 
-hdl=checkEDFheader(filen)
 
+hdl=EDFfileCheck(filen)
+header=hdl.checkEDFheader()
+header=hdl.checkAnnotations()
 tempdict=hdl.as_dict()
 
 data_path=r'F:\iEEG_study\edf_data\new\sub-043'
@@ -1248,3 +1461,17 @@ for ifile in files:
 
 header[192 : 192 + 5] = bytes("EDF+C", encoding="ascii")
 
+def edfC2D(file):
+	with open(file, 'r+b') as fid:
+		assert(fid.tell() == 0)
+		fid.seek(192)
+		fid.write(bytes(str("EDF+D") + ' ' * (44-len("EDF+D")), encoding="ascii"))
+
+def edfD2C(file):
+	with open(file, 'r+b') as fid:
+		assert(fid.tell() == 0)
+		fid.seek(192)
+		fid.write(bytes(str("EDF+C") + ' ' * (44-len("EDF+C")), encoding="ascii"))
+		
+edfC2D(filen)
+edfD2C(filen)
