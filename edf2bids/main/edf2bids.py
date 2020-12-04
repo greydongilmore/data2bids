@@ -279,9 +279,20 @@ class edf2bids(QtCore.QRunnable):
 					if sessions_fix:
 						fix_sessions(sessions_fix, values['num_sessions'], self.output_path, isub)
 					
-					for ises in range(len(values['session_labels'])):
+					combine_sessions=set([x for x in values['session_labels'] if values['session_labels'].count(x) > 1])
+					if combine_sessions:
+						update_info=[]
+						for idx, isession in enumerate(np.unique(values['session_labels'])):
+							if isession in combine_sessions:
+								update_info.append([item for items in [self.file_info[isub][i] for i,x in enumerate(values['session_labels']) if x == isession] for item in items])
+							else:
+								update_info.append([item for items in [self.file_info[isub][i] for i,x in enumerate(values['session_labels']) if x == isession] for item in items])
+						
+						self.file_info[isub]=update_info
+					
+					for ises in range(len(np.unique(values['session_labels']))):
 						file_data = self.file_info[isub][ises]
-						session_id = values['session_labels'][ises].split('-')[-1]
+						session_id = np.unique(values['session_labels'])[ises].split('-')[-1]
 						
 # 						file_data = file_info[isub][ises]
 # 						session_id = 'V01SE01'
@@ -291,7 +302,7 @@ class edf2bids(QtCore.QRunnable):
 						elif 'iEEG' in file_data[0]['RecordingType']:
 							kind = 'ieeg'
 						
-						self.conversionStatusText = '\nStarting conversion: session {} of {} for {} at {}'.format(str(ises+1), str(len(values['session_labels'])), isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+						self.conversionStatusText = '\nStarting conversion: session {} of {} for {} at {}'.format(str(ises+1), str(len(np.unique(values['session_labels']))), isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 						self.signals.progressEvent.emit(self.conversionStatusText)
 						
 						bids_helper = bidsHelper(subject_id=isub, session_id=session_id, kind=kind, output_path=self.output_path, bids_settings=self.bids_settings, make_sub_dir=True)
@@ -367,7 +378,7 @@ class edf2bids(QtCore.QRunnable):
 						shutil.copy(os.path.join(self.script_path, 'edf2bids.py'), code_path)
 						shutil.copy(os.path.join(self.script_path, 'helpers.py'), code_path)
 					
-						self.conversionStatusText = 'Finished conversion: session {} of {} for {} at {}'.format(str(ises+1), str(len(values['session_labels'])), isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+						self.conversionStatusText = 'Finished conversion: session {} of {} for {} at {}'.format(str(ises+1), str(len(np.unique(values['session_labels']))), isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 						self.signals.progressEvent.emit(self.conversionStatusText)
 					
 					time.sleep(0.1)

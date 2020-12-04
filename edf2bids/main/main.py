@@ -439,7 +439,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 						
 			self.new_sessions = read_output_dir(self.output_path, self.file_info, self.offsetDate.isChecked(), self.bids_settings, participants_fname=None)
 			
-#			isub = list(new_sessions)[0]
+#			isub = list(new_sessions)[1]
 #			values = new_sessions[isub]
 # 			if len(self.imaging_data.items()) >0:
 # 				if not self.imagingButton.isEnabled():
@@ -454,11 +454,10 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 				if values['newSessions']:
 					parent = QtWidgets.QTreeWidgetItem(self.treeViewOutput)
 					parent.setText(0, "{}".format(str(isub)))
-					all_sessions = np.unique(values['all_sessions'])
-					session_not_done = set(all_sessions).intersection(values['session_labels'])
+					session_not_done = set(values['all_sessions']).intersection(values['session_labels'])
 					self.file_info_final = []
 					ses_not_done_cnt = 0
-					for isession in all_sessions:
+					for isession in values['all_sessions']:
 						if isession in session_not_done:
 							session_index = values['session_index'][ses_not_done_cnt]
 							self.file_info_final.append(self.file_info[isub][session_index])
