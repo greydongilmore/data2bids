@@ -91,6 +91,6 @@
         "Deidentify_source": true,
         "offset_dates": false
     },
-    "lastInputDirectory": "/media/veracrypt6/projects/eplink/other_data/twh eplink data/in",
+    "lastInputDirectory": "D:/ieeg_data/working_dir/input",
     "lastOutputDirectory": "/media/veracrypt6/projects/eplink/other_data/twh eplink data/out"
 }

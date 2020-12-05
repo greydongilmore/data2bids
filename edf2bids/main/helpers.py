@@ -1345,7 +1345,7 @@ def read_input_dir(input_dir, bids_settings):
 		raw_file_path_sub = os.path.join(input_dir, ifold)
 		file_info = get_file_info(raw_file_path_sub, bids_settings)
 		sub_file_info[subject_id] = file_info
-		chan_label_file = [x for x in os.listdir(raw_file_path_sub) if re.search('channel_label', x, re.IGNORECASE)]
+		chan_label_file = [x for x in os.listdir(raw_file_path_sub) if re.search('_labels', x, re.IGNORECASE)]
 		imaging_data = [x for x in os.listdir(raw_file_path_sub) if 'imaging' in x]
 		sub_chan_file[subject_id] = chan_label_file
 		imaging_dir[subject_id] = {}
