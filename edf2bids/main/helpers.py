@@ -18,6 +18,8 @@ import shutil
 import glob
 from collections import OrderedDict
 import sys
+import struct
+
 
 ##############################################################################
 #                                 HELPERS                                    #
@@ -449,7 +451,30 @@ class EDFReader():
 				annotation_data = pd.concat([annotation_data, pd.DataFrame([data_temp])], axis = 0)
 		
 		return annotation_data
+	
+	def get_montage(self, fname):
+	
+		ignore_keys={'IChannelId','IInputId','ISiteId','ITypeId','OChannelId','OTypeId','GroupId'}
 		
+		mtg_file = np.fromfile(fname, dtype='uint8')
+		mtg_file_tmp = "".join([struct.unpack('s', x)[0].decode('ISO-8859-1') for x in mtg_file])
+		mtg_file_tmp = re.findall(r'\(.\(..*?\)\)', mtg_file_tmp)
+		
+		#chan info
+		chans_info = [x.replace('(.','(') for x in mtg_file_tmp if x.startswith('(.(."ChanIndex"')]
+		
+		chan_info=[]
+		for ichan in range(len(chans_info)):
+			chan_info_tmp=[eval(re.findall(r'\(.*?\)',chans_info[ichan])[0].replace('((','('))]+[eval(x) for x in re.findall(r'\(.*?\)',chans_info[ichan])[2:] if not any( y in x for y in ignore_keys)]
+			chan_info.append({key: value for (key, value) in chan_info_tmp})
+			
+		chan_info=pd.DataFrame(chan_info)
+		chan_info=chan_info[chan_info.To_Name != 0].reset_index(drop=True)
+		
+		chan_info['ChanIndex'] = chan_info.index
+		
+		return chan_info.loc[:,['ChanIndex','To_Name']].values
+	
 	def chnames_update(self, channel_file, bids_settings, write=False):
 		with open(self.fname, 'r+b') as fid:
 			fid.seek(252)
@@ -457,8 +482,11 @@ class EDFReader():
 			ch_names_orig= [fid.read(16).strip().decode() for ch in channels]
 			
 		chan_idx = [i for i, x in enumerate(ch_names_orig) if not any(x.startswith(substring) for substring in list(bids_settings['natus_info']['ChannelInfo'].keys()))]
-			
-		chan_label_new = np.genfromtxt(channel_file, dtype='str')
+		
+		if channel_file.endswith('.mtg'):
+			chan_label_new = self.get_montage(channel_file)
+		else:
+			chan_label_new = np.genfromtxt(channel_file, dtype='str')
 		
 		if len(chan_label_new) >1:
 			chan_label_new=[x[1] if isinstance(x,np.ndarray) else x.split(',')[1] for x in chan_label_new]
@@ -475,18 +503,18 @@ class EDFReader():
 			else:
 				chan_idx+=list(range(chan_idx[-1]+1, (chan_idx[-1]+add_chans)))
 			assert len(chan_label_new)==len(chan_idx)
-	
+		
 		ch_names_new=ch_names_orig
 		for (index, replacement) in zip(chan_idx, chan_label_new):
 			ch_names_new[index] = replacement
-			
+		
 		if write:
 			with open(self.fname, 'r+b') as fid:
 				assert(fid.tell() == 0)
 				fid.seek(256)
 				for ch in ch_names_new:
 					fid.write(padtrim(ch,16))
-					
+		
 		return ch_names_new
 		
 	def readBlock(self, block):
@@ -1131,7 +1159,7 @@ def get_file_info(raw_file_path_sub, bids_settings):
 			files = [os.path.sep.join([ifold, x]) for x in os.listdir(os.path.join(raw_file_path_sub, ifold)) if x.lower().endswith('.edf')]
 			file_list.append(files)
 			
-	chan_label_filename = [x for x in os.listdir(raw_file_path_sub) if re.search('channel_label', x, re.IGNORECASE)]
+	chan_label_filename = [x for x in os.listdir(raw_file_path_sub) if re.search('_labels', x, re.IGNORECASE)]
 	
 	filesInfo = []
 	for ises in file_list:
@@ -1144,7 +1172,7 @@ def get_file_info(raw_file_path_sub, bids_settings):
 				
 				chan_label_file_ses = []
 				if sub_dir:
-					chan_label_file_ses = [x for x in os.listdir(os.path.dirname(filen)) if re.search('channel_label', x, re.IGNORECASE)]
+					chan_label_file_ses = [x for x in os.listdir(os.path.dirname(filen)) if re.search('_labels', x, re.IGNORECASE)]
 				
 				if not chan_label_file_ses:
 					if chan_label_filename:
@@ -1156,7 +1184,7 @@ def get_file_info(raw_file_path_sub, bids_settings):
 				else:
 					chan_label_file=file_in.chnames_update(os.path.join(os.path.dirname(filen), chan_label_file_ses[0]), bids_settings, write=False)
 					values = partition(chan_label_file)
-						
+				
 				eeg_chan_idx = [i for i, x in enumerate(values) if x[0] not in list(bids_settings['natus_info']['ChannelInfo'].keys())]
 				group_info = determine_groups(np.array(chan_label_file)[eeg_chan_idx])
 				
