@@ -388,9 +388,6 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 															  self.padentry('Ret/Pro', header_padding), self.padentry('Channel File', 10), self.padentry('Imaging Data', 10),
 															  self.padentry('Channel Labels', 20)]))
 			
-# 			for icol in range(12):
-# 				self.treeViewLoad.header().setSectionResizeMode(icol,self.treeViewLoad.header().ResizeToContents)
-# 				
 			self.treeViewLoad.header().setDefaultAlignment(QtCore.Qt.AlignHCenter)
 			
 			header = self.treeViewLoad.header()
