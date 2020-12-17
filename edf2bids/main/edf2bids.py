@@ -248,7 +248,9 @@ class edf2bids(QtCore.QRunnable):
 							update_cnt += int(total_size/10)
 				if not callback is None:
 					callback.emit('100%')
-					
+	
+# 	isub = list(new_sessions)[0]
+#	values = new_sessions[isub]
 # 	edf2b=edf2bids()
 	@QtCore.Slot()
 	def run(self):
@@ -270,6 +272,8 @@ class edf2bids(QtCore.QRunnable):
 # 				subject_dir = file_info[isub][0][0]['SubDir']
 # 				raw_file_path = os.path.join(input_path, subject_dir)
 				
+				
+				
 				if self.is_killed:
 					self.running = False
 					raise WorkerKilledException
@@ -283,14 +287,11 @@ class edf2bids(QtCore.QRunnable):
 					if combine_sessions:
 						update_info=[]
 						for idx, isession in enumerate(np.unique(values['session_labels'])):
-							if isession in combine_sessions:
-								update_info.append([item for items in [self.file_info[isub][i] for i,x in enumerate(values['session_labels']) if x == isession] for item in items])
-							else:
-								update_info.append([item for items in [self.file_info[isub][i] for i,x in enumerate(values['session_labels']) if x == isession] for item in items])
+							update_info.append([sum(self.file_info[isub],[])[i] for i,x in enumerate(values['session_labels']) if x == isession])
 						
 						self.file_info[isub]=update_info
 					
-					for ises in range(len(np.unique(values['session_labels']))):
+					for ises in range(len(self.file_info[isub])):
 						file_data = self.file_info[isub][ises]
 						session_id = np.unique(values['session_labels'])[ises].split('-')[-1]
 						

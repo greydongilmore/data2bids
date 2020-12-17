@@ -1452,13 +1452,17 @@ def read_output_dir(output_path, file_info, offset_date, bids_settings, particip
 			session_labels = []
 			session_index = list(range(len(values)))
 			for ises in range(len(values)):
-				if '_SE' in values[ises][0]['DisplayName']:
-					visit_num = 'V'+ values[ises][0]['DisplayName'].split('_')[3]
-					session_num = values[ises][0]['DisplayName'].split('_')[4]
-					session_labels.append('ses-' + visit_num + session_num)
-				else:
-					session_labels.append('ses-' + str(ises+1).zfill(3))
-			
+				sess_temp=[]
+				for irun in range(len(values[ises])):
+					if '_SE' in values[ises][irun]['DisplayName']:
+						visit_num = 'V'+ values[ises][irun]['DisplayName'].split('_')[3]
+						session_num = values[ises][irun]['DisplayName'].split('_')[4]
+						sess_temp.append('ses-' + visit_num + session_num)
+					else:
+						sess_temp.append('ses-' + str(ises+1).zfill(3))
+				
+				session_labels.append(sess_temp)
+				
 			all_labels = session_labels
 			
 			if participants_fname is not None:
