@@ -21,7 +21,7 @@ from edf2bids import edf2bids
 from bids2spred import bids2spred
 from dicomAnon import dicomAnon
 
-from helpers import read_input_dir, read_output_dir, bidsHelper
+from helpers import read_input_dir, read_output_dir, bidsHelper, warningBox
 
 class Delegate(QtWidgets.QStyledItemDelegate):
 	def initStyleOption(self, option, index):
@@ -96,6 +96,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.setupUi(self)
 		self.settingsPanel = SettingsDialog()
 		self.bidsSettingsSetup()
+		
+		self.output_path=None
 		
 		self.cancel_button_color = "background-color: rgb(255,0,0);color: black"
 		self.spred_button_color = "background-color: rgb(0, 85, 255);color: black"
@@ -449,39 +451,46 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if dialog.exec_():
 			self.updateStatus("Loading output directory...")
 			self.output_path = dialog.selectedFiles()[0]
+			
+			if len(os.listdir(self.output_path)) != 0:
+				warningBox("Output directory is not empty!")
+				return
+		
 			if self.output_path != bids_settings_json_temp['lastOutputDirectory']:
 				bids_settings_json_temp['lastOutputDirectory']=self.output_path
 				json_output = json.dumps(bids_settings_json_temp, indent=4)
 				with open(bids_file, 'w') as fid:
 					fid.write(json_output)
 					fid.write('\n')
-					
+				
 			root = self.treeViewLoad.invisibleRootItem()
 			parent_count = root.childCount()
 			
 			for i in range(parent_count):
 				sub = root.child(i).text(0)
 				child_count = root.child(i).childCount()
+				
+				self.file_info[sub]=sum(self.file_info[sub],[])
+				
 				ses_cnt = 0
 				for j in range(child_count):
 					item = root.child(i).child(j)
-					for ses_cnt in range(len(self.file_info[sub])):
-						for irun in range(len(self.file_info[sub][ses_cnt])):
-							if self.file_info[sub][ses_cnt][irun]['DisplayName'] == item.text(0):
-								if self.file_info[sub][ses_cnt][irun]['SamplingFrequency'] != int(item.text(4)):
-									self.file_info[sub][ses_cnt][irun]['SamplingFrequency'] = int(item.text(4))
-									self.file_info[sub][ses_cnt][irun]['TotalRecordTime'] = round((((self.file_info[sub][ses_cnt][irun]['NRecords']*(int(item.text(4))*self.file_info[sub][ses_cnt][irun]['RecordLength']))/int(item.text(4)))/60)/60,3)
-								
-								if self.file_info[sub][ses_cnt][irun]['RecordingType'] != self.treeViewLoad.itemWidget(item, 7).currentText():
-									self.file_info[sub][ses_cnt][irun]['RecordingType'] = self.treeViewLoad.itemWidget(item, 7).currentText()
-								
-								if self.file_info[sub][ses_cnt][irun]['RecordingLength'] != self.treeViewLoad.itemWidget(item, 8).currentText():
-									self.file_info[sub][ses_cnt][irun]['RecordingLength'] = self.treeViewLoad.itemWidget(item, 8).currentText()
-							
-								if self.file_info[sub][ses_cnt][irun]['Retro_Pro'] != self.treeViewLoad.itemWidget(item, 9).currentText():
-									self.file_info[sub][ses_cnt][irun]['Retro_Pro'] = self.treeViewLoad.itemWidget(item, 9).currentText()
-								
+					if self.file_info[sub][ses_cnt]['DisplayName'] == item.text(0):
+						if self.file_info[sub][ses_cnt]['SamplingFrequency'] != int(item.text(4)):
+							self.file_info[sub][ses_cnt]['SamplingFrequency'] = int(item.text(4))
+							self.file_info[sub][ses_cnt]['TotalRecordTime'] = round((((self.file_info[sub][ses_cnt]['NRecords']*(int(item.text(4))*self.file_info[sub][ses_cnt]['RecordLength']))/int(item.text(4)))/60)/60,3)
 						
+						if self.file_info[sub][ses_cnt]['RecordingType'] != self.treeViewLoad.itemWidget(item, 7).currentText():
+							self.file_info[sub][ses_cnt]['RecordingType'] = self.treeViewLoad.itemWidget(item, 7).currentText()
+						
+						if self.file_info[sub][ses_cnt]['RecordingLength'] != self.treeViewLoad.itemWidget(item, 8).currentText():
+							self.file_info[sub][ses_cnt]['RecordingLength'] = self.treeViewLoad.itemWidget(item, 8).currentText()
+					
+						if self.file_info[sub][ses_cnt]['Retro_Pro'] != self.treeViewLoad.itemWidget(item, 9).currentText():
+							self.file_info[sub][ses_cnt]['Retro_Pro'] = self.treeViewLoad.itemWidget(item, 9).currentText()
+				
+					ses_cnt+=1
+					
 			self.new_sessions = read_output_dir(self.output_path, self.file_info, self.offsetDate.isChecked(), self.bids_settings, participants_fname=None)
 			
 #			isub = list(new_sessions)[1]
@@ -506,138 +515,136 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 					self.file_info_final = []
 					ses_not_done_cnt = 0
 					for isession in range(len(values['all_sessions'])):
-						session_not_done = set(values['all_sessions'][isession]).intersection(values['session_labels'][isession])
-						for irun in range(len(values['all_sessions'][isession])):
-							if values['all_sessions'][isession][irun] in session_not_done:
-								self.file_info_final.append(self.file_info[isub][isession])
-								
-								date = self.file_info[isub][isession][irun]['Date']
-								if self.offsetDate.isChecked():
-									date_study = datetime.datetime.strptime(date,"%Y-%m-%d")
-									date = (date_study - datetime.timedelta(5856)).strftime('%Y-%m-%d')
-								
-								time = self.file_info[isub][isession][irun]['Time']
-								date_collected = datetime.datetime.strptime(' '.join([date, time]), '%Y-%m-%d %H:%M:%S')
-								child = QtWidgets.QTreeWidgetItem(parent)
-								child.setFlags(child.flags() | ~QtCore.Qt.ItemIsUserCheckable | ~QtCore.Qt.ItemIsSelectable)
-								
-								child.setText(0, self.padentry(self.file_info[isub][isession][irun]['DisplayName'], padding))
-								child.setCheckState(0, QtCore.Qt.Unchecked)
-								child.setText(1, self.padentry(values['all_sessions'][isession][irun], padding))
-								child.setTextAlignment(1, QtCore.Qt.AlignCenter)
-								child.setText(2, "{}".format(date_collected.date()))
-								child.setTextAlignment(2, QtCore.Qt.AlignCenter)
-								child.setText(3, "{}".format(date_collected.time()))
-								child.setTextAlignment(3, QtCore.Qt.AlignCenter)
-								child.setText(4, str(self.file_info[isub][isession][irun]['SamplingFrequency']))
-								child.setTextAlignment(4, QtCore.Qt.AlignCenter)
-								child.setText(5, "{:.3f}".format(self.file_info[isub][isession][irun]['TotalRecordTime']))
-								child.setTextAlignment(5, QtCore.Qt.AlignCenter)
-								
-								combobox_type_out = QtWidgets.QComboBox()
-								combobox_type_out.addItems(['iEEG','Scalp'])
-								combobox_type_out.setCurrentText(self.file_info[isub][isession][irun]['RecordingType'])
-								layout3 = QtWidgets.QHBoxLayout()
-								layout3.setContentsMargins(4,0,4,0)
-								combobox_type_out.setLayout(layout3)
-								self.treeViewOutput.setItemWidget(child, 6, combobox_type_out)
-								
-								combobox_length_out = QtWidgets.QComboBox()
-								combobox_length_out.addItems(['Full','Clip','CS'])
-								combobox_length_out.setCurrentText(self.file_info[isub][isession][irun]['RecordingLength'])
-								layout4 = QtWidgets.QHBoxLayout()
-								layout4.setContentsMargins(4,0,4,0)
-								combobox_length_out.setLayout(layout4)
-								self.treeViewOutput.setItemWidget(child, 7, combobox_length_out)
-								
-								combobox_retpro_out = QtWidgets.QComboBox()
-								combobox_retpro_out.addItems(['Ret','Pro'])
-								combobox_retpro_out.setCurrentText(self.file_info[isub][isession][irun]['Retro_Pro'])
-								layout5 = QtWidgets.QHBoxLayout()
-								layout5.setContentsMargins(4,0,4,0)
-								combobox_retpro_out.setLayout(layout5)
-								self.treeViewOutput.setItemWidget(child, 8, combobox_retpro_out)
+						if values['all_sessions'][isession] in values['session_labels']:
+							self.file_info_final.append(self.file_info[isub][isession])
 							
-							else:
-								old_isession = [x[0] for x in values['session_changes'] if isession == x[1]][0]
-								
-								# Load output scan file
-								scans_tsv = pd.read_csv(os.path.join(self.output_path, isub, isub + '_scans.tsv'), sep='\t')
-								name_idx = [i for i,z in enumerate(list(scans_tsv['filename'])) if old_isession in z]
-
-								date = scans_tsv.loc[irun, 'acq_time'].split('T')[0]
-								time = scans_tsv.loc[irun, 'acq_time'].split('T')[1]
-								file_n = scans_tsv.loc[irun, 'filename'].split('.edf')[0] + '.json'
-								with open(os.path.join(self.output_path, isub, old_isession, file_n)) as side_file:
-									side_file_temp = json.load(side_file)
-								display_name = scans_tsv.loc[irun, 'filename'].split('.edf')[0]
+							date = self.file_info[isub][isession]['Date']
+							if self.offsetDate.isChecked():
+								date_study = datetime.datetime.strptime(date,"%Y-%m-%d")
+								date = (date_study - datetime.timedelta(5856)).strftime('%Y-%m-%d')
 							
-								retpro_out = 'Pro'
-								length_out = []
-								if 'EPL' in isub:
-									old_sub = '_'.join([''.join(' '.join(re.split('(\d+)', isub.split('-')[-1])).split()[:2])] + ' '.join(re.split('(\d+)', isub.split('-')[-1])).split()[2:])
-									old_ses = '_'.join([' '.join(re.split('(\D+)', isession.split('-')[-1])).split()[0], ''.join(' '.join(re.split('(\D+)', isession.split('-')[-1])).split()[1:3]), ' '.join(re.split('(\D+)', isession.split('-')[-1])).split()[-1]])
-								
-									display_name = old_sub + '_' + old_ses
-								
-									if 'full' in side_file_temp['TaskName'].lower():
-										length_out = 'Full'
-									elif 'clip' in side_file_temp['TaskName'].lower():
-										length_out = 'Clip'
-									elif 'cs' in side_file_temp['TaskName'].lower():
-										length_out = 'CS'
-								
-									if length_out:
-										display_name = display_name + '_' + length_out.upper()
-									
-									if 'ret' in side_file_temp['TaskName'].lower():
-										retpro_out = 'Ret'
-										display_name = display_name + '_' + retpro_out.upper()
+							time = self.file_info[isub][isession]['Time']
+							date_collected = datetime.datetime.strptime(' '.join([date, time]), '%Y-%m-%d %H:%M:%S')
+							child = QtWidgets.QTreeWidgetItem(parent)
+							child.setFlags(child.flags() | ~QtCore.Qt.ItemIsUserCheckable | ~QtCore.Qt.ItemIsSelectable)
+							
+							child.setText(0, self.padentry(self.file_info[isub][isession]['DisplayName'], padding))
+							child.setCheckState(0, QtCore.Qt.Unchecked)
+							child.setText(1, self.padentry(values['all_sessions'][isession], padding))
+							child.setTextAlignment(1, QtCore.Qt.AlignCenter)
+							child.setText(2, "{}".format(date_collected.date()))
+							child.setTextAlignment(2, QtCore.Qt.AlignCenter)
+							child.setText(3, "{}".format(date_collected.time()))
+							child.setTextAlignment(3, QtCore.Qt.AlignCenter)
+							child.setText(4, str(self.file_info[isub][isession]['SamplingFrequency']))
+							child.setTextAlignment(4, QtCore.Qt.AlignCenter)
+							child.setText(5, "{:.3f}".format(self.file_info[isub][isession]['TotalRecordTime']))
+							child.setTextAlignment(5, QtCore.Qt.AlignCenter)
+							
+							combobox_type_out = QtWidgets.QComboBox()
+							combobox_type_out.addItems(['iEEG','Scalp'])
+							combobox_type_out.setCurrentText(self.file_info[isub][isession]['RecordingType'])
+							layout3 = QtWidgets.QHBoxLayout()
+							layout3.setContentsMargins(4,0,4,0)
+							combobox_type_out.setLayout(layout3)
+							self.treeViewOutput.setItemWidget(child, 6, combobox_type_out)
+							
+							combobox_length_out = QtWidgets.QComboBox()
+							combobox_length_out.addItems(['Full','Clip','CS'])
+							combobox_length_out.setCurrentText(self.file_info[isub][isession]['RecordingLength'])
+							layout4 = QtWidgets.QHBoxLayout()
+							layout4.setContentsMargins(4,0,4,0)
+							combobox_length_out.setLayout(layout4)
+							self.treeViewOutput.setItemWidget(child, 7, combobox_length_out)
+							
+							combobox_retpro_out = QtWidgets.QComboBox()
+							combobox_retpro_out.addItems(['Ret','Pro'])
+							combobox_retpro_out.setCurrentText(self.file_info[isub][isession]['Retro_Pro'])
+							layout5 = QtWidgets.QHBoxLayout()
+							layout5.setContentsMargins(4,0,4,0)
+							combobox_retpro_out.setLayout(layout5)
+							self.treeViewOutput.setItemWidget(child, 8, combobox_retpro_out)
+						
+						else:
+							old_isession = [x[0] for x in values['session_changes'] if isession == x[1]][0]
+							
+							# Load output scan file
+							scans_tsv = pd.read_csv(os.path.join(self.output_path, isub, isub + '_scans.tsv'), sep='\t')
+							name_idx = [i for i,z in enumerate(list(scans_tsv['filename'])) if old_isession in z]
 
-								child = QtWidgets.QTreeWidgetItem(parent)
-								child.setFlags(child.flags() | QtCore.Qt.ItemIsUserCheckable)
-								
-								child.setText(0, self.padentry(display_name, padding))
-								child.setCheckState(0, QtCore.Qt.Checked)
-								child.setText(1, self.padentry(isession, padding))
-								child.setText(2, "{}".format(date))
-								child.setTextAlignment(2, QtCore.Qt.AlignCenter)
-								child.setText(3, "{}".format(time))
-								child.setTextAlignment(3, QtCore.Qt.AlignCenter)
-								child.setText(4, str(side_file_temp['SamplingFrequency']))
-								child.setTextAlignment(4, QtCore.Qt.AlignCenter)
-								child.setText(5, "{:.3f}".format(side_file_temp['RecordingDuration']))
-								child.setTextAlignment(5, QtCore.Qt.AlignCenter)
-								
-								combobox_type_out = QtWidgets.QComboBox()
-								combobox_type_out.addItems(['iEEG','Scalp'])
-								
-								if 'SEEGChannelCount' in side_file_temp:
-									combobox_type_out.setCurrentText('iEEG')
-								elif 'EEGChannelCount' in side_file_temp:
-									combobox_type_out.setCurrentText('Scalp')
-								
-								layout3 = QtWidgets.QHBoxLayout()
-								layout3.setContentsMargins(4,0,4,0)
-								combobox_type_out.setLayout(layout3)
-								self.treeViewOutput.setItemWidget(child, 6, combobox_type_out)
-								
-								combobox_length_out = QtWidgets.QComboBox()
-								combobox_length_out.addItems(['Full','Clip','CS'])
+							date = scans_tsv.loc[isession, 'acq_time'].split('T')[0]
+							time = scans_tsv.loc[isession, 'acq_time'].split('T')[1]
+							file_n = scans_tsv.loc[isession, 'filename'].split('.edf')[0] + '.json'
+							with open(os.path.join(self.output_path, isub, old_isession, file_n)) as side_file:
+								side_file_temp = json.load(side_file)
+							display_name = scans_tsv.loc[isession, 'filename'].split('.edf')[0]
+						
+							retpro_out = 'Pro'
+							length_out = []
+							if 'EPL' in isub:
+								old_sub = '_'.join([''.join(' '.join(re.split('(\d+)', isub.split('-')[-1])).split()[:2])] + ' '.join(re.split('(\d+)', isub.split('-')[-1])).split()[2:])
+								old_ses = '_'.join([' '.join(re.split('(\D+)', isession.split('-')[-1])).split()[0], ''.join(' '.join(re.split('(\D+)', isession.split('-')[-1])).split()[1:3]), ' '.join(re.split('(\D+)', isession.split('-')[-1])).split()[-1]])
+							
+								display_name = old_sub + '_' + old_ses
+							
+								if 'full' in side_file_temp['TaskName'].lower():
+									length_out = 'Full'
+								elif 'clip' in side_file_temp['TaskName'].lower():
+									length_out = 'Clip'
+								elif 'cs' in side_file_temp['TaskName'].lower():
+									length_out = 'CS'
+							
 								if length_out:
-									combobox_length_out.setCurrentText(length_out)
-								layout4 = QtWidgets.QHBoxLayout()
-								layout4.setContentsMargins(4,0,4,0)
-								combobox_length_out.setLayout(layout4)
-								self.treeViewOutput.setItemWidget(child, 7, combobox_length_out)
+									display_name = display_name + '_' + length_out.upper()
 								
-								combobox_retpro_out = QtWidgets.QComboBox()
-								combobox_retpro_out.addItems(['Ret','Pro'])
-								combobox_retpro_out.setCurrentText(retpro_out)
-								layout5 = QtWidgets.QHBoxLayout()
-								layout5.setContentsMargins(4,0,4,0)
-								combobox_retpro_out.setLayout(layout5)
-								self.treeViewOutput.setItemWidget(child, 8, combobox_retpro_out)
+								if 'ret' in side_file_temp['TaskName'].lower():
+									retpro_out = 'Ret'
+									display_name = display_name + '_' + retpro_out.upper()
+
+							child = QtWidgets.QTreeWidgetItem(parent)
+							child.setFlags(child.flags() | QtCore.Qt.ItemIsUserCheckable)
+							
+							child.setText(0, self.padentry(display_name, padding))
+							child.setCheckState(0, QtCore.Qt.Checked)
+							child.setText(1, self.padentry(isession, padding))
+							child.setText(2, "{}".format(date))
+							child.setTextAlignment(2, QtCore.Qt.AlignCenter)
+							child.setText(3, "{}".format(time))
+							child.setTextAlignment(3, QtCore.Qt.AlignCenter)
+							child.setText(4, str(side_file_temp['SamplingFrequency']))
+							child.setTextAlignment(4, QtCore.Qt.AlignCenter)
+							child.setText(5, "{:.3f}".format(side_file_temp['RecordingDuration']))
+							child.setTextAlignment(5, QtCore.Qt.AlignCenter)
+							
+							combobox_type_out = QtWidgets.QComboBox()
+							combobox_type_out.addItems(['iEEG','Scalp'])
+							
+							if 'SEEGChannelCount' in side_file_temp:
+								combobox_type_out.setCurrentText('iEEG')
+							elif 'EEGChannelCount' in side_file_temp:
+								combobox_type_out.setCurrentText('Scalp')
+							
+							layout3 = QtWidgets.QHBoxLayout()
+							layout3.setContentsMargins(4,0,4,0)
+							combobox_type_out.setLayout(layout3)
+							self.treeViewOutput.setItemWidget(child, 6, combobox_type_out)
+							
+							combobox_length_out = QtWidgets.QComboBox()
+							combobox_length_out.addItems(['Full','Clip','CS'])
+							if length_out:
+								combobox_length_out.setCurrentText(length_out)
+							layout4 = QtWidgets.QHBoxLayout()
+							layout4.setContentsMargins(4,0,4,0)
+							combobox_length_out.setLayout(layout4)
+							self.treeViewOutput.setItemWidget(child, 7, combobox_length_out)
+							
+							combobox_retpro_out = QtWidgets.QComboBox()
+							combobox_retpro_out.addItems(['Ret','Pro'])
+							combobox_retpro_out.setCurrentText(retpro_out)
+							layout5 = QtWidgets.QHBoxLayout()
+							layout5.setContentsMargins(4,0,4,0)
+							combobox_retpro_out.setLayout(layout5)
+							self.treeViewOutput.setItemWidget(child, 8, combobox_retpro_out)
 						
 						ses_not_done_cnt += 1
 						
@@ -754,6 +761,11 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.treeViewOutput.editItem(item, column)
 			
 	def onConvertButton(self):
+		
+		if self.output_path is None:
+			warningBox("Please choose an output directory!")
+			return
+		
 		if getattr(sys, 'frozen', False):
 			# frozen
 			source_dir = os.path.dirname(sys.executable)
@@ -772,19 +784,14 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			child_count = root.child(i).childCount()
 			ses_cnt = 0
 			
-			self.new_sessions[sub]['session_labels']=sum(self.new_sessions[sub]['session_labels'],[])
-			self.new_sessions[sub]['all_sessions']=sum(self.new_sessions[sub]['all_sessions'],[])
-			self.new_sessions[sub]['num_sessions']=len(np.unique(self.new_sessions[sub]['session_labels']))
-			
 			ses_cnt=0
 			for j in range(child_count):
 				item = root.child(i).child(j)
 				if self.new_sessions[sub]['session_labels'][ses_cnt] != item.text(1):
 					self.new_sessions[sub]['session_labels'][ses_cnt] = item.text(1)
 					self.new_sessions[sub]['all_sessions'][ses_cnt] = item.text(1)
-					print(self.new_sessions[sub]['all_sessions'])
 				ses_cnt+=1
-					
+			
 		### convert script
 		dataset_fname = bidsHelper(output_path=self.output_path).write_dataset(return_fname=True)
 		if not os.path.exists(dataset_fname):
@@ -825,8 +832,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.worker.verbose = False
 		self.worker.deidentify_source = self.deidentifyInputDir.isChecked()
 		self.worker.offset_date = self.offsetDate.isChecked()
-		self.worker.test_conversion = self.testConvert.isChecked()
-		self.worker.annotations_only = self.annotationsOnly.isChecked()
+		self.worker.dry_run = self.dryRun.isChecked()
 		
 		# Set Qthread signals
 		self.worker.signals.progressEvent.connect(self.conversionStatusUpdate)

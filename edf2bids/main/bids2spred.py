@@ -13,8 +13,9 @@ from PySide2 import QtCore
 import time
 import re
 import datetime
-
-from helpers import moveAllFilesinDir
+import numpy as np
+import glob
+import zipfile
 
 class WorkerKilledException(Exception):
 	pass
@@ -100,44 +101,45 @@ class bids2spred(QtCore.QRunnable):
 					old_subfold = [x for x in os.listdir(os.path.sep.join([self.output_path, isub, ises])) if os.path.isdir(os.path.sep.join([self.output_path, isub, ises, x]))]
 					old_subfold = [x for x in os.listdir(os.path.sep.join([self.output_path, isub, ises])) if os.path.isdir(os.path.sep.join([self.output_path, isub, ises, x]))]
 					old_edf_name = [x.split('task-')[1].split('_')[0] for x in os.listdir(os.path.sep.join([self.output_path, isub, ises, old_subfold[0]])) if x.endswith('.json')]
-					suffix = ''
 					
 # 					old_subfold = [x for x in os.listdir(os.path.sep.join([output_path, isub, ises])) if os.path.isdir(os.path.sep.join([output_path, isub, ises, x]))]
 # 					old_subfold = [x for x in os.listdir(os.path.sep.join([output_path, isub, ises])) if os.path.isdir(os.path.sep.join([output_path, isub, ises, x]))]
 # 					old_edf_name = [x.split('task-')[1].split('_')[0] for x in os.listdir(os.path.sep.join([output_path, isub, ises, old_subfold[0]])) if x.endswith('.json')]
-# 					suffix = ''
 
-					if 'full' in old_edf_name[0]:
-						suffix += '_FULL'
-					elif 'clip' in old_edf_name[0]:
-						suffix += '_CLIP'
-					elif 'stim' in old_edf_name[0]:
-						suffix += '_STIM'
+					for itask in np.unique(old_edf_name):
+						suffix = f'_{itask.upper()}'
 						
-					if any(x == old_edf_name[0] for x in {'full', 'clip','stim'}):
-						suffix += '_PRO'
-					elif any(x == old_edf_name[0] for x in {'fullret', 'clipret','stimret'}):
-						suffix += '_RET'
-					
-					new_subfolder = '_'.join([output_folders[sub_cnt], ses_folders_output[ses_cnt]+'_'+ old_subfold[0].upper() + suffix])
-					old_fold = os.path.sep.join([self.output_path, isub, ises, old_subfold[0]])
-					new_fold = os.path.sep.join([self.output_path, 'SPReD', output_folders[sub_cnt], new_subfolder, new_subfolder])
-					
-# 					old_fold = os.path.sep.join([output_path, isub, ises, old_subfold[0]])
-# 					new_fold = os.path.sep.join([output_path, 'SPReD', output_folders[sub_cnt], new_subfolder, new_subfolder])
-
-					if not os.path.exists(new_fold):
-						os.makedirs(new_fold)
-					else:
-						electrodes_output = [x for x in os.listdir(new_fold) if x.endswith('electrodes.tsv')]
-						if electrodes_output:
-							electrodes_input = [x for x in os.listdir(old_fold) if x.endswith('electrodes.tsv')]
-							os.remove(os.path.sep.join(old_fold, electrodes_input))
-							
-					moveAllFilesinDir(old_fold, new_fold)
-					shutil.make_archive(os.path.dirname(new_fold), 'zip', os.path.dirname(new_fold))
-					shutil.rmtree(os.path.dirname(new_fold))
-					
+						if any(x == itask for x in {'full', 'clip','stim'}):
+							suffix += '_PRO'
+						elif any(x == itask for x in {'fullret', 'clipret','stimret'}):
+							suffix += '_RET'
+						
+						new_subfolder = '_'.join([output_folders[sub_cnt], ses_folders_output[ses_cnt]+'_'+ old_subfold[0].upper() + suffix])
+						old_fold = os.path.sep.join([self.output_path, isub, ises, old_subfold[0]])
+						new_fold = os.path.sep.join([self.output_path, 'SPReD', output_folders[sub_cnt], new_subfolder, new_subfolder])
+						
+	# 					old_fold = os.path.sep.join([output_path, isub, ises, old_subfold[0]])
+	# 					new_fold = os.path.sep.join([output_path, 'SPReD', output_folders[sub_cnt], new_subfolder, new_subfolder])
+	
+						if not os.path.exists(new_fold):
+							os.makedirs(new_fold)
+						
+						
+						electrodes_input = [x for x in os.listdir(old_fold) if x.endswith('electrodes.tsv')]
+						if not os.path.exists(os.path.join(new_fold, electrodes_input[0])):
+							shutil.copy2(os.path.join(old_fold, electrodes_input[0]), os.path.join(new_fold, electrodes_input[0]))
+						
+						for filePath in glob.glob(old_fold+f'/*task-{itask}*'):
+							shutil.move(filePath, os.path.join(new_fold, os.path.basename(filePath)))
+						
+# 						shutil.make_archive( (os.path.dirname(new_fold), 'zip', os.path.dirname(new_fold))
+						with zipfile.ZipFile(os.path.dirname(new_fold)+'.zip', 'w', zipfile.ZIP_DEFLATED) as ziph:
+							for root, dirs, files in os.walk(os.path.dirname(new_fold)):
+								for file in files:
+									ziph.write(os.path.join(root, file), os.path.join(os.path.basename(new_fold), file))
+						
+						shutil.rmtree(os.path.dirname(new_fold))
+						
 					if ises == ses_folders[-1]:
 						self.conversionStatusText = ''
 						self.signals.progressEvent.emit(self.conversionStatusText)

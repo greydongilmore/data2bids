@@ -455,7 +455,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="testConvert">
+           <widget class="QCheckBox" name="dryRun">
             <property name="font">
              <font>
               <pointsize>10</pointsize>
@@ -464,21 +464,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Test conversion (no EDF)</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="annotationsOnly">
-            <property name="font">
-             <font>
-              <pointsize>10</pointsize>
-              <weight>50</weight>
-              <bold>false</bold>
-             </font>
-            </property>
-            <property name="text">
-             <string>Extract annotations only</string>
+             <string>Dry run (no EDF)</string>
             </property>
            </widget>
           </item>
@@ -910,6 +896,12 @@ color: black</string>
        </item>
        <item>
         <widget class="QPlainTextEdit" name="conversionStatus">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>200</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>16777215</width>

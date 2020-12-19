@@ -90,8 +90,7 @@ class edf2bids(QtCore.QRunnable):
 		self.deidentify_source = []
 		self.offset_date = []
 		self.bids_settings = {}
-		self.test_conversion = []
-		self.annotations_only = []
+		self.dry_run = []
 		
 		self.signals = WorkerSignals()
 		
@@ -248,8 +247,12 @@ class edf2bids(QtCore.QRunnable):
 							update_cnt += int(total_size/10)
 				if not callback is None:
 					callback.emit('100%')
-	
+
+#%%
 # 	isub = list(new_sessions)[0]
+# 	new_sessions[isub]['session_labels']=sum(new_sessions[isub]['session_labels'],[])
+# 	new_sessions[isub]['all_sessions']=sum(new_sessions[isub]['all_sessions'],[])
+# 	new_sessions[isub]['num_sessions']=len(np.unique(new_sessions[isub]['session_labels']))
 #	values = new_sessions[isub]
 # 	edf2b=edf2bids()
 	@QtCore.Slot()
@@ -266,13 +269,13 @@ class edf2bids(QtCore.QRunnable):
 			self.participant_tsv = pd.read_csv(participants_fname, sep='\t')
 			
 		try:
-			for isub, values in self.new_sessions.items():
-				subject_dir = self.file_info[isub][0][0]['SubDir']
+			for isub in list(self.file_info):
+				subject_dir = self.file_info[isub][0]['SubDir']
 				raw_file_path = os.path.join(self.input_path, subject_dir)
 # 				subject_dir = file_info[isub][0][0]['SubDir']
 # 				raw_file_path = os.path.join(input_path, subject_dir)
 				
-				
+				values = self.new_sessions[isub]
 				
 				if self.is_killed:
 					self.running = False
@@ -283,40 +286,36 @@ class edf2bids(QtCore.QRunnable):
 					if sessions_fix:
 						fix_sessions(sessions_fix, values['num_sessions'], self.output_path, isub)
 					
-					combine_sessions=set([x for x in values['session_labels'] if values['session_labels'].count(x) > 1])
-					if combine_sessions:
-						update_info=[]
-						for idx, isession in enumerate(np.unique(values['session_labels'])):
-							update_info.append([sum(self.file_info[isub],[])[i] for i,x in enumerate(values['session_labels']) if x == isession])
+					update_info=[]
+					for idx, isession in enumerate(np.unique(values['session_labels'])):
+						update_info.append([self.file_info[isub][i] for i,x in enumerate(values['session_labels']) if x == isession])
 						
-						self.file_info[isub]=update_info
+					self.file_info[isub]=update_info
 					
 					for ises in range(len(self.file_info[isub])):
+						if self.is_killed:
+							self.running = False
+							raise WorkerKilledException
+					
 						file_data = self.file_info[isub][ises]
 						session_id = np.unique(values['session_labels'])[ises].split('-')[-1]
 						
-# 						file_data = file_info[isub][ises]
-# 						session_id = 'V01SE01'
-						
-						if 'Scalp' in file_data[0]['RecordingType']:
-							kind = 'eeg'
-						elif 'iEEG' in file_data[0]['RecordingType']:
-							kind = 'ieeg'
-						
 						self.conversionStatusText = '\nStarting conversion: session {} of {} for {} at {}'.format(str(ises+1), str(len(np.unique(values['session_labels']))), isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 						self.signals.progressEvent.emit(self.conversionStatusText)
-						
-						bids_helper = bidsHelper(subject_id=isub, session_id=session_id, kind=kind, output_path=self.output_path, bids_settings=self.bids_settings, make_sub_dir=True)
-# 						bids_helper = bidsHelper(subject_id=isub, session_id=session_id, kind=kind, output_path=output_path, bids_settings=bids_settings, make_sub_dir=True)
-						
+					
 						num_runs = len(file_data)
 						
 						for irun in range(num_runs):
-							if 'Full' in file_data[irun]['RecordingLength']:
+							if 'Scalp' in file_data[irun]['RecordingType']:
+								kind = 'eeg'
+							elif 'iEEG' in file_data[irun]['RecordingType']:
+								kind = 'ieeg'
+							
+							if 'full' in file_data[irun]['RecordingLength'].lower():
 								task_id = 'full'
-							elif 'Clip' in file_data[irun]['RecordingLength']:
+							elif 'clip' in file_data[irun]['RecordingLength'].lower():
 								task_id = 'clip'
-							elif 'CS' in file_data[irun]['RecordingLength']:
+							elif 'cs' in file_data[irun]['RecordingLength'].lower():
 								task_id = 'stim'
 							
 							if 'Ret' in file_data[irun]['Retro_Pro']:
@@ -324,40 +323,36 @@ class edf2bids(QtCore.QRunnable):
 								
 							run_num = str(irun+1).zfill(2)
 							
-							bids_helper.task_id=task_id
-							bids_helper.run_num=run_num
+							bids_helper=bidsHelper(subject_id=isub, session_id=session_id, kind=kind, task_id=task_id, run_num=run_num, output_path=self.output_path, bids_settings=self.bids_settings, make_sub_dir=True)
+# 							bids_helper = bidsHelper(subject_id=isub, session_id=session_id, kind=kind, task_id=task_id, run_num=run_num, output_path=output_path, bids_settings=bids_settings, make_sub_dir=True)
 							
 							data_fname = bids_helper.make_bids_filename(suffix = kind + '.edf')
-							
-							if not self.test_conversion:
-								source_name = os.path.join(raw_file_path, file_data[irun]['FileName'])
-								self.annotation_fname = bids_helper.make_bids_filename(suffix='annotations.tsv')
-								if not self.annotations_only:
-									if self.deidentify_source:
-										self.write_annotations(file_data[irun], data_fname, self.signals.progressEvent, deidentify=True)
-										source_name, epochLength = deidentify_edf(source_name, isub, self.offset_date, True)
-										self.bids_settings['json_metadata']['EpochLength'] = epochLength
-										
-									self.copyLargeFile(source_name, data_fname, self.signals.progressEvent)
+							source_name = os.path.join(raw_file_path, file_data[irun]['FileName'])
+							self.annotation_fname = bids_helper.make_bids_filename(suffix='annotations.tsv')
+							if not self.dry_run:
+								if self.deidentify_source:
+									self.write_annotations(file_data[irun], data_fname, self.signals.progressEvent, deidentify=True)
+									source_name, epochLength = deidentify_edf(source_name, isub, self.offset_date, True)
+									self.bids_settings['json_metadata']['EpochLength'] = epochLength
+									
+								self.copyLargeFile(source_name, data_fname, self.signals.progressEvent)
 # 									edf2b.copyLargeFile(source_name, data_fname)
-									
-									if not self.deidentify_source:
-										self.write_annotations(file_data[irun], data_fname, self.signals.progressEvent, deidentify=True)
-										temp_name, epochLength = deidentify_edf(data_fname, isub, self.offset_date, False)
-										self.bids_settings['json_metadata']['EpochLength'] = epochLength
-									
-									if file_data[irun]['chan_label']:
-										file_in = EDFReader()
-										file_in.open(data_fname)
-										chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[irun]['chan_label'][0]), self.bids_settings, write=True)
-									elif file_data[irun]['ses_chan_label']:
-										file_in = EDFReader()
-										file_in.open(data_fname)
-										chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[irun]['ses_chan_label'][0]), self.bids_settings, write=True)
-								else:
-									self.write_annotations(file_data[irun], source_name, self.signals.progressEvent, deidentify=False)
-							
+								
+								if not self.deidentify_source:
+									self.write_annotations(file_data[irun], data_fname, self.signals.progressEvent, deidentify=True)
+									temp_name, epochLength = deidentify_edf(data_fname, isub, self.offset_date, False)
+									self.bids_settings['json_metadata']['EpochLength'] = epochLength
+								
+								if file_data[irun]['chan_label']:
+									file_in = EDFReader()
+									file_in.open(data_fname)
+									chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[irun]['chan_label'][0]), self.bids_settings, write=True)
+								elif file_data[irun]['ses_chan_label']:
+									file_in = EDFReader()
+									file_in.open(data_fname)
+									chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[irun]['ses_chan_label'][0]), self.bids_settings, write=True)
 							else:
+								self.write_annotations(file_data[irun], source_name, self.signals.progressEvent, deidentify=False)
 								if self.deidentify_source:
 									source_name = os.path.join(raw_file_path, file_data[irun]['FileName'])
 									source_name, epochLength = deidentify_edf(source_name, isub, self.offset_date, True)

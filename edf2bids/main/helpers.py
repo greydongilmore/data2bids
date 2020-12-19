@@ -19,7 +19,7 @@ import glob
 from collections import OrderedDict
 import sys
 import struct
-
+from PySide2 import QtWidgets
 
 ##############################################################################
 #                                 HELPERS                                    #
@@ -1284,13 +1284,16 @@ def get_file_info(raw_file_path_sub, bids_settings):
 		filesInfo_final = []
 		study_dates = [x[0]['Date'] for x in filesInfo]
 		dates_unique, counts = np.unique(study_dates, return_counts=True)
+		ses_cnt=1
 		for idate in dates_unique:
 			filesInfo_temp = []
 			index_session = [i for i,x in enumerate(study_dates) if x == idate]
 			for ises in index_session:
+				filesInfo[ises][0]['session']=ses_cnt
 				filesInfo_temp.append(filesInfo[ises][0])
 			filesInfo_temp = sorted(filesInfo_temp, key = lambda i: (i['Date'], i['Time']))
 			filesInfo_final.append(filesInfo_temp)
+			ses_cnt+=1
 			
 		filesInfo = filesInfo_final
 		
@@ -1306,7 +1309,9 @@ def folders_in(path_to_parent):
 
 #%%
 
-# input_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/input'
+# input_dir = r'/media/veracrypt6/projects/eplink/other_data/twh eplink data/in'
+# output_path = r'/media/veracrypt6/projects/eplink/other_data/twh eplink data/out'
+# input_dir = r'/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/input'
 # output_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/output'
 
 # bids_settings = {}
@@ -1314,7 +1319,9 @@ def folders_in(path_to_parent):
 # bids_settings['natus_info'] = natus_info
 # bids_settings['settings_panel'] = {'Deidentify_source': False,
 # 									 'offset_dates': False}
-# file_info, chan_label_file, imaging_data = read_input_dir(input_path, bids_settings)
+# file_info, chan_label_file, imaging_data = read_input_dir(input_dir, bids_settings)
+# for isub in list(file_info):
+# 	file_info[isub]=sum(file_info[isub],[])
 # new_sessions = read_output_dir(output_path, file_info, False, bids_settings, participants_fname=None)
 # isub = list(file_info)[0]
 # values = file_info[isub]
@@ -1453,13 +1460,12 @@ def read_output_dir(output_path, file_info, offset_date, bids_settings, particip
 			session_index = list(range(len(values)))
 			for ises in range(len(values)):
 				sess_temp=[]
-				for irun in range(len(values[ises])):
-					if '_SE' in values[ises][irun]['DisplayName']:
-						visit_num = 'V'+ values[ises][irun]['DisplayName'].split('_')[3]
-						session_num = values[ises][irun]['DisplayName'].split('_')[4]
-						sess_temp.append('ses-' + visit_num + session_num)
-					else:
-						sess_temp.append('ses-' + str(ises+1).zfill(3))
+				if '_SE' in values[ises]['DisplayName']:
+					visit_num = 'V'+ values[ises]['DisplayName'].split('_')[3]
+					session_num = values[ises]['DisplayName'].split('_')[4]
+					sess_temp='ses-' + visit_num + session_num
+				else:
+					sess_temp='ses-' + str(values[ises]['session']).zfill(3)
 				
 				session_labels.append(sess_temp)
 				
@@ -1617,3 +1623,21 @@ def deidentify_edf(data_fname, isub, offset_date, rename):
 		new_name = data_fname
 	
 	return new_name, days_off
+
+class warningBox(QtWidgets.QMessageBox):
+	"""Class for wanring message box. 
+
+	This class displays a wanring message box to the user. 
+
+	Parameters
+	----------
+	text: str
+		Text to appear in the error box.
+	"""
+	def __init__(self, text):
+		super(warningBox,self).__init__()
+		self.setIcon(QtWidgets.QMessageBox.Critical)
+		self.setText(text)
+		self.setWindowTitle("Error")
+		self.exec_()
+		

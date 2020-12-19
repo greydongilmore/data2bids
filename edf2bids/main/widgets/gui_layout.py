@@ -251,17 +251,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.offsetDate)
 
-        self.testConvert = QCheckBox(self.groupBox)
-        self.testConvert.setObjectName(u"testConvert")
-        self.testConvert.setFont(font5)
+        self.dryRun = QCheckBox(self.groupBox)
+        self.dryRun.setObjectName(u"dryRun")
+        self.dryRun.setFont(font5)
 
-        self.verticalLayout_4.addWidget(self.testConvert)
-
-        self.annotationsOnly = QCheckBox(self.groupBox)
-        self.annotationsOnly.setObjectName(u"annotationsOnly")
-        self.annotationsOnly.setFont(font5)
-
-        self.verticalLayout_4.addWidget(self.annotationsOnly)
+        self.verticalLayout_4.addWidget(self.dryRun)
 
         self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -392,6 +386,7 @@ class Ui_MainWindow(object):
 
         self.conversionStatus = QPlainTextEdit(self.widget_3)
         self.conversionStatus.setObjectName(u"conversionStatus")
+        self.conversionStatus.setMinimumSize(QSize(0, 200))
         self.conversionStatus.setMaximumSize(QSize(16777215, 300))
         font6 = QFont()
         font6.setFamily(u"Arial")
@@ -448,8 +443,7 @@ class Ui_MainWindow(object):
         self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"Settings Panel", None))
         self.deidentifyInputDir.setText(QCoreApplication.translate("MainWindow", u"De-identify input directory", None))
         self.offsetDate.setText(QCoreApplication.translate("MainWindow", u"Offset dates", None))
-        self.testConvert.setText(QCoreApplication.translate("MainWindow", u"Test conversion (no EDF)", None))
-        self.annotationsOnly.setText(QCoreApplication.translate("MainWindow", u"Extract annotations only", None))
+        self.dryRun.setText(QCoreApplication.translate("MainWindow", u"Dry run (no EDF)", None))
         self.cancelButton.setText(QCoreApplication.translate("MainWindow", u"Cancel", None))
         self.convertButton.setText(QCoreApplication.translate("MainWindow", u"Convert", None))
         self.spredButton.setText(QCoreApplication.translate("MainWindow", u"SPReD", None))
