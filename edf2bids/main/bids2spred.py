@@ -92,7 +92,7 @@ class bids2spred(QtCore.QRunnable):
 # 				ses_folders = [x for x in os.listdir(os.path.sep.join([output_path, isub])) if os.path.isdir(os.path.sep.join([output_path, isub, x]))]
 				
 				session_split = [[x for x in i if x.isdigit()] for i in ses_folders]
-				ses_folders_output = ['_'.join([x[0]+x[1],'SE'+x[2]+x[3]]) for x in session_split]
+				ses_folders_output = ['_'.join([x[0]+x[1],'SE'+x[2]+x[3], 'EEG']) for x in session_split]
 				ses_cnt = 0
 				for ises in ses_folders:
 					self.conversionStatusText = 'Performing SPReD conversion: session {} of {} for {} at {}'.format(str(ses_cnt+1), str(len(ses_folders)), isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -118,8 +118,8 @@ class bids2spred(QtCore.QRunnable):
 						old_fold = os.path.sep.join([self.output_path, isub, ises, old_subfold[0]])
 						new_fold = os.path.sep.join([self.output_path, 'SPReD', output_folders[sub_cnt], new_subfolder, new_subfolder])
 						
-	# 					old_fold = os.path.sep.join([output_path, isub, ises, old_subfold[0]])
-	# 					new_fold = os.path.sep.join([output_path, 'SPReD', output_folders[sub_cnt], new_subfolder, new_subfolder])
+						#old_fold = os.path.sep.join([output_path, isub, ises, old_subfold[0]])
+						#new_fold = os.path.sep.join([output_path, 'SPReD', output_folders[sub_cnt], new_subfolder, new_subfolder])
 	
 						if not os.path.exists(new_fold):
 							os.makedirs(new_fold)
