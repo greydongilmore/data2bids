@@ -247,7 +247,7 @@ class Ui_MainWindow(object):
         self.offsetDate = QCheckBox(self.groupBox)
         self.offsetDate.setObjectName(u"offsetDate")
         self.offsetDate.setFont(font5)
-        self.offsetDate.setChecked(True)
+        self.offsetDate.setChecked(False)
 
         self.verticalLayout_4.addWidget(self.offsetDate)
 

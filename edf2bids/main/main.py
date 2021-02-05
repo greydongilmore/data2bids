@@ -64,13 +64,13 @@ class SettingsDialog(QtWidgets.QDialog, settings_panel.Ui_Dialog):
 					'Manufacturer': 'AdTech',
 					'Type': 'depth',
 					'Material': 'Platinum',
-					'Diameter': 1.3
+					'Diameter': 0.86
 					},
 			'EEGElectrodeInfo': {
 					'Manufacturer': 'AdTech',
 					'Type': 'scalp',
 					'Material': 'Platinum',
-					'Diameter': 1.3
+					'Diameter': 10
 					},
 			'ChannelInfo': {
 					'Patient Event': {'type': 'PatientEvent', 'name': 'PE'},
@@ -112,6 +112,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.spredButton.setEnabled(False)
 		self.spredButton.setStyleSheet(self.inactive_color)
 		self.userAborted = False
+		self.eegConversionDone=False
 		self.imagingConversionDone=False
 		self.imagingDataPresent=False
 		
@@ -150,7 +151,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			bids_settings_json_temp['json_metadata'] = self.settingsPanel.ieeg_file_metadata
 			bids_settings_json_temp['natus_info'] = self.settingsPanel.natus_info
 			bids_settings_json_temp['settings_panel'] = {'Deidentify_source': False,
-														  'offset_dates': True}
+														  'offset_dates': False}
 			
 			json_output = json.dumps(bids_settings_json_temp, indent=4)
 			with open(file, 'w') as fid:
@@ -408,7 +409,11 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 				self.imagingButton.setStyleSheet(self.inactive_color)
 		
 		self.updateStatus("Input directory loaded. Select output directory.")
-	
+		
+		if all(len(value) == 0 for value in self.file_info.values()):
+			self.convertButton.setEnabled(False)
+			self.convertButton.setStyleSheet(self.inactive_color)
+
 	def checkEdit(self, item, column):
 		if column == 4:
 			self.treeViewLoad.editItem(item, column)
@@ -438,7 +443,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.treeViewOutput.clear()
 		self.conversionStatus.clear()
 		self.sText.setVisible(0)
-		if not self.convertButton.isEnabled():
+		
+		if not self.convertButton.isEnabled() and not all(len(value) == 0 for value in self.file_info.values()):
 			self.convertButton.setEnabled(True)
 			self.convertButton.setStyleSheet(self.convert_button_color)
 		if self.cancelButton.isEnabled():
@@ -877,8 +883,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 
 	def onCancelButton(self):
 		self.worker.kill()
-		self.updateStatus("Conversion cancel requested...")
-		self.conversionStatus.appendPlainText('Cancelling data conversion...\n')
+		self.updateStatus("Conversion cancel requested... ")
+		self.conversionStatus.appendPlainText('\nCancelling data conversion... please wait for process to finish\n')
 		self.userAborted = True
 		self.cancelButton.setEnabled(False)
 		self.cancelButton.setStyleSheet(self.inactive_color)
@@ -908,13 +914,16 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 	def doneConversion(self):
 		if self.userAborted:
 			self.conversionStatus.appendPlainText('\nAborted conversion at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-			self.conversionStatus.appendPlainText('File coversion incomplete: Please delete output directory and close program.')
+			self.conversionStatus.appendPlainText('File coversion incomplete: Please delete output directory contents and close program.')
 			self.updateStatus("Conversion aborted.")
 			self.treeViewOutput.clear()
 			self.treeViewLoad.clear()
 			
 			self.spredButton.setEnabled(False)
 			self.spredButton.setStyleSheet(self.inactive_color)
+			
+			self.imagingButton.setEnabled(False)
+			self.imagingButton.setStyleSheet(self.inactive_color)
 		
 		else:
 			self.conversionStatus.appendPlainText('\nCompleted conversion at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
@@ -924,14 +933,16 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.spredButton.setEnabled(True)
 			self.spredButton.setStyleSheet(self.spred_button_color)
 			
+			if self.imagingDataPresent and not self.imagingConversionDone:
+				self.imagingButton.setEnabled(True)
+				self.imagingButton.setStyleSheet(self.convert_button_color)
+		
 		self.cancelButton.setEnabled(False)
 		self.cancelButton.setStyleSheet(self.inactive_color)
 		self.convertButton.setEnabled(False)
 		self.convertButton.setStyleSheet(self.inactive_color)
 		
-		if self.imagingDataPresent and not self.imagingConversionDone:
-			self.imagingButton.setEnabled(True)
-			self.imagingButton.setStyleSheet(self.convert_button_color)
+		
 	
 	def errorConversion(self, errorInfo):
 		self.conversionStatus.appendPlainText('\n')
@@ -980,7 +991,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 	def doneSPReDConversion(self):
 		if self.userAborted:
 			self.conversionStatus.appendPlainText('\nAborted SPReD conversion at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-			self.conversionStatus.appendPlainText('SPReD coversion incomplete: Please delete output directory and close program.')
+			self.conversionStatus.appendPlainText('SPReD coversion incomplete: Please delete output directory contents and close program.')
 			self.updateStatus("SPReD conversion aborted.")
 			self.treeViewOutput.clear()
 			self.treeViewLoad.clear()
@@ -988,7 +999,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.conversionStatus.appendPlainText('Completed SPReD conversion at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 			self.conversionStatus.appendPlainText('Your data has been SPReDified!\n')
 			self.updateStatus("SPReD conversion complete.")
-			
+		
+		self.eegConversionDone=True
 		self.spredButton.setEnabled(False)
 		self.spredButton.setStyleSheet(self.inactive_color)
 		self.cancelButton.setEnabled(False)
@@ -1003,7 +1015,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 	def onImagingButton(self):
 		self.updateStatus('De-identifying imaging data...')
 		QtGui.QGuiApplication.processEvents()
-		
+			
 		# Set Qthread
 		self.worker = dicomAnon()
 		self.worker.input_path = self.input_path
@@ -1024,17 +1036,20 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.cancelButton.clicked.connect(self.onCancelButton)
 		self.imagingButton.setEnabled(False)
 		self.imagingButton.setStyleSheet(self.inactive_color)
+		
+		if self.convertButton.isEnabled():
+			self.convertButton.setEnabled(False)
+			self.convertButton.setStyleSheet(self.inactive_color)
 	
 	def doneImagingConversion(self):
 		if self.userAborted:
 			self.conversionStatus.appendPlainText('\nAborted image de-identification at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-			self.conversionStatus.appendPlainText('Image de-identification incomplete: Please delete output directory and close program.')
+			self.conversionStatus.appendPlainText('Image de-identification incomplete: Please delete output directory contents and close program.')
 			self.updateStatus("Image de-identification aborted.")
 			self.treeViewOutput.clear()
 			self.treeViewLoad.clear()
 		else:
-			self.conversionStatus.appendPlainText('Completed image de-identification at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-			self.conversionStatus.appendPlainText('Your imaging data has been de-identified!\n')
+			self.conversionStatus.appendPlainText('\nCompleted image de-identification at {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 			self.updateStatus("Image de-identification complete.")
 		
 		self.imagingConversionDone=True
@@ -1042,8 +1057,13 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.imagingButton.setStyleSheet(self.inactive_color)
 		self.cancelButton.setEnabled(False)
 		self.cancelButton.setStyleSheet(self.inactive_color)
-		self.convertButton.setEnabled(False)
-		self.convertButton.setStyleSheet(self.inactive_color)
+		
+		if not self.eegConversionDone and not all(len(value) == 0 for value in self.file_info.values()):
+			self.convertButton.setEnabled(True)
+			self.convertButton.setStyleSheet(self.convert_button_color)
+		else:
+			self.convertButton.setEnabled(False)
+			self.convertButton.setStyleSheet(self.inactive_color)
 		
 def main():
 	app = QtWidgets.QApplication(sys.argv)

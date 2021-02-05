@@ -1311,8 +1311,8 @@ def folders_in(path_to_parent):
 
 # input_dir = r'/media/veracrypt6/projects/eplink/other_data/twh eplink data/in'
 # output_path = r'/media/veracrypt6/projects/eplink/other_data/twh eplink data/out'
-# input_dir = r'/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/input'
-# output_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/output'
+# input_dir = r'/media/veracrypt6/projects/iEEG/working_dir/edf2bids/input'
+# output_path = r'/media/veracrypt6/projects/iEEG/working_dir/edf2bids/output'
 
 # bids_settings = {}
 # bids_settings['json_metadata'] = ieeg_file_metadata
