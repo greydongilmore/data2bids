@@ -64,7 +64,7 @@ class bids2spred(QtCore.QRunnable):
 	def kill(self):
 		self.is_killed = True
 	
-# 	output_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/output'
+# 	output_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/output/bids_old'
 	@QtCore.Slot()
 	def run(self):
 		"""
@@ -107,7 +107,13 @@ class bids2spred(QtCore.QRunnable):
 # 					old_edf_name = [x.split('task-')[1].split('_')[0] for x in os.listdir(os.path.sep.join([output_path, isub, ises, old_subfold[0]])) if x.endswith('.json')]
 
 					for itask in np.unique(old_edf_name):
-						suffix = f'_{itask.upper()}'
+						
+						if 'clip' in itask:
+							suffix = '_CLIP'
+						elif 'full' in itask:
+							suffix = '_FULL'
+						elif 'stim' in itask:
+							suffix = '_STIM'
 						
 						if any(x == itask for x in {'full', 'clip','stim'}):
 							suffix += '_PRO'
