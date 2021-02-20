@@ -49,8 +49,8 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
         self.centralwidget.setSizePolicy(sizePolicy)
-        self.formLayout = QFormLayout(self.centralwidget)
-        self.formLayout.setObjectName(u"formLayout")
+        self.gridLayout_2 = QGridLayout(self.centralwidget)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.splitter = QSplitter(self.centralwidget)
         self.splitter.setObjectName(u"splitter")
         sizePolicy.setHeightForWidth(self.splitter.sizePolicy().hasHeightForWidth())
@@ -66,16 +66,15 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.widget_6.sizePolicy().hasHeightForWidth())
         self.widget_6.setSizePolicy(sizePolicy)
         self.widget_6.setMinimumSize(QSize(0, 0))
-        self.horizontalLayout = QHBoxLayout(self.widget_6)
-        self.horizontalLayout.setSpacing(6)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.gridLayout_3 = QGridLayout(self.widget_6)
+        self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.widget_4 = QWidget(self.widget_6)
         self.widget_4.setObjectName(u"widget_4")
         sizePolicy.setHeightForWidth(self.widget_4.sizePolicy().hasHeightForWidth())
         self.widget_4.setSizePolicy(sizePolicy)
         self.widget_4.setMinimumSize(QSize(0, 0))
-        self.verticalLayout_2 = QVBoxLayout(self.widget_4)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.gridLayout_4 = QGridLayout(self.widget_4)
+        self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.loadDirButton = QPushButton(self.widget_4)
         self.loadDirButton.setObjectName(u"loadDirButton")
         sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
@@ -93,14 +92,14 @@ class Ui_MainWindow(object):
         self.loadDirButton.setFont(font2)
         self.loadDirButton.setStyleSheet(u"")
 
-        self.verticalLayout_2.addWidget(self.loadDirButton)
+        self.gridLayout_4.addWidget(self.loadDirButton, 0, 0, 1, 1)
 
         self.verticalSpacer = QSpacerItem(20, 226, QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
 
-        self.verticalLayout_2.addItem(self.verticalSpacer)
+        self.gridLayout_4.addItem(self.verticalSpacer, 1, 0, 1, 1)
 
 
-        self.horizontalLayout.addWidget(self.widget_4)
+        self.gridLayout_3.addWidget(self.widget_4, 0, 0, 1, 1)
 
         self.treeViewLoad = QTreeWidget(self.widget_6)
         self.treeViewLoad.setObjectName(u"treeViewLoad")
@@ -129,7 +128,7 @@ class Ui_MainWindow(object):
         self.treeViewLoad.header().setVisible(True)
         self.treeViewLoad.header().setStretchLastSection(False)
 
-        self.horizontalLayout.addWidget(self.treeViewLoad)
+        self.gridLayout_3.addWidget(self.treeViewLoad, 0, 1, 1, 1)
 
         self.splitter.addWidget(self.widget_6)
         self.widget_8 = QWidget(self.splitter)
@@ -137,15 +136,15 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.widget_8.sizePolicy().hasHeightForWidth())
         self.widget_8.setSizePolicy(sizePolicy)
         self.widget_8.setMinimumSize(QSize(0, 0))
-        self.horizontalLayout_3 = QHBoxLayout(self.widget_8)
-        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.gridLayout_5 = QGridLayout(self.widget_8)
+        self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.widget_5 = QWidget(self.widget_8)
         self.widget_5.setObjectName(u"widget_5")
         sizePolicy.setHeightForWidth(self.widget_5.sizePolicy().hasHeightForWidth())
         self.widget_5.setSizePolicy(sizePolicy)
         self.widget_5.setMinimumSize(QSize(0, 0))
-        self.verticalLayout = QVBoxLayout(self.widget_5)
-        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.gridLayout_6 = QGridLayout(self.widget_5)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.outDirButton = QPushButton(self.widget_5)
         self.outDirButton.setObjectName(u"outDirButton")
         sizePolicy1.setHeightForWidth(self.outDirButton.sizePolicy().hasHeightForWidth())
@@ -155,7 +154,7 @@ class Ui_MainWindow(object):
         self.outDirButton.setLayoutDirection(Qt.LeftToRight)
         self.outDirButton.setStyleSheet(u"")
 
-        self.verticalLayout.addWidget(self.outDirButton)
+        self.gridLayout_6.addWidget(self.outDirButton, 0, 0, 1, 1)
 
         self.sText = QLabel(self.widget_5)
         self.sText.setObjectName(u"sText")
@@ -175,14 +174,14 @@ class Ui_MainWindow(object):
         self.sText.setAlignment(Qt.AlignCenter)
         self.sText.setWordWrap(True)
 
-        self.verticalLayout.addWidget(self.sText)
+        self.gridLayout_6.addWidget(self.sText, 1, 0, 1, 1)
 
         self.verticalSpacer_2 = QSpacerItem(20, 211, QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
 
-        self.verticalLayout.addItem(self.verticalSpacer_2)
+        self.gridLayout_6.addItem(self.verticalSpacer_2, 2, 0, 1, 1)
 
 
-        self.horizontalLayout_3.addWidget(self.widget_5)
+        self.gridLayout_5.addWidget(self.widget_5, 0, 0, 1, 1)
 
         self.treeViewOutput = QTreeWidget(self.widget_8)
         self.treeViewOutput.setObjectName(u"treeViewOutput")
@@ -205,11 +204,15 @@ class Ui_MainWindow(object):
         self.treeViewOutput.header().setVisible(True)
         self.treeViewOutput.header().setStretchLastSection(False)
 
-        self.horizontalLayout_3.addWidget(self.treeViewOutput)
+        self.gridLayout_5.addWidget(self.treeViewOutput, 0, 1, 1, 1)
 
         self.splitter.addWidget(self.widget_8)
 
-        self.formLayout.setWidget(0, QFormLayout.SpanningRole, self.splitter)
+        self.gridLayout_2.addWidget(self.splitter, 0, 0, 1, 2)
+
+        self.verticalSpacer_3 = QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Minimum)
+
+        self.gridLayout_2.addItem(self.verticalSpacer_3, 1, 0, 1, 1)
 
         self.widget_7 = QWidget(self.centralwidget)
         self.widget_7.setObjectName(u"widget_7")
@@ -233,8 +236,8 @@ class Ui_MainWindow(object):
         font5.setBold(True)
         font5.setWeight(75)
         self.groupBox.setFont(font5)
-        self.verticalLayout_4 = QVBoxLayout(self.groupBox)
-        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.gridLayout_9 = QGridLayout(self.groupBox)
+        self.gridLayout_9.setObjectName(u"gridLayout_9")
         self.deidentifyInputDir = QCheckBox(self.groupBox)
         self.deidentifyInputDir.setObjectName(u"deidentifyInputDir")
         font6 = QFont()
@@ -243,47 +246,47 @@ class Ui_MainWindow(object):
         font6.setWeight(50)
         self.deidentifyInputDir.setFont(font6)
 
-        self.verticalLayout_4.addWidget(self.deidentifyInputDir)
+        self.gridLayout_9.addWidget(self.deidentifyInputDir, 0, 0, 1, 1)
 
         self.offsetDate = QCheckBox(self.groupBox)
         self.offsetDate.setObjectName(u"offsetDate")
         self.offsetDate.setFont(font6)
         self.offsetDate.setChecked(False)
 
-        self.verticalLayout_4.addWidget(self.offsetDate)
+        self.gridLayout_9.addWidget(self.offsetDate, 1, 0, 1, 1)
 
         self.dryRun = QCheckBox(self.groupBox)
         self.dryRun.setObjectName(u"dryRun")
         self.dryRun.setFont(font6)
 
-        self.verticalLayout_4.addWidget(self.dryRun)
+        self.gridLayout_9.addWidget(self.dryRun, 2, 0, 1, 1)
 
         self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.verticalLayout_4.addItem(self.verticalSpacer_4)
+        self.gridLayout_9.addItem(self.verticalSpacer_4, 3, 0, 1, 1)
 
 
         self.gridLayout.addWidget(self.groupBox, 0, 0, 1, 1)
 
 
-        self.formLayout.setWidget(2, QFormLayout.LabelRole, self.widget_7)
+        self.gridLayout_2.addWidget(self.widget_7, 2, 0, 1, 1)
 
         self.widget_3 = QWidget(self.centralwidget)
         self.widget_3.setObjectName(u"widget_3")
         sizePolicy.setHeightForWidth(self.widget_3.sizePolicy().hasHeightForWidth())
         self.widget_3.setSizePolicy(sizePolicy)
         self.widget_3.setMinimumSize(QSize(0, 200))
-        self.verticalLayout_3 = QVBoxLayout(self.widget_3)
-        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.gridLayout_7 = QGridLayout(self.widget_3)
+        self.gridLayout_7.setObjectName(u"gridLayout_7")
         self.widget = QWidget(self.widget_3)
         self.widget.setObjectName(u"widget")
         sizePolicy3.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
         self.widget.setSizePolicy(sizePolicy3)
-        self.horizontalLayout_2 = QHBoxLayout(self.widget)
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.gridLayout_8 = QGridLayout(self.widget)
+        self.gridLayout_8.setObjectName(u"gridLayout_8")
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        self.horizontalLayout_2.addItem(self.horizontalSpacer)
+        self.gridLayout_8.addItem(self.horizontalSpacer, 0, 0, 1, 1)
 
         self.cancelButton = QPushButton(self.widget)
         self.cancelButton.setObjectName(u"cancelButton")
@@ -338,7 +341,7 @@ class Ui_MainWindow(object):
 "color: black")
         self.cancelButton.setFlat(False)
 
-        self.horizontalLayout_2.addWidget(self.cancelButton)
+        self.gridLayout_8.addWidget(self.cancelButton, 0, 1, 1, 1)
 
         self.convertButton = QPushButton(self.widget)
         self.convertButton.setObjectName(u"convertButton")
@@ -350,7 +353,7 @@ class Ui_MainWindow(object):
         self.convertButton.setStyleSheet(u"background-color: rgb(79, 232, 109);\n"
 "color: black")
 
-        self.horizontalLayout_2.addWidget(self.convertButton)
+        self.gridLayout_8.addWidget(self.convertButton, 0, 2, 1, 1)
 
         self.spredButton = QPushButton(self.widget)
         self.spredButton.setObjectName(u"spredButton")
@@ -362,7 +365,7 @@ class Ui_MainWindow(object):
         self.spredButton.setStyleSheet(u"background-color: rgb(0, 85, 255);\n"
 "color: black")
 
-        self.horizontalLayout_2.addWidget(self.spredButton)
+        self.gridLayout_8.addWidget(self.spredButton, 0, 3, 1, 1)
 
         self.imagingButton = QPushButton(self.widget)
         self.imagingButton.setObjectName(u"imagingButton")
@@ -374,20 +377,20 @@ class Ui_MainWindow(object):
         self.imagingButton.setStyleSheet(u"background-color: rgb(0, 85, 255);\n"
 "color: black")
 
-        self.horizontalLayout_2.addWidget(self.imagingButton)
+        self.gridLayout_8.addWidget(self.imagingButton, 0, 4, 1, 1)
 
         self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
+        self.gridLayout_8.addItem(self.horizontalSpacer_2, 0, 5, 1, 1)
 
 
-        self.verticalLayout_3.addWidget(self.widget)
+        self.gridLayout_7.addWidget(self.widget, 0, 0, 1, 1)
 
         self.label = QLabel(self.widget_3)
         self.label.setObjectName(u"label")
         self.label.setFont(font5)
 
-        self.verticalLayout_3.addWidget(self.label)
+        self.gridLayout_7.addWidget(self.label, 1, 0, 1, 1)
 
         self.conversionStatus = QPlainTextEdit(self.widget_3)
         self.conversionStatus.setObjectName(u"conversionStatus")
@@ -403,14 +406,10 @@ class Ui_MainWindow(object):
         self.conversionStatus.setMidLineWidth(1)
         self.conversionStatus.setTextInteractionFlags(Qt.NoTextInteraction)
 
-        self.verticalLayout_3.addWidget(self.conversionStatus)
+        self.gridLayout_7.addWidget(self.conversionStatus, 2, 0, 1, 1)
 
 
-        self.formLayout.setWidget(2, QFormLayout.FieldRole, self.widget_3)
-
-        self.verticalSpacer_3 = QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Minimum)
-
-        self.formLayout.setItem(1, QFormLayout.SpanningRole, self.verticalSpacer_3)
+        self.gridLayout_2.addWidget(self.widget_3, 2, 1, 1, 1)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
