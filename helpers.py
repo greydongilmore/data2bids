@@ -1311,6 +1311,8 @@ def folders_in(path_to_parent):
 
 # input_dir = r'/media/veracrypt6/projects/eplink/other_data/twh eplink data/in'
 # output_path = r'/media/veracrypt6/projects/eplink/other_data/twh eplink data/out'
+# input_dir = r'/home/greydon/Downloads/input'
+# output_path = r'/home/greydon/Downloads/output'
 # input_dir = r'/media/veracrypt6/projects/iEEG/working_dir/edf2bids/input'
 # output_path = r'/media/veracrypt6/projects/iEEG/working_dir/edf2bids/output'
 
@@ -1353,7 +1355,7 @@ def read_input_dir(input_dir, bids_settings):
 		file_info = get_file_info(raw_file_path_sub, bids_settings)
 		sub_file_info[subject_id] = file_info
 		chan_label_file = [x for x in os.listdir(raw_file_path_sub) if re.search('_labels', x, re.IGNORECASE)]
-		imaging_data = [x for x in os.listdir(raw_file_path_sub) if 'imaging' in x]
+		imaging_data = [x for x in os.listdir(raw_file_path_sub) if 'imaging' in x.lower() and os.path.isdir(os.path.join(raw_file_path_sub,x))]
 		sub_chan_file[subject_id] = chan_label_file
 		imaging_dir[subject_id] = {}
 		imaging_dir[subject_id]['imaging_dir'] = imaging_data
