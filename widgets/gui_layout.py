@@ -122,7 +122,7 @@ class Ui_MainWindow(object):
         self.treeViewLoad.setLineWidth(1)
         self.treeViewLoad.setMidLineWidth(1)
         self.treeViewLoad.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.treeViewLoad.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        self.treeViewLoad.setSizeAdjustPolicy(QAbstractScrollArea.AdjustIgnored)
         self.treeViewLoad.setAlternatingRowColors(True)
         self.treeViewLoad.setSelectionMode(QAbstractItemView.NoSelection)
         self.treeViewLoad.setHorizontalScrollMode(QAbstractItemView.ScrollPerItem)
