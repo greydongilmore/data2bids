@@ -1438,10 +1438,23 @@ class EDFfileCheck:
 				}
 		return header
 
+def edfC2D(file):
+	with open(file, 'r+b') as fid:
+		assert(fid.tell() == 0)
+		fid.seek(192)
+		fid.write(bytes(str("EDF+D") + ' ' * (44-len("EDF+D")), encoding="ascii"))
+
+def edfD2C(file):
+	with open(file, 'r+b') as fid:
+		assert(fid.tell() == 0)
+		fid.seek(192)
+		fid.write(bytes(str("EDF+C") + ' ' * (44-len("EDF+C")), encoding="ascii"))
+
+
 #%%
 import json
 
-filen = r'/home/greydon/Downloads/edf_data/WEST~ SCOTT_f4f79c81-d899-49dc-ba25-b3c2728fb288_1.edf'
+filen = r'D:/ieeg_data/working_dir/Burnham~ Laura_f4d6e656-71f9-4bfa-864d-efb867c18583.EDF'
 
 
 hdl=EDFfileCheck(filen)
@@ -1461,17 +1474,7 @@ for ifile in files:
 
 header[192 : 192 + 5] = bytes("EDF+C", encoding="ascii")
 
-def edfC2D(file):
-	with open(file, 'r+b') as fid:
-		assert(fid.tell() == 0)
-		fid.seek(192)
-		fid.write(bytes(str("EDF+D") + ' ' * (44-len("EDF+D")), encoding="ascii"))
 
-def edfD2C(file):
-	with open(file, 'r+b') as fid:
-		assert(fid.tell() == 0)
-		fid.seek(192)
-		fid.write(bytes(str("EDF+C") + ' ' * (44-len("EDF+C")), encoding="ascii"))
 		
 edfC2D(filen)
 edfD2C(filen)
