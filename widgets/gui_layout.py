@@ -20,7 +20,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1535, 994)
+        MainWindow.resize(1242, 974)
         sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -47,18 +47,19 @@ class Ui_MainWindow(object):
         self.actionSettings.setFont(font1)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
-        self.centralwidget.setSizePolicy(sizePolicy)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
+        self.centralwidget.setSizePolicy(sizePolicy1)
+        self.centralwidget.setMinimumSize(QSize(0, 700))
         self.gridLayout_2 = QGridLayout(self.centralwidget)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.splitter = QSplitter(self.centralwidget)
         self.splitter.setObjectName(u"splitter")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.splitter.sizePolicy().hasHeightForWidth())
         self.splitter.setSizePolicy(sizePolicy1)
-        self.splitter.setMinimumSize(QSize(1100, 0))
+        self.splitter.setMinimumSize(QSize(1100, 450))
         self.splitter.setMidLineWidth(0)
         self.splitter.setOrientation(Qt.Vertical)
         self.splitter.setOpaqueResize(False)
@@ -68,7 +69,7 @@ class Ui_MainWindow(object):
         self.widget_6.setObjectName(u"widget_6")
         sizePolicy1.setHeightForWidth(self.widget_6.sizePolicy().hasHeightForWidth())
         self.widget_6.setSizePolicy(sizePolicy1)
-        self.widget_6.setMinimumSize(QSize(1100, 0))
+        self.widget_6.setMinimumSize(QSize(1100, 200))
         self.gridLayout_3 = QGridLayout(self.widget_6)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.widget_4 = QWidget(self.widget_6)
@@ -138,7 +139,7 @@ class Ui_MainWindow(object):
         self.widget_8.setObjectName(u"widget_8")
         sizePolicy1.setHeightForWidth(self.widget_8.sizePolicy().hasHeightForWidth())
         self.widget_8.setSizePolicy(sizePolicy1)
-        self.widget_8.setMinimumSize(QSize(1100, 0))
+        self.widget_8.setMinimumSize(QSize(1100, 250))
         self.gridLayout_5 = QGridLayout(self.widget_8)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.widget_5 = QWidget(self.widget_8)
@@ -213,10 +214,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.splitter, 0, 0, 1, 2)
 
-        self.verticalSpacer_3 = QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Minimum)
-
-        self.gridLayout_2.addItem(self.verticalSpacer_3, 1, 0, 1, 1)
-
         self.widget_7 = QWidget(self.centralwidget)
         self.widget_7.setObjectName(u"widget_7")
         sizePolicy1.setHeightForWidth(self.widget_7.sizePolicy().hasHeightForWidth())
@@ -278,7 +275,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.groupBox, 0, 0, 1, 1)
 
 
-        self.gridLayout_2.addWidget(self.widget_7, 2, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.widget_7, 1, 0, 1, 1)
 
         self.widget_3 = QWidget(self.centralwidget)
         self.widget_3.setObjectName(u"widget_3")
@@ -420,7 +417,7 @@ class Ui_MainWindow(object):
         self.gridLayout_7.addWidget(self.conversionStatus, 2, 0, 1, 1)
 
 
-        self.gridLayout_2.addWidget(self.widget_3, 2, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.widget_3, 1, 1, 1, 1)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
@@ -431,7 +428,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.menuBar = QMenuBar(MainWindow)
         self.menuBar.setObjectName(u"menuBar")
-        self.menuBar.setGeometry(QRect(0, 0, 1535, 23))
+        self.menuBar.setGeometry(QRect(0, 0, 1242, 23))
         self.menuBar.setFont(font1)
         self.menuFile = QMenu(self.menuBar)
         self.menuFile.setObjectName(u"menuFile")

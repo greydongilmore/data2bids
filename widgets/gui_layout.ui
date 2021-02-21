@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1535</width>
-    <height>994</height>
+    <width>1242</width>
+    <height>974</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -31,10 +31,16 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+    <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>700</height>
+    </size>
    </property>
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0" colspan="2">
@@ -48,7 +54,7 @@
       <property name="minimumSize">
        <size>
         <width>1100</width>
-        <height>0</height>
+        <height>450</height>
        </size>
       </property>
       <property name="midLineWidth">
@@ -76,7 +82,7 @@
        <property name="minimumSize">
         <size>
          <width>1100</width>
-         <height>0</height>
+         <height>200</height>
         </size>
        </property>
        <layout class="QGridLayout" name="gridLayout_3">
@@ -233,7 +239,7 @@
        <property name="minimumSize">
         <size>
          <width>1100</width>
-         <height>0</height>
+         <height>250</height>
         </size>
        </property>
        <layout class="QGridLayout" name="gridLayout_5">
@@ -410,22 +416,6 @@
      </widget>
     </item>
     <item row="1" column="0">
-     <spacer name="verticalSpacer_3">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeType">
-       <enum>QSizePolicy::Minimum</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>10</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="2" column="0">
      <widget class="QWidget" name="widget_7" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
@@ -557,7 +547,7 @@
       </layout>
      </widget>
     </item>
-    <item row="2" column="1">
+    <item row="1" column="1">
      <widget class="QWidget" name="widget_3" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
@@ -1048,7 +1038,7 @@ color: black</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1535</width>
+     <width>1242</width>
      <height>23</height>
     </rect>
    </property>
