@@ -394,12 +394,14 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.treeViewLoad.header().setDefaultAlignment(QtCore.Qt.AlignHCenter)
 			
 			header = self.treeViewLoad.header()
+			
 			for column in range(header.count()):
 				header.setSectionResizeMode(column, self.treeViewLoad.header().ResizeToContents)
 				width = header.sectionSize(column)
 				header.setSectionResizeMode(column, self.treeViewLoad.header().Interactive)
 				header.resizeSection(column, width)
-				
+			
+			
 			font = QtGui.QFont()
 			font.setBold(True)
 			self.treeViewLoad.header().setFont(font)
