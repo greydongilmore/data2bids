@@ -20,7 +20,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1243, 989)
+        MainWindow.resize(1243, 991)
         sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -247,6 +247,7 @@ class Ui_MainWindow(object):
         sizePolicy5.setHeightForWidth(self.deidentifyInputDir.sizePolicy().hasHeightForWidth())
         self.deidentifyInputDir.setSizePolicy(sizePolicy5)
         font6 = QFont()
+        font6.setFamily(u"Arial")
         font6.setPointSize(11)
         font6.setBold(False)
         font6.setWeight(50)
@@ -306,7 +307,7 @@ class Ui_MainWindow(object):
         sizePolicy6.setVerticalStretch(0)
         sizePolicy6.setHeightForWidth(self.cancelButton.sizePolicy().hasHeightForWidth())
         self.cancelButton.setSizePolicy(sizePolicy6)
-        self.cancelButton.setMinimumSize(QSize(150, 0))
+        self.cancelButton.setMinimumSize(QSize(170, 0))
         self.cancelButton.setMaximumSize(QSize(150, 16777215))
         palette = QPalette()
         brush = QBrush(QColor(0, 0, 0, 255))
@@ -358,7 +359,7 @@ class Ui_MainWindow(object):
         self.convertButton.setObjectName(u"convertButton")
         sizePolicy6.setHeightForWidth(self.convertButton.sizePolicy().hasHeightForWidth())
         self.convertButton.setSizePolicy(sizePolicy6)
-        self.convertButton.setMinimumSize(QSize(150, 0))
+        self.convertButton.setMinimumSize(QSize(170, 0))
         self.convertButton.setMaximumSize(QSize(150, 16777215))
         self.convertButton.setFont(font2)
         self.convertButton.setStyleSheet(u"background-color: rgb(79, 232, 109);\n"
@@ -370,7 +371,7 @@ class Ui_MainWindow(object):
         self.spredButton.setObjectName(u"spredButton")
         sizePolicy6.setHeightForWidth(self.spredButton.sizePolicy().hasHeightForWidth())
         self.spredButton.setSizePolicy(sizePolicy6)
-        self.spredButton.setMinimumSize(QSize(150, 0))
+        self.spredButton.setMinimumSize(QSize(170, 0))
         self.spredButton.setMaximumSize(QSize(150, 16777215))
         self.spredButton.setFont(font5)
         self.spredButton.setStyleSheet(u"background-color: rgb(0, 85, 255);\n"
@@ -382,7 +383,7 @@ class Ui_MainWindow(object):
         self.imagingButton.setObjectName(u"imagingButton")
         sizePolicy6.setHeightForWidth(self.imagingButton.sizePolicy().hasHeightForWidth())
         self.imagingButton.setSizePolicy(sizePolicy6)
-        self.imagingButton.setMinimumSize(QSize(150, 0))
+        self.imagingButton.setMinimumSize(QSize(170, 0))
         self.imagingButton.setMaximumSize(QSize(150, 16777215))
         self.imagingButton.setFont(font5)
         self.imagingButton.setStyleSheet(u"background-color: rgb(0, 85, 255);\n"
@@ -426,9 +427,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
-        font8 = QFont()
-        font8.setFamily(u"Arial")
-        self.statusbar.setFont(font8)
+        self.statusbar.setFont(font)
         MainWindow.setStatusBar(self.statusbar)
         self.menuBar = QMenuBar(MainWindow)
         self.menuBar.setObjectName(u"menuBar")
@@ -451,7 +450,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"data2bids converter", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"databids converter", None))
         self.actionLoad_data.setText(QCoreApplication.translate("MainWindow", u"Load data", None))
         self.actionQuit.setText(QCoreApplication.translate("MainWindow", u"Quit", None))
         self.actionSettings.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
@@ -463,9 +462,9 @@ class Ui_MainWindow(object):
         self.offsetDate.setText(QCoreApplication.translate("MainWindow", u"Offset dates", None))
         self.dryRun.setText(QCoreApplication.translate("MainWindow", u"Dry run (no EDF)", None))
         self.cancelButton.setText(QCoreApplication.translate("MainWindow", u"Cancel", None))
-        self.convertButton.setText(QCoreApplication.translate("MainWindow", u"Convert", None))
+        self.convertButton.setText(QCoreApplication.translate("MainWindow", u"convert EEG/iEEG", None))
         self.spredButton.setText(QCoreApplication.translate("MainWindow", u"SPReD", None))
-        self.imagingButton.setText(QCoreApplication.translate("MainWindow", u"Imaging", None))
+        self.imagingButton.setText(QCoreApplication.translate("MainWindow", u"convert imaging", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Conversion Status", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
     # retranslateUi

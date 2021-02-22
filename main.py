@@ -104,7 +104,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.convert_button_color = "background-color: rgb(79, 232, 109);color: black"
 		self.inactive_color = "background-color: rgb(160, 160, 160);color: rgb(130, 130, 130)"
 		
-		self.updateStatus("Welcome to edf2bids converter. Load your directory.")
+		self.updateStatus("Welcome to data2bids converter. Load your directory.")
 		self.sText.setVisible(0)
 		#self.conversionStatus.setReadOnly(True)
 		self.cancelButton.setEnabled(False)
