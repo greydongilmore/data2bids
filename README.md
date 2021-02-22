@@ -1,4 +1,4 @@
-# edf2bids
+# data2bids
 
 An open-source software to sort EDF/EDF+ files into a BIDs compliant structure.
 
