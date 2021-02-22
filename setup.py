@@ -15,7 +15,7 @@ from cx_Freeze import setup, Executable
 
 base = 'Win32GUI' if sys.platform=='win32' else None
 
-includefiles = ['edf2bids.py', 'helpers.py', 'bids2spred.py', 'dicomAnon.py', 'widgets/', 'static/', 'ext_lib/']
+includefiles = ['edf2bids.py', 'helpers.py', 'bids2spred.py', 'dicom2bids.py', 'widgets/', 'static/', 'ext_lib/']
 
 buildOptions = {
 		'build_exe': {
@@ -26,12 +26,12 @@ buildOptions = {
 }
 
 executables = [
-	Executable('main.py', base=base, targetName = 'edf2bids', icon="static/eplink_icon.ico")
+	Executable('main.py', base=base, targetName = 'data2bids', icon="static/eplink_icon.ico")
 ]
 
-setup(name='edf2bids',
+setup(name='data2bids',
 		version = '1.0',
-		description = 'Converts clinical EDF files to BIDS/SPReD format.',
+		description = 'Convert clinical data files to BIDS/SPReD format.',
 		options = buildOptions,
 		executables = executables)
 

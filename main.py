@@ -19,7 +19,7 @@ from widgets import gui_layout
 from widgets import settings_panel
 from edf2bids import edf2bids
 from bids2spred import bids2spred
-from dicomAnon import dicomAnon
+from dicom2bids import dicom2bids
 
 from helpers import read_input_dir, read_output_dir, bidsHelper, warningBox
 
@@ -1019,7 +1019,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		QtGui.QGuiApplication.processEvents()
 			
 		# Set Qthread
-		self.worker = dicomAnon()
+		self.worker = dicom2bids()
 		self.worker.input_path = self.input_path
 		self.worker.output_path = self.output_path
 		self.worker.imaging_data = self.imaging_data

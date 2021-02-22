@@ -39,10 +39,10 @@ class WorkerSignals(QtCore.QObject):
 	progressEvent=QtCore.Signal(str)
 
 
-class dicomAnon(QtCore.QRunnable):
+class dicom2bids(QtCore.QRunnable):
 	
 	def __init__(self):	
-		super(dicomAnon, self).__init__()
+		super(dicom2bids, self).__init__()
 		
 		self.input_path=[]
 		self.output_path=[]

@@ -451,7 +451,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"edf2bids converter", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"data2bids converter", None))
         self.actionLoad_data.setText(QCoreApplication.translate("MainWindow", u"Load data", None))
         self.actionQuit.setText(QCoreApplication.translate("MainWindow", u"Quit", None))
         self.actionSettings.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
