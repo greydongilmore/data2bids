@@ -1454,7 +1454,7 @@ def edfD2C(file):
 #%%
 import json
 
-filen = r'D:/ieeg_data/working_dir/Burnham~ Laura_f4d6e656-71f9-4bfa-864d-efb867c18583.EDF'
+filen = r'C:/Users/greydon/Downloads/EPL31_LHS_0010_01_SE18_EEG_CLIP_RET/X~ X_27195dba-c2eb-40a2-a357-645aee49875a.EDF'
 
 
 hdl=EDFfileCheck(filen)
