@@ -100,6 +100,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.output_path=None
 		
 		self.cancel_button_color = "background-color: rgb(255,0,0);color: black"
+		self.pause_button_color = "background-color: rgb(173, 127, 168);color: black"
 		self.spred_button_color = "background-color: rgb(0, 85, 255);color: black"
 		self.convert_button_color = "background-color: rgb(79, 232, 109);color: black"
 		self.inactive_color = "background-color: rgb(160, 160, 160);color: rgb(130, 130, 130)"
@@ -109,6 +110,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		#self.conversionStatus.setReadOnly(True)
 		self.cancelButton.setEnabled(False)
 		self.cancelButton.setStyleSheet(self.inactive_color)
+		self.pauseButton.setEnabled(False)
+		self.pauseButton.setStyleSheet(self.inactive_color)
 		self.spredButton.setEnabled(False)
 		self.spredButton.setStyleSheet(self.inactive_color)
 		self.userAborted = False
@@ -279,6 +282,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if self.cancelButton.isEnabled():
 			self.cancelButton.setEnabled(False)
 			self.convertButton.setStyleSheet(self.cancel_button_color)
+		if self.pauseButton.isEnabled():
+			self.pauseButton.setEnabled(False)
+			self.pauseButton.setStyleSheet(self.inactive_color)
 		if self.spredButton.isEnabled():
 			self.spredButton.setEnabled(False)
 			self.spredButton.setStyleSheet(self.inactive_color)
@@ -455,7 +461,13 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if self.spredButton.isEnabled():
 			self.spredButton.setEnabled(False)
 			self.spredButton.setStyleSheet(self.inactive_color)
-			
+		if self.pauseButton.isEnabled():
+			self.pauseButton.setEnabled(False)
+			self.pauseButton.setStyleSheet(self.inactive_color)
+		if not self.imagingDataPresent:
+			self.imagingButton.setEnabled(False)
+			self.imagingButton.setStyleSheet(self.inactive_color)
+				
 		if dialog.exec_():
 			self.updateStatus("Loading output directory...")
 			self.output_path = dialog.selectedFiles()[0]
@@ -824,37 +836,42 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.participant_tsv = pd.read_csv(participants_fname, sep='\t')
 		
 		# Set Qthread
-		self.worker = edf2bids()
+		self.edf2bidsWorker = edf2bids()
 
-		self.worker.bids_settings = self.bids_settings
-		self.worker.new_sessions = self.new_sessions
-		self.worker.file_info = self.file_info
-		self.worker.chan_label_file = self.chan_label_file
-		self.worker.input_path = self.input_path
-		self.worker.output_path = self.output_path
-		self.worker.script_path = source_dir
-		self.worker.coordinates = None
-		self.worker.electrode_imp = None
-		self.worker.make_dir = True
-		self.worker.overwrite = True
-		self.worker.verbose = False
-		self.worker.deidentify_source = self.deidentifyInputDir.isChecked()
-		self.worker.offset_date = self.offsetDate.isChecked()
-		self.worker.dry_run = self.dryRun.isChecked()
+		self.edf2bidsWorker.bids_settings = self.bids_settings
+		self.edf2bidsWorker.new_sessions = self.new_sessions
+		self.edf2bidsWorker.file_info = self.file_info
+		self.edf2bidsWorker.chan_label_file = self.chan_label_file
+		self.edf2bidsWorker.input_path = self.input_path
+		self.edf2bidsWorker.output_path = self.output_path
+		self.edf2bidsWorker.script_path = source_dir
+		self.edf2bidsWorker.coordinates = None
+		self.edf2bidsWorker.electrode_imp = None
+		self.edf2bidsWorker.make_dir = True
+		self.edf2bidsWorker.overwrite = True
+		self.edf2bidsWorker.verbose = False
+		self.edf2bidsWorker.deidentify_source = self.deidentifyInputDir.isChecked()
+		self.edf2bidsWorker.offset_date = self.offsetDate.isChecked()
+		self.edf2bidsWorker.dry_run = self.dryRun.isChecked()
 		
 		# Set Qthread signals
-		self.worker.signals.progressEvent.connect(self.conversionStatusUpdate)
-		self.worker.signals.finished.connect(self.doneConversion)
-		self.worker.signals.errorEvent.connect(self.errorConversion)
+		self.edf2bidsWorker.signals.progressEvent.connect(self.conversionStatusUpdate)
+		self.edf2bidsWorker.signals.finished.connect(self.doneConversion)
+		self.edf2bidsWorker.signals.errorEvent.connect(self.errorConversion)
 		
 		# Execute
-		self.threadpool.start(self.worker) 
-# 		self.worker.start()
+		self.threadpool.start(self.edf2bidsWorker) 
 		
 		# Set button states
 		self.cancelButton.setEnabled(True)
 		self.cancelButton.setStyleSheet(self.cancel_button_color)
-		self.cancelButton.clicked.connect(self.onCancelButton)
+		self.cancelButton.clicked.connect(lambda: self.onCancelButton('edf2bids'))
+		
+		self.pauseButton.setEnabled(True)
+		self.pauseButton.setStyleSheet(self.pause_button_color)
+		self.pauseButton.pressed.connect(self.edf2bidsWorker.pause)
+		self.pauseButton.pressed.connect(lambda: self.onPauseButton('edf2bids'))
+		
 		self.convertButton.setEnabled(False)
 		self.convertButton.setStyleSheet(self.inactive_color)
 		self.imagingButton.setEnabled(False)
@@ -880,16 +897,49 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		else:
 			num -= len(str(buf))
 			buffer = ((' ' * int(num/2)) + str(buf) + (' ' * int(num/2)))
-
+		
 		return buffer
-
-	def onCancelButton(self):
-		self.worker.kill()
+	
+	def onPauseButton(self, worker_name):
+		paused=False
+		if worker_name in ('edf2bids'):
+			if self.edf2bidsWorker.is_paused:
+				paused=True
+		if worker_name in ('spred2bids'):
+			if self.spred2bidsWorker.is_paused:
+				paused=True
+		if worker_name in ('dicom2bids'):
+			if self.dicom2bidsWorker.is_paused:
+				paused=True
+				
+		if paused:
+			self.pauseButton.setText('Resume...')
+			self.updateStatus("Conversion paused... ")
+			#self.conversionStatus.appendPlainText('\nData conversion paused...\n')
+			self.cancelButton.setEnabled(False)
+			self.cancelButton.setStyleSheet(self.inactive_color)
+		else:
+			self.pauseButton.setText('Pause')
+			self.updateStatus("Conversion resumed...")
+			#self.conversionStatus.appendPlainText('\nResuming data conversion...\n')
+			self.cancelButton.setEnabled(True)
+			self.cancelButton.setStyleSheet(self.cancel_button_color)
+		
+	def onCancelButton(self, worker_name):
+		if worker_name in ('edf2bids'):
+			self.edf2bidsWorker.kill()
+		if worker_name in ('spred2bids'):
+			self.spred2bidsWorker.kill()
+		if worker_name in ('dicom2bids'):
+			self.dicom2bidsWorker.kill()
+		
 		self.updateStatus("Conversion cancel requested... ")
 		self.conversionStatus.appendPlainText('\nCancelling data conversion... please wait for process to finish\n')
 		self.userAborted = True
 		self.cancelButton.setEnabled(False)
 		self.cancelButton.setStyleSheet(self.inactive_color)
+		self.pauseButton.setEnabled(False)
+		self.pauseButton.setStyleSheet(self.inactive_color)
 		
 	def updateStatus(self, update):
 		"""Updates the status bar located at the bottom of the window.
@@ -943,9 +993,10 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.cancelButton.setStyleSheet(self.inactive_color)
 		self.convertButton.setEnabled(False)
 		self.convertButton.setStyleSheet(self.inactive_color)
+		self.pauseButton.setEnabled(False)
+		self.pauseButton.setStyleSheet(self.inactive_color)
 		
 		
-	
 	def errorConversion(self, errorInfo):
 		self.conversionStatus.appendPlainText('\n')
 		self.conversionStatus.appendPlainText('Error occured: {}'.format(errorInfo[1]))
@@ -960,6 +1011,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.spredButton.setStyleSheet(self.inactive_color)
 		self.cancelButton.setEnabled(False)
 		self.cancelButton.setStyleSheet(self.inactive_color)
+		self.pauseButton.setEnabled(False)
+		self.pauseButton.setStyleSheet(self.inactive_color)
 		self.convertButton.setEnabled(False)
 		self.convertButton.setStyleSheet(self.inactive_color)
 		self.imagingButton.setEnabled(False)
@@ -970,21 +1023,26 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		QtGui.QGuiApplication.processEvents()
 		
 		# Set Qthread
-		self.worker = bids2spred()
-		self.worker.output_path = self.output_path
+		self.spred2bidsWorker = bids2spred()
+		self.spred2bidsWorker.output_path = self.output_path
 		
 		# Set Qthread signals
-		self.worker.signals.progressEvent.connect(self.conversionStatusUpdate)
-		self.worker.signals.finished.connect(self.doneSPReDConversion)
+		self.spred2bidsWorker.signals.progressEvent.connect(self.conversionStatusUpdate)
+		self.spred2bidsWorker.signals.finished.connect(self.doneSPReDConversion)
 		
 		# Execute
-		self.threadpool.start(self.worker)
-# 		self.worker.start()
+		self.threadpool.start(self.spred2bidsWorker)
 		
 		# Set button states
 		self.cancelButton.setEnabled(True)
 		self.cancelButton.setStyleSheet(self.cancel_button_color)
-		self.cancelButton.clicked.connect(self.onCancelButton)
+		self.cancelButton.clicked.connect(lambda: self.onCancelButton('spred2bids'))
+		
+		self.pauseButton.setEnabled(True)
+		self.pauseButton.setStyleSheet(self.pause_button_color)
+		self.pauseButton.pressed.connect(self.spred2bidsWorker.pause)
+		self.pauseButton.pressed.connect(lambda: self.onPauseButton('spred2bids'))
+		
 		self.spredButton.setEnabled(False)
 		self.spredButton.setStyleSheet(self.inactive_color)
 		self.imagingButton.setEnabled(False)
@@ -1007,6 +1065,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.spredButton.setStyleSheet(self.inactive_color)
 		self.cancelButton.setEnabled(False)
 		self.cancelButton.setStyleSheet(self.inactive_color)
+		self.pauseButton.setEnabled(False)
+		self.pauseButton.setStyleSheet(self.inactive_color)
 		self.convertButton.setEnabled(False)
 		self.convertButton.setStyleSheet(self.inactive_color)
 		
@@ -1019,23 +1079,28 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		QtGui.QGuiApplication.processEvents()
 			
 		# Set Qthread
-		self.worker = dicom2bids()
-		self.worker.input_path = self.input_path
-		self.worker.output_path = self.output_path
-		self.worker.imaging_data = self.imaging_data
+		self.dicom2bidsWorker = dicom2bids()
+		self.dicom2bidsWorker.input_path = self.input_path
+		self.dicom2bidsWorker.output_path = self.output_path
+		self.dicom2bidsWorker.imaging_data = self.imaging_data
 		
 		# Set Qthread signals
-		self.worker.signals.progressEvent.connect(self.conversionStatusUpdate)
-		self.worker.signals.finished.connect(self.doneImagingConversion)
+		self.dicom2bidsWorker.signals.progressEvent.connect(self.conversionStatusUpdate)
+		self.dicom2bidsWorker.signals.finished.connect(self.doneImagingConversion)
 		
 		# Execute
-		self.threadpool.start(self.worker)
-# 		self.worker.start()
+		self.threadpool.start(self.dicom2bidsWorker)
 		
 		# Set button states
 		self.cancelButton.setEnabled(True)
 		self.cancelButton.setStyleSheet(self.cancel_button_color)
-		self.cancelButton.clicked.connect(self.onCancelButton)
+		self.cancelButton.clicked.connect(lambda: self.onCancelButton('dicom2bids'))
+		
+		self.pauseButton.setEnabled(True)
+		self.pauseButton.setStyleSheet(self.pause_button_color)
+		self.pauseButton.pressed.connect(self.dicom2bidsWorker.pause)
+		self.pauseButton.pressed.connect(lambda: self.onPauseButton('dicom2bids'))
+		
 		self.imagingButton.setEnabled(False)
 		self.imagingButton.setStyleSheet(self.inactive_color)
 		
@@ -1059,6 +1124,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.imagingButton.setStyleSheet(self.inactive_color)
 		self.cancelButton.setEnabled(False)
 		self.cancelButton.setStyleSheet(self.inactive_color)
+		self.pauseButton.setEnabled(False)
+		self.pauseButton.setStyleSheet(self.inactive_color)
 		
 		if not self.eegConversionDone and not all(len(value) == 0 for value in self.file_info.values()):
 			self.convertButton.setEnabled(True)

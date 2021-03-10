@@ -96,6 +96,7 @@ class edf2bids(QtCore.QRunnable):
 		
 		self.running = False
 		self.userAbort = False
+		self.is_paused = False
 		self.is_killed = False
 		self.isError=False
 		
@@ -103,6 +104,12 @@ class edf2bids(QtCore.QRunnable):
 		self.running = False
 		self.userAbort = True
 	
+	def pause(self):
+		if not self.is_paused:
+			self.is_paused=True
+		else:
+			self.is_paused=False
+		
 	def kill(self):
 		self.is_killed = True
 	
@@ -230,6 +237,8 @@ class edf2bids(QtCore.QRunnable):
 			with open(dest, 'wb') as fdest:
 				copied = 0
 				while 1:
+					while self.is_paused:
+						time.sleep(0)
 					if self.is_killed:
 						self.running = False
 						raise WorkerKilledException
@@ -290,6 +299,9 @@ class edf2bids(QtCore.QRunnable):
 						self.file_info[isub]=update_info
 						
 						for ises in range(len(self.file_info[isub])):
+							while self.is_paused:
+								time.sleep(0)
+							
 							if self.is_killed:
 								self.running = False
 								raise WorkerKilledException
@@ -303,6 +315,9 @@ class edf2bids(QtCore.QRunnable):
 							num_runs = len(file_data)
 							
 							for irun in range(num_runs):
+								while self.is_paused:
+									time.sleep(0)
+								
 								if self.is_killed:
 									self.running = False
 									raise WorkerKilledException
@@ -388,7 +403,7 @@ class edf2bids(QtCore.QRunnable):
 						self.signals.progressEvent.emit(self.conversionStatusText)
 				
 		except:
-			if not self.is_killed:
+			if not self.is_killed and not self.is_paused:
 				self.running = False
 				self.isError=True
 				

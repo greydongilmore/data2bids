@@ -91,6 +91,6 @@
         "Deidentify_source": false,
         "offset_dates": false
     },
-    "lastInputDirectory": "/media/veracrypt6/projects/eplink/walkthrough_example/working_dir/input",
-    "lastOutputDirectory": "/home/greydon/Downloads/output"
+    "lastInputDirectory": "/media/veracrypt6/projects/eplink/walkthrough_example/ieeg_sample/input",
+    "lastOutputDirectory": "/media/veracrypt6/projects/eplink/walkthrough_example/ieeg_sample/output"
 }

@@ -55,12 +55,19 @@ class bids2spred(QtCore.QRunnable):
 		
 		self.running = False
 		self.userAbort = False
+		self.is_paused=False
 		self.is_killed = False
 		
 	def stop(self):
 		self.running = False
 		self.userAbort = True
-		
+	
+	def pause(self):
+		if not self.is_paused:
+			self.is_paused=True
+		else:
+			self.is_paused=False
+	
 	def kill(self):
 		self.is_killed = True
 	
@@ -83,6 +90,8 @@ class bids2spred(QtCore.QRunnable):
 			output_folders = ['_'.join([''.join(' '.join(re.split('(\d+)', x.split('-')[-1])).split()[:2])] + ' '.join(re.split('(\d+)', x.split('-')[-1])).split()[2:]) for x in folders]
 			sub_cnt = 0
 			for isub in folders:
+				while self.is_paused:
+					time.sleep(0)
 				
 				if self.is_killed:
 					self.running = False
@@ -107,6 +116,13 @@ class bids2spred(QtCore.QRunnable):
 # 					old_edf_name = [x.split('task-')[1].split('_')[0] for x in os.listdir(os.path.sep.join([output_path, isub, ises, old_subfold[0]])) if x.endswith('.json')]
 
 					for itask in np.unique(old_edf_name):
+						
+						while self.is_paused:
+							time.sleep(0)
+						
+						if self.is_killed:
+							self.running = False
+							raise WorkerKilledException
 						
 						if 'clip' in itask:
 							suffix = '_CLIP'

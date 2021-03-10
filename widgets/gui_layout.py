@@ -296,24 +296,56 @@ class Ui_MainWindow(object):
         self.widget.setMinimumSize(QSize(900, 0))
         self.gridLayout_8 = QGridLayout(self.widget)
         self.gridLayout_8.setObjectName(u"gridLayout_8")
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
-
-        self.gridLayout_8.addItem(self.horizontalSpacer, 0, 0, 1, 1)
-
-        self.cancelButton = QPushButton(self.widget)
-        self.cancelButton.setObjectName(u"cancelButton")
+        self.convertButton = QPushButton(self.widget)
+        self.convertButton.setObjectName(u"convertButton")
         sizePolicy6 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy6.setHorizontalStretch(0)
         sizePolicy6.setVerticalStretch(0)
-        sizePolicy6.setHeightForWidth(self.cancelButton.sizePolicy().hasHeightForWidth())
-        self.cancelButton.setSizePolicy(sizePolicy6)
-        self.cancelButton.setMinimumSize(QSize(170, 0))
-        self.cancelButton.setMaximumSize(QSize(150, 16777215))
+        sizePolicy6.setHeightForWidth(self.convertButton.sizePolicy().hasHeightForWidth())
+        self.convertButton.setSizePolicy(sizePolicy6)
+        self.convertButton.setMinimumSize(QSize(170, 0))
+        self.convertButton.setMaximumSize(QSize(150, 16777215))
+        self.convertButton.setFont(font2)
+        self.convertButton.setStyleSheet(u"background-color: rgb(79, 232, 109);\n"
+"color: black")
+
+        self.gridLayout_8.addWidget(self.convertButton, 0, 2, 1, 1)
+
+        self.imagingButton = QPushButton(self.widget)
+        self.imagingButton.setObjectName(u"imagingButton")
+        sizePolicy6.setHeightForWidth(self.imagingButton.sizePolicy().hasHeightForWidth())
+        self.imagingButton.setSizePolicy(sizePolicy6)
+        self.imagingButton.setMinimumSize(QSize(170, 0))
+        self.imagingButton.setMaximumSize(QSize(150, 16777215))
+        self.imagingButton.setFont(font5)
+        self.imagingButton.setStyleSheet(u"background-color: rgb(0, 85, 255);\n"
+"color: black")
+
+        self.gridLayout_8.addWidget(self.imagingButton, 0, 4, 1, 1)
+
+        self.spredButton = QPushButton(self.widget)
+        self.spredButton.setObjectName(u"spredButton")
+        sizePolicy6.setHeightForWidth(self.spredButton.sizePolicy().hasHeightForWidth())
+        self.spredButton.setSizePolicy(sizePolicy6)
+        self.spredButton.setMinimumSize(QSize(170, 0))
+        self.spredButton.setMaximumSize(QSize(150, 16777215))
+        self.spredButton.setFont(font5)
+        self.spredButton.setStyleSheet(u"background-color: rgb(0, 85, 255);\n"
+"color: black")
+
+        self.gridLayout_8.addWidget(self.spredButton, 0, 3, 1, 1)
+
+        self.pauseButton = QPushButton(self.widget)
+        self.pauseButton.setObjectName(u"pauseButton")
+        sizePolicy6.setHeightForWidth(self.pauseButton.sizePolicy().hasHeightForWidth())
+        self.pauseButton.setSizePolicy(sizePolicy6)
+        self.pauseButton.setMinimumSize(QSize(170, 0))
+        self.pauseButton.setMaximumSize(QSize(150, 16777215))
         palette = QPalette()
         brush = QBrush(QColor(0, 0, 0, 255))
         brush.setStyle(Qt.SolidPattern)
         palette.setBrush(QPalette.Active, QPalette.WindowText, brush)
-        brush1 = QBrush(QColor(255, 0, 0, 255))
+        brush1 = QBrush(QColor(173, 127, 168, 255))
         brush1.setStyle(Qt.SolidPattern)
         palette.setBrush(QPalette.Active, QPalette.Button, brush1)
         palette.setBrush(QPalette.Active, QPalette.Text, brush)
@@ -347,56 +379,66 @@ class Ui_MainWindow(object):
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
         palette.setBrush(QPalette.Disabled, QPalette.PlaceholderText, brush4)
 #endif
-        self.cancelButton.setPalette(palette)
+        self.pauseButton.setPalette(palette)
+        self.pauseButton.setFont(font5)
+        self.pauseButton.setStyleSheet(u"background-color: rgb(173, 127, 168);\n"
+"color: black")
+        self.pauseButton.setFlat(False)
+
+        self.gridLayout_8.addWidget(self.pauseButton, 0, 1, 1, 1)
+
+        self.cancelButton = QPushButton(self.widget)
+        self.cancelButton.setObjectName(u"cancelButton")
+        sizePolicy6.setHeightForWidth(self.cancelButton.sizePolicy().hasHeightForWidth())
+        self.cancelButton.setSizePolicy(sizePolicy6)
+        self.cancelButton.setMinimumSize(QSize(170, 0))
+        self.cancelButton.setMaximumSize(QSize(150, 16777215))
+        palette1 = QPalette()
+        palette1.setBrush(QPalette.Active, QPalette.WindowText, brush)
+        brush5 = QBrush(QColor(255, 0, 0, 255))
+        brush5.setStyle(Qt.SolidPattern)
+        palette1.setBrush(QPalette.Active, QPalette.Button, brush5)
+        palette1.setBrush(QPalette.Active, QPalette.Text, brush)
+        palette1.setBrush(QPalette.Active, QPalette.ButtonText, brush)
+        palette1.setBrush(QPalette.Active, QPalette.Base, brush5)
+        palette1.setBrush(QPalette.Active, QPalette.Window, brush5)
+        brush6 = QBrush(QColor(0, 0, 0, 128))
+        brush6.setStyle(Qt.NoBrush)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
+        palette1.setBrush(QPalette.Active, QPalette.PlaceholderText, brush6)
+#endif
+        palette1.setBrush(QPalette.Inactive, QPalette.WindowText, brush)
+        palette1.setBrush(QPalette.Inactive, QPalette.Button, brush5)
+        palette1.setBrush(QPalette.Inactive, QPalette.Text, brush)
+        palette1.setBrush(QPalette.Inactive, QPalette.ButtonText, brush)
+        palette1.setBrush(QPalette.Inactive, QPalette.Base, brush5)
+        palette1.setBrush(QPalette.Inactive, QPalette.Window, brush5)
+        brush7 = QBrush(QColor(0, 0, 0, 128))
+        brush7.setStyle(Qt.NoBrush)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
+        palette1.setBrush(QPalette.Inactive, QPalette.PlaceholderText, brush7)
+#endif
+        palette1.setBrush(QPalette.Disabled, QPalette.WindowText, brush)
+        palette1.setBrush(QPalette.Disabled, QPalette.Button, brush5)
+        palette1.setBrush(QPalette.Disabled, QPalette.Text, brush)
+        palette1.setBrush(QPalette.Disabled, QPalette.ButtonText, brush)
+        palette1.setBrush(QPalette.Disabled, QPalette.Base, brush5)
+        palette1.setBrush(QPalette.Disabled, QPalette.Window, brush5)
+        brush8 = QBrush(QColor(0, 0, 0, 128))
+        brush8.setStyle(Qt.NoBrush)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
+        palette1.setBrush(QPalette.Disabled, QPalette.PlaceholderText, brush8)
+#endif
+        self.cancelButton.setPalette(palette1)
         self.cancelButton.setFont(font5)
         self.cancelButton.setStyleSheet(u"background-color: rgb(255,0,0);\n"
 "color: black")
         self.cancelButton.setFlat(False)
 
-        self.gridLayout_8.addWidget(self.cancelButton, 0, 1, 1, 1)
-
-        self.convertButton = QPushButton(self.widget)
-        self.convertButton.setObjectName(u"convertButton")
-        sizePolicy6.setHeightForWidth(self.convertButton.sizePolicy().hasHeightForWidth())
-        self.convertButton.setSizePolicy(sizePolicy6)
-        self.convertButton.setMinimumSize(QSize(170, 0))
-        self.convertButton.setMaximumSize(QSize(150, 16777215))
-        self.convertButton.setFont(font2)
-        self.convertButton.setStyleSheet(u"background-color: rgb(79, 232, 109);\n"
-"color: black")
-
-        self.gridLayout_8.addWidget(self.convertButton, 0, 2, 1, 1)
-
-        self.spredButton = QPushButton(self.widget)
-        self.spredButton.setObjectName(u"spredButton")
-        sizePolicy6.setHeightForWidth(self.spredButton.sizePolicy().hasHeightForWidth())
-        self.spredButton.setSizePolicy(sizePolicy6)
-        self.spredButton.setMinimumSize(QSize(170, 0))
-        self.spredButton.setMaximumSize(QSize(150, 16777215))
-        self.spredButton.setFont(font5)
-        self.spredButton.setStyleSheet(u"background-color: rgb(0, 85, 255);\n"
-"color: black")
-
-        self.gridLayout_8.addWidget(self.spredButton, 0, 3, 1, 1)
-
-        self.imagingButton = QPushButton(self.widget)
-        self.imagingButton.setObjectName(u"imagingButton")
-        sizePolicy6.setHeightForWidth(self.imagingButton.sizePolicy().hasHeightForWidth())
-        self.imagingButton.setSizePolicy(sizePolicy6)
-        self.imagingButton.setMinimumSize(QSize(170, 0))
-        self.imagingButton.setMaximumSize(QSize(150, 16777215))
-        self.imagingButton.setFont(font5)
-        self.imagingButton.setStyleSheet(u"background-color: rgb(0, 85, 255);\n"
-"color: black")
-
-        self.gridLayout_8.addWidget(self.imagingButton, 0, 4, 1, 1)
-
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
-
-        self.gridLayout_8.addItem(self.horizontalSpacer_2, 0, 5, 1, 1)
+        self.gridLayout_8.addWidget(self.cancelButton, 0, 0, 1, 1)
 
 
-        self.gridLayout_7.addWidget(self.widget, 0, 0, 1, 1)
+        self.gridLayout_7.addWidget(self.widget, 0, 0, 1, 1, Qt.AlignHCenter)
 
         self.label = QLabel(self.widget_3)
         self.label.setObjectName(u"label")
@@ -461,10 +503,11 @@ class Ui_MainWindow(object):
         self.deidentifyInputDir.setText(QCoreApplication.translate("MainWindow", u"De-identify input directory", None))
         self.offsetDate.setText(QCoreApplication.translate("MainWindow", u"Offset dates", None))
         self.dryRun.setText(QCoreApplication.translate("MainWindow", u"Dry run (no EDF)", None))
-        self.cancelButton.setText(QCoreApplication.translate("MainWindow", u"Cancel", None))
         self.convertButton.setText(QCoreApplication.translate("MainWindow", u"convert EEG/iEEG", None))
-        self.spredButton.setText(QCoreApplication.translate("MainWindow", u"SPReD", None))
         self.imagingButton.setText(QCoreApplication.translate("MainWindow", u"convert imaging", None))
+        self.spredButton.setText(QCoreApplication.translate("MainWindow", u"SPReD", None))
+        self.pauseButton.setText(QCoreApplication.translate("MainWindow", u"Pause", None))
+        self.cancelButton.setText(QCoreApplication.translate("MainWindow", u"Cancel", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Conversion Status", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
     # retranslateUi

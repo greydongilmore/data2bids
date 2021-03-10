@@ -16,7 +16,7 @@ import shutil
 import tarfile
 import zipfile
 import uuid
-
+import time
 
 class WorkerKilledException(Exception):
 	pass
@@ -52,12 +52,19 @@ class dicom2bids(QtCore.QRunnable):
 		
 		self.running=False
 		self.userAbort=False
+		self.is_paused=False
 		self.is_killed=False
 		self.compressed_exts=('.tar', '.tgz', '.tar.gz', '.tar.bz2', '.zip')
 	
 	def stop(self):
 		self.running=False
 		self.userAbort=True
+	
+	def pause(self):
+		if not self.is_paused:
+			self.is_paused=True
+		else:
+			self.is_paused=False
 	
 	def kill(self):
 		self.is_killed=True
@@ -106,6 +113,9 @@ class dicom2bids(QtCore.QRunnable):
 					self.conversionStatusText='\nDe-identifying imaging data for subject {} at {}'.format(isub, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 					self.signals.progressEvent.emit(self.conversionStatusText)
 					
+					while self.is_paused:
+						time.sleep(0)
+					
 					if self.is_killed:
 						self.running=False
 						raise WorkerKilledException
@@ -126,6 +136,9 @@ class dicom2bids(QtCore.QRunnable):
 						
 						for root, folders, files in os.walk(os.path.join(base, istudy)):
 							for file in files:
+								
+								while self.is_paused:
+									time.sleep(0)
 								
 								if self.is_killed:
 									self.running=False
@@ -151,6 +164,9 @@ class dicom2bids(QtCore.QRunnable):
 							session_name='_'.join(istudy.split('_')[:-1] + ['SE' + istudy.split('_')[-1], 'MRI'])
 							
 							outname=os.path.sep.join([outdir, session_name, original_filename.split(f'{os.sep}tmp{os.sep}')[-1].split(istudy)[-1][len(os.sep):]])
+							
+							while self.is_paused:
+								time.sleep(0)
 							
 							if self.is_killed:
 								self.running=False
