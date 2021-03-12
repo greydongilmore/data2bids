@@ -1,10 +1,13 @@
 cx-Freeze==6.1
 dicognito>=0.11.0
+google>=3.0.0
+google-cloud>=0.34.0
 numpy>=1.17.2
 pandas>=0.24.2
 PyDrive>=1.3.1
 pyside2==5.14.1
 pydicom>=2.0.0
 PyQt5==5.14.1
+pysocks>=1.7.1
 qdarkstyle>=2.8.1
 scipy>=1.3.2

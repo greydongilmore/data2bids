@@ -130,7 +130,8 @@ class SettingsDialog(QtWidgets.QDialog, settings_panel.Ui_Dialog):
 		self.setupUi(self)
 		
 		self.general = {
-			'checkUpdates': True
+			'checkUpdates': True,
+			'darkMode': True
 			}
 			
 		# set initials values to widgets
@@ -192,6 +193,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		elif __file__:
 			self.application_path = os.path.dirname(os.path.realpath(__file__))
 		
+		self.settings_fname = os.path.join(self.application_path, 'bids_settings.json')
+		
 		version_fname = os.path.join(self.application_path, 'version.json')
 		with open(version_fname) as version_file:
 			self.app_info = json.load(version_file)
@@ -201,6 +204,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.aboutPanel=aboutDialog(self.app_info)
 		self.bidsSettingsSetup()
 		
+		if self.bids_settings['general']['darkMode']:
+			self.onDarkMode()
+
 		if self.settingsPanel.checkUpdates.isChecked():
 			self.checkUpdates=checkUpdates(self.app_info)
 			latestVersion=self.checkUpdates.getLatest()
@@ -263,11 +269,22 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.actionLightMode.triggered.connect(self.onLightMode)
 		self.actionQuit.triggered.connect(self.close)
 	
+	def updateSettingsFile(self,settings_dict):
+		self.bids_settings=settings_dict
+		json_output = json.dumps(self.bids_settings, indent=4)
+		with open(self.settings_fname, 'w') as fid:
+			fid.write(json_output)
+			fid.write('\n')
+
 	def onDarkMode(self):
 		self.setStyleSheet(qdarkstyle.load_stylesheet_pyside2())
-	
+		self.bids_settings['general']['darkMode']=True
+		self.updateSettingsFile(self.bids_settings)
+
 	def onLightMode(self):
 		self.setStyleSheet("")
+		self.bids_settings['general']['darkMode']=False
+		self.updateSettingsFile(self.bids_settings)
 	
 	def onSettingsReject(self):
 		pass
@@ -279,10 +296,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.aboutPanel.close()
 		
 	def bidsSettingsSetup(self):
-		config_name = 'bids_settings.json'
-		
-		file = os.path.join(self.application_path, config_name)
-		if not os.path.exists(file):
+
+		if not os.path.exists(self.settings_fname):
 			bids_settings_json_temp = {}
 			bids_settings_json_temp['general'] = self.settingsPanel.general
 			bids_settings_json_temp['json_metadata'] = self.settingsPanel.ieeg_file_metadata
@@ -290,25 +305,15 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			bids_settings_json_temp['settings_panel'] = {'Deidentify_source': False,
 														  'offset_dates': False}
 			
-			json_output = json.dumps(bids_settings_json_temp, indent=4)
-			with open(file, 'w') as fid:
-				fid.write(json_output)
-				fid.write('\n')
+			self.updateSettingsFile(bids_settings_json_temp)
 		else:
-			with open(file) as settings_file:
-				bids_settings_json_temp = json.load(settings_file)
-		
-		self.bids_settings = bids_settings_json_temp
+			with open(self.settings_fname) as settings_file:
+				self.bids_settings = json.load(settings_file)
 		
 		if 'general' not in list(self.bids_settings):
-			self.bids_settings['general']={}
-			self.bids_settings['general']['checkUpdates'] = self.settingsPanel.checkUpdates.isChecked()
-			json_output = json.dumps(self.bids_settings, indent=4)
-			with open(file, 'w') as fid:
-				fid.write(json_output)
-				fid.write('\n')
+			self.bids_settings['general']=self.settingsPanel.general
+			self.updateSettingsFile(self.bids_settings)
 				
-# 		self.deidentifyInputDir.setChecked(self.bids_settings['settings_panel']['Deidentify_source'])
 		self.offsetDate.setChecked(self.bids_settings['settings_panel']['offset_dates'])
 		self.settingsPanel.checkUpdates.setChecked(self.bids_settings['general']['checkUpdates'])
 	
@@ -327,32 +332,19 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 # 			self.bids_settings = bids_settings_json_temp
 	
 	def onUpdatesCheckbox(self):
-		file = os.path.join(self.application_path, 'bids_settings.json')
-		with open(file) as settings_file:
-			bids_settings_json_temp = json.load(settings_file)
 		
-		if bids_settings_json_temp['general']['checkUpdates'] != self.settingsPanel.checkUpdates.isChecked():
-			bids_settings_json_temp['general']['checkUpdates'] = self.settingsPanel.checkUpdates.isChecked()
-			json_output = json.dumps(bids_settings_json_temp, indent=4)
-			with open(file, 'w') as fid:
-				fid.write(json_output)
-				fid.write('\n')
-				
-			self.bids_settings = bids_settings_json_temp
+		if self.bids_settings['general']['checkUpdates'] != self.settingsPanel.checkUpdates.isChecked():
+			self.bids_settings['general']['checkUpdates'] = self.settingsPanel.checkUpdates.isChecked()
+			self.updateSettingsFile(self.bids_settings)
 		
 	def onOffsetdateCheckbox(self):
 		file = os.path.join(self.application_path, 'bids_settings.json')
 		with open(file) as settings_file:
 			bids_settings_json_temp = json.load(settings_file)
 				
-		if bids_settings_json_temp['settings_panel']['offset_dates'] != self.offsetDate.isChecked():
-			bids_settings_json_temp['settings_panel']['offset_dates'] = self.offsetDate.isChecked()
-			json_output = json.dumps(bids_settings_json_temp, indent=4)
-			with open(file, 'w') as fid:
-				fid.write(json_output)
-				fid.write('\n')
-				
-			self.bids_settings = bids_settings_json_temp
+		if self.bids_settings['settings_panel']['offset_dates'] != self.offsetDate.isChecked():
+			self.bids_settings['settings_panel']['offset_dates'] = self.offsetDate.isChecked()
+			self.updateSettingsFile(self.bids_settings)
 			
 	def onSettingsButton(self):
 		self.settingsPanel.textboxDatasetName.setText(self.bids_settings['json_metadata']['DatasetName'])
@@ -403,29 +395,22 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if self.bids_settings['natus_info']['EEGElectrodeInfo']['Diameter'] != self.settingsPanel.textboxEEGDiameter.text():
 			self.bids_settings['natus_info']['EEGElectrodeInfo']['Diameter'] = self.settingsPanel.textboxEEGDiameter.text()
 		
-		file = os.path.join(self.application_path, 'bids_settings.json')
-		json_output = json.dumps(self.bids_settings, indent=4)
-		with open(file, 'w') as fid:
-			fid.write(json_output)
-			fid.write('\n')
+		self.updateSettingsFile(self.bids_settings)
 				
 	def onLoadDirButton(self):
 		bids_file = os.path.join(self.application_path, 'bids_settings.json')
 		with open(bids_file) as settings_file:
 			bids_settings_json_temp = json.load(settings_file)
 		
-		if 'lastInputDirectory' not in bids_settings_json_temp.keys():
-			bids_settings_json_temp['lastInputDirectory']=[]
-			json_output = json.dumps(bids_settings_json_temp, indent=4)
-			with open(bids_file, 'w') as fid:
-				fid.write(json_output)
-				fid.write('\n')
+		if 'lastInputDirectory' not in self.bids_settings.keys():
+			self.bids_settings['lastInputDirectory']=[]
+			self.updateSettingsFile(self.bids_settings)
 			
 			with open(bids_file) as settings_file:
 				bids_settings_json_temp = json.load(settings_file)
 		
-		if bids_settings_json_temp['lastInputDirectory']:
-			dialog = QtWidgets.QFileDialog(self, directory=bids_settings_json_temp['lastInputDirectory'])
+		if self.bids_settings['lastInputDirectory']:
+			dialog = QtWidgets.QFileDialog(self, directory=self.bids_settings['lastInputDirectory'])
 		else:
 			dialog = QtWidgets.QFileDialog(self)
 			
@@ -448,12 +433,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if dialog.exec_():
 			self.updateStatus("Loading input directory...")
 			self.input_path = dialog.selectedFiles()[0]
-			if self.input_path != bids_settings_json_temp['lastInputDirectory']:
-				bids_settings_json_temp['lastInputDirectory']=self.input_path
-				json_output = json.dumps(bids_settings_json_temp, indent=4)
-				with open(bids_file, 'w') as fid:
-					fid.write(json_output)
-					fid.write('\n')
+			if self.input_path != self.bids_settings['lastInputDirectory']:
+				self.bids_settings['lastInputDirectory']=self.input_path
+				self.updateSettingsFile(self.bids_settings)
 			
 			self.file_info, self.chan_label_file, self.imaging_data = read_input_dir(self.input_path, self.bids_settings)
 			self.treeViewLoad.setEditTriggers(self.treeViewLoad.NoEditTriggers)
@@ -584,22 +566,13 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.treeViewLoad.editItem(item, column)
 			
 	def onOutDirButton(self):
-		bids_file = os.path.join(self.application_path, 'bids_settings.json')
-		with open(bids_file) as settings_file:
-			bids_settings_json_temp = json.load(settings_file)
 		
-		if 'lastOutputDirectory' not in bids_settings_json_temp.keys():
-			bids_settings_json_temp['lastOutputDirectory']=[]
-			json_output = json.dumps(bids_settings_json_temp, indent=4)
-			with open(bids_file, 'w') as fid:
-				fid.write(json_output)
-				fid.write('\n')
-			
-			with open(bids_file) as settings_file:
-				bids_settings_json_temp = json.load(settings_file)
+		if 'lastOutputDirectory' not in self.bids_settings.keys():
+			self.bids_settings['lastOutputDirectory']=[]
+			self.updateSettingsFile(self.bids_settings)
 		
-		if bids_settings_json_temp['lastOutputDirectory']:
-			dialog = QtWidgets.QFileDialog(self, directory=bids_settings_json_temp['lastOutputDirectory'])
+		if self.bids_settings['lastOutputDirectory']:
+			dialog = QtWidgets.QFileDialog(self, directory=self.bids_settings['lastOutputDirectory'])
 		else:
 			dialog = QtWidgets.QFileDialog(self)
 			
@@ -633,12 +606,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 				warningBox("Output directory is not empty!")
 				return
 		
-			if self.output_path != bids_settings_json_temp['lastOutputDirectory']:
-				bids_settings_json_temp['lastOutputDirectory']=self.output_path
-				json_output = json.dumps(bids_settings_json_temp, indent=4)
-				with open(bids_file, 'w') as fid:
-					fid.write(json_output)
-					fid.write('\n')
+			if self.output_path != self.bids_settings['lastOutputDirectory']:
+				self.bids_settings['lastOutputDirectory']=self.output_path
+				self.updateSettingsFile(self.bids_settings)
 				
 			root = self.treeViewLoad.invisibleRootItem()
 			parent_count = root.childCount()

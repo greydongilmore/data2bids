@@ -37,6 +37,8 @@ class Ui_Dialog(object):
         self.versionDate.setMinimumSize(QSize(130, 26))
         self.versionDate.setMaximumSize(QSize(16777215, 26))
         font = QFont()
+        font.setFamily(u"Arial")
+        font.setPointSize(11)
         font.setBold(True)
         font.setWeight(75)
         self.versionDate.setFont(font)
@@ -51,6 +53,10 @@ class Ui_Dialog(object):
         self.versionDateEdit.setSizePolicy(sizePolicy)
         self.versionDateEdit.setMinimumSize(QSize(0, 26))
         self.versionDateEdit.setMaximumSize(QSize(16777215, 26))
+        font1 = QFont()
+        font1.setFamily(u"Arial")
+        font1.setPointSize(11)
+        self.versionDateEdit.setFont(font1)
         self.versionDateEdit.setStyleSheet(u"margin-left:1px;")
 
         self.gridLayout.addWidget(self.versionDateEdit, 0, 1, 1, 1)
@@ -148,6 +154,7 @@ class Ui_Dialog(object):
         palette.setBrush(QPalette.Disabled, QPalette.PlaceholderText, brush7)
 #endif
         self.googleDriveLink.setPalette(palette)
+        self.googleDriveLink.setFont(font1)
         self.googleDriveLink.setAutoFillBackground(False)
         self.googleDriveLink.setStyleSheet(u"")
         self.googleDriveLink.setFrameShape(QFrame.NoFrame)
@@ -233,6 +240,7 @@ class Ui_Dialog(object):
         palette1.setBrush(QPalette.Disabled, QPalette.PlaceholderText, brush7)
 #endif
         self.documentationLink.setPalette(palette1)
+        self.documentationLink.setFont(font1)
         self.documentationLink.setAutoFillBackground(False)
         self.documentationLink.setFrameShape(QFrame.NoFrame)
         self.documentationLink.setFrameShadow(QFrame.Plain)
@@ -261,6 +269,7 @@ class Ui_Dialog(object):
         self.versionDateEdit_2.setSizePolicy(sizePolicy)
         self.versionDateEdit_2.setMinimumSize(QSize(0, 26))
         self.versionDateEdit_2.setMaximumSize(QSize(16777215, 26))
+        self.versionDateEdit_2.setFont(font1)
         self.versionDateEdit_2.setStyleSheet(u"margin-left:1px;")
         self.versionDateEdit_2.setTextInteractionFlags(Qt.LinksAccessibleByMouse|Qt.TextSelectableByMouse)
 
@@ -283,6 +292,7 @@ class Ui_Dialog(object):
         self.versionDateEdit_3.setSizePolicy(sizePolicy)
         self.versionDateEdit_3.setMinimumSize(QSize(0, 26))
         self.versionDateEdit_3.setMaximumSize(QSize(16777215, 26))
+        self.versionDateEdit_3.setFont(font1)
         self.versionDateEdit_3.setStyleSheet(u"margin-left:1px;")
         self.versionDateEdit_3.setTextInteractionFlags(Qt.LinksAccessibleByMouse|Qt.TextSelectableByMouse)
 
@@ -317,6 +327,7 @@ class Ui_Dialog(object):
         self.closeAboutWindowButton.setObjectName(u"closeAboutWindowButton")
         sizePolicy2.setHeightForWidth(self.closeAboutWindowButton.sizePolicy().hasHeightForWidth())
         self.closeAboutWindowButton.setSizePolicy(sizePolicy2)
+        self.closeAboutWindowButton.setFont(font1)
 
         self.gridLayout_2.addWidget(self.closeAboutWindowButton, 5, 0, 1, 1, Qt.AlignRight)
 
@@ -338,8 +349,8 @@ class Ui_Dialog(object):
         self.googleDriveLink.setHtml(QCoreApplication.translate("Dialog", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><a href=\"https://drive.google.com/drive/folders/1op8Gv6sVWosIL7QQyXsUvNNjR5XXXj0j?usp=sharing\"><span style=\" text-decoration: underline; color:#0000ff;\">link to folder</span></a></p></body></html>", None))
+"</style></head><body style=\" font-family:'Arial'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><a href=\"https://drive.google.com/drive/folders/1op8Gv6sVWosIL7QQyXsUvNNjR5XXXj0j?usp=sharing\"><span style=\" font-size:12pt; text-decoration: underline; color:#0000ff;\">link to folder</span></a></p></body></html>", None))
         self.googleDriveLink.setPlaceholderText("")
         self.documentation.setText(QCoreApplication.translate("Dialog", u"Documentation: ", None))
         self.documentationLink.setMarkdown(QCoreApplication.translate("Dialog", u"[https://data2bids.greydongilmore.com](https://data2bids.greydongilmore.com)\n"
@@ -348,8 +359,8 @@ class Ui_Dialog(object):
         self.documentationLink.setHtml(QCoreApplication.translate("Dialog", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:8px; margin-bottom:8px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><a href=\"https://data2bids.greydongilmore.com\"><span style=\" text-decoration: underline; color:#0000ff;\">https://data2bids.greydongilmore.com</span></a></p></body></html>", None))
+"</style></head><body style=\" font-family:'Arial'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:8px; margin-bottom:8px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><a href=\"https://data2bids.greydongilmore.com\"><span style=\" font-size:12pt; text-decoration: underline; color:#0000ff;\">https://data2bids.greydongilmore.com</span></a></p></body></html>", None))
         self.documentationLink.setPlaceholderText("")
         self.versionDate_2.setText(QCoreApplication.translate("Dialog", u"Developer", None))
         self.versionDateEdit_2.setText(QCoreApplication.translate("Dialog", u"Greydon Gilmore", None))

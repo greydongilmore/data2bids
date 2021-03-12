@@ -1,4 +1,8 @@
 {
+    "general": {
+        "checkUpdates": true,
+        "darkMode": false
+    },
     "json_metadata": {
         "TaskName": "EEG Clinical",
         "Experimenter": [
@@ -90,10 +94,5 @@
     "settings_panel": {
         "Deidentify_source": false,
         "offset_dates": false
-    },
-    "lastInputDirectory": "/media/veracrypt6/projects/eplink/walkthrough_example/ieeg_sample/input",
-    "lastOutputDirectory": "/media/veracrypt6/projects/eplink/walkthrough_example/ieeg_sample/output",
-    "general": {
-        "checkUpdates": false
     }
 }
