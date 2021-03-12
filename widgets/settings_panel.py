@@ -3,19 +3,22 @@
 ################################################################################
 ## Form generated from reading UI file 'settings_panel.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 5.14.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
+from PySide2.QtCore import (QCoreApplication, QMetaObject, QObject, QPoint,
+    QRect, QSize, QUrl, Qt)
+from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
+    QFontDatabase, QIcon, QLinearGradient, QPalette, QPainter, QPixmap,
+    QRadialGradient)
 from PySide2.QtWidgets import *
 
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
-        if not Dialog.objectName():
+        if Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.resize(619, 515)
         self.verticalLayout_3 = QVBoxLayout(Dialog)
@@ -27,15 +30,56 @@ class Ui_Dialog(object):
         font.setPointSize(10)
         self.tabWidget.setFont(font)
         self.tabWidget.setDocumentMode(True)
+        self.tab = QWidget()
+        self.tab.setObjectName(u"tab")
+        self.gridLayout_2 = QGridLayout(self.tab)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.widgetLab_2 = QWidget(self.tab)
+        self.widgetLab_2.setObjectName(u"widgetLab_2")
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(40)
+        sizePolicy.setHeightForWidth(self.widgetLab_2.sizePolicy().hasHeightForWidth())
+        self.widgetLab_2.setSizePolicy(sizePolicy)
+        self.widgetLab_2.setMinimumSize(QSize(0, 40))
+        self.widgetLab_2.setMaximumSize(QSize(16777215, 40))
+        font1 = QFont()
+        font1.setPointSize(11)
+        self.widgetLab_2.setFont(font1)
+        self.gridLayout = QGridLayout(self.widgetLab_2)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.checkUpdatesLabel = QLabel(self.widgetLab_2)
+        self.checkUpdatesLabel.setObjectName(u"checkUpdatesLabel")
+        self.checkUpdatesLabel.setMinimumSize(QSize(120, 0))
+        font2 = QFont()
+        font2.setFamily(u"Arial")
+        font2.setPointSize(11)
+        font2.setBold(False)
+        font2.setWeight(50)
+        self.checkUpdatesLabel.setFont(font2)
+
+        self.gridLayout.addWidget(self.checkUpdatesLabel, 0, 0, 1, 1)
+
+        self.checkUpdates = QCheckBox(self.widgetLab_2)
+        self.checkUpdates.setObjectName(u"checkUpdates")
+        self.checkUpdates.setChecked(True)
+
+        self.gridLayout.addWidget(self.checkUpdates, 0, 1, 1, 1)
+
+
+        self.gridLayout_2.addWidget(self.widgetLab_2, 0, 0, 1, 1, Qt.AlignLeft)
+
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.gridLayout_2.addItem(self.verticalSpacer_3, 1, 0, 1, 1)
+
+        self.tabWidget.addTab(self.tab, "")
         self.tabJson = QWidget()
         self.tabJson.setObjectName(u"tabJson")
         self.verticalLayout = QVBoxLayout(self.tabJson)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.widgetLab = QWidget(self.tabJson)
         self.widgetLab.setObjectName(u"widgetLab")
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(40)
         sizePolicy.setHeightForWidth(self.widgetLab.sizePolicy().hasHeightForWidth())
         self.widgetLab.setSizePolicy(sizePolicy)
         self.widgetLab.setMinimumSize(QSize(0, 40))
@@ -45,12 +89,12 @@ class Ui_Dialog(object):
         self.labelLab = QLabel(self.widgetLab)
         self.labelLab.setObjectName(u"labelLab")
         self.labelLab.setMinimumSize(QSize(120, 0))
-        font1 = QFont()
-        font1.setFamily(u"Arial")
-        font1.setPointSize(10)
-        font1.setBold(False)
-        font1.setWeight(50)
-        self.labelLab.setFont(font1)
+        font3 = QFont()
+        font3.setFamily(u"Arial")
+        font3.setPointSize(10)
+        font3.setBold(False)
+        font3.setWeight(50)
+        self.labelLab.setFont(font3)
 
         self.horizontalLayout_3.addWidget(self.labelLab)
 
@@ -75,7 +119,7 @@ class Ui_Dialog(object):
         self.labelExperimenter = QLabel(self.widgetExperimenter)
         self.labelExperimenter.setObjectName(u"labelExperimenter")
         self.labelExperimenter.setMinimumSize(QSize(120, 0))
-        self.labelExperimenter.setFont(font1)
+        self.labelExperimenter.setFont(font3)
 
         self.horizontalLayout_2.addWidget(self.labelExperimenter)
 
@@ -100,7 +144,7 @@ class Ui_Dialog(object):
         self.labelDatasetName = QLabel(self.widgetDatasetName)
         self.labelDatasetName.setObjectName(u"labelDatasetName")
         self.labelDatasetName.setMinimumSize(QSize(120, 0))
-        self.labelDatasetName.setFont(font1)
+        self.labelDatasetName.setFont(font3)
 
         self.horizontalLayout.addWidget(self.labelDatasetName)
 
@@ -130,7 +174,7 @@ class Ui_Dialog(object):
         sizePolicy1.setHeightForWidth(self.labelInstitutionAddress.sizePolicy().hasHeightForWidth())
         self.labelInstitutionAddress.setSizePolicy(sizePolicy1)
         self.labelInstitutionAddress.setMinimumSize(QSize(120, 0))
-        self.labelInstitutionAddress.setFont(font1)
+        self.labelInstitutionAddress.setFont(font3)
 
         self.horizontalLayout_5.addWidget(self.labelInstitutionAddress)
 
@@ -157,7 +201,7 @@ class Ui_Dialog(object):
         sizePolicy1.setHeightForWidth(self.labelInstitutionName.sizePolicy().hasHeightForWidth())
         self.labelInstitutionName.setSizePolicy(sizePolicy1)
         self.labelInstitutionName.setMinimumSize(QSize(120, 0))
-        self.labelInstitutionName.setFont(font1)
+        self.labelInstitutionName.setFont(font3)
 
         self.horizontalLayout_4.addWidget(self.labelInstitutionName)
 
@@ -182,12 +226,12 @@ class Ui_Dialog(object):
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.labeliEEG = QLabel(self.tabElectrodeInfo)
         self.labeliEEG.setObjectName(u"labeliEEG")
-        font2 = QFont()
-        font2.setFamily(u"Arial")
-        font2.setPointSize(12)
-        font2.setBold(True)
-        font2.setWeight(75)
-        self.labeliEEG.setFont(font2)
+        font4 = QFont()
+        font4.setFamily(u"Arial")
+        font4.setPointSize(12)
+        font4.setBold(True)
+        font4.setWeight(75)
+        self.labeliEEG.setFont(font4)
 
         self.verticalLayout_2.addWidget(self.labeliEEG)
 
@@ -202,7 +246,7 @@ class Ui_Dialog(object):
         self.labelIEEGManufacturer = QLabel(self.widgetIEEGManufacturer)
         self.labelIEEGManufacturer.setObjectName(u"labelIEEGManufacturer")
         self.labelIEEGManufacturer.setMinimumSize(QSize(120, 0))
-        self.labelIEEGManufacturer.setFont(font1)
+        self.labelIEEGManufacturer.setFont(font3)
         self.labelIEEGManufacturer.setIndent(20)
 
         self.horizontalLayout_6.addWidget(self.labelIEEGManufacturer)
@@ -228,7 +272,7 @@ class Ui_Dialog(object):
         self.labelIEEGType = QLabel(self.widgetIEEGType)
         self.labelIEEGType.setObjectName(u"labelIEEGType")
         self.labelIEEGType.setMinimumSize(QSize(120, 0))
-        self.labelIEEGType.setFont(font1)
+        self.labelIEEGType.setFont(font3)
         self.labelIEEGType.setIndent(20)
 
         self.horizontalLayout_7.addWidget(self.labelIEEGType)
@@ -254,7 +298,7 @@ class Ui_Dialog(object):
         self.labelIEEGMaterial = QLabel(self.widgetIEEGMaterial)
         self.labelIEEGMaterial.setObjectName(u"labelIEEGMaterial")
         self.labelIEEGMaterial.setMinimumSize(QSize(120, 0))
-        self.labelIEEGMaterial.setFont(font1)
+        self.labelIEEGMaterial.setFont(font3)
         self.labelIEEGMaterial.setIndent(20)
 
         self.horizontalLayout_8.addWidget(self.labelIEEGMaterial)
@@ -280,7 +324,7 @@ class Ui_Dialog(object):
         self.labelIEEGDiameter = QLabel(self.widgetIEEGDiameter)
         self.labelIEEGDiameter.setObjectName(u"labelIEEGDiameter")
         self.labelIEEGDiameter.setMinimumSize(QSize(120, 0))
-        self.labelIEEGDiameter.setFont(font1)
+        self.labelIEEGDiameter.setFont(font3)
         self.labelIEEGDiameter.setIndent(20)
 
         self.horizontalLayout_9.addWidget(self.labelIEEGDiameter)
@@ -297,7 +341,7 @@ class Ui_Dialog(object):
 
         self.labelEEG = QLabel(self.tabElectrodeInfo)
         self.labelEEG.setObjectName(u"labelEEG")
-        self.labelEEG.setFont(font2)
+        self.labelEEG.setFont(font4)
 
         self.verticalLayout_2.addWidget(self.labelEEG)
 
@@ -312,7 +356,7 @@ class Ui_Dialog(object):
         self.labelEEGManufacturer = QLabel(self.widgetEEGManufacturer)
         self.labelEEGManufacturer.setObjectName(u"labelEEGManufacturer")
         self.labelEEGManufacturer.setMinimumSize(QSize(120, 0))
-        self.labelEEGManufacturer.setFont(font1)
+        self.labelEEGManufacturer.setFont(font3)
         self.labelEEGManufacturer.setIndent(20)
 
         self.horizontalLayout_17.addWidget(self.labelEEGManufacturer)
@@ -338,7 +382,7 @@ class Ui_Dialog(object):
         self.labelEEGType = QLabel(self.widgetEEGType)
         self.labelEEGType.setObjectName(u"labelEEGType")
         self.labelEEGType.setMinimumSize(QSize(120, 0))
-        self.labelEEGType.setFont(font1)
+        self.labelEEGType.setFont(font3)
         self.labelEEGType.setIndent(20)
 
         self.horizontalLayout_16.addWidget(self.labelEEGType)
@@ -364,7 +408,7 @@ class Ui_Dialog(object):
         self.labelEEGMaterial = QLabel(self.widgetEEGMaterial)
         self.labelEEGMaterial.setObjectName(u"labelEEGMaterial")
         self.labelEEGMaterial.setMinimumSize(QSize(120, 0))
-        self.labelEEGMaterial.setFont(font1)
+        self.labelEEGMaterial.setFont(font3)
         self.labelEEGMaterial.setIndent(20)
 
         self.horizontalLayout_14.addWidget(self.labelEEGMaterial)
@@ -390,7 +434,7 @@ class Ui_Dialog(object):
         self.labelEEGDiameter = QLabel(self.widgetEEGDiameter)
         self.labelEEGDiameter.setObjectName(u"labelEEGDiameter")
         self.labelEEGDiameter.setMinimumSize(QSize(120, 0))
-        self.labelEEGDiameter.setFont(font1)
+        self.labelEEGDiameter.setFont(font3)
         self.labelEEGDiameter.setIndent(20)
 
         self.horizontalLayout_15.addWidget(self.labelEEGDiameter)
@@ -426,7 +470,7 @@ class Ui_Dialog(object):
         self.buttonBoxJson.accepted.connect(Dialog.accept)
         self.buttonBoxJson.rejected.connect(Dialog.reject)
 
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -434,6 +478,9 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Settings", None))
+        self.checkUpdatesLabel.setText(QCoreApplication.translate("Dialog", u"check for updates on startup", None))
+        self.checkUpdates.setText("")
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("Dialog", u"General settings", None))
         self.labelLab.setText(QCoreApplication.translate("Dialog", u"Lab", None))
         self.labelExperimenter.setText(QCoreApplication.translate("Dialog", u"Experimenter", None))
         self.labelDatasetName.setText(QCoreApplication.translate("Dialog", u"Dataset Name", None))

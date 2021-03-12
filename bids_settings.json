@@ -24,13 +24,13 @@
             "Manufacturer": "AdTech",
             "Type": "depth",
             "Material": "Platinum",
-            "Diameter": 0.86
+            "Diameter": "0.86"
         },
         "EEGElectrodeInfo": {
             "Manufacturer": "AdTech",
             "Type": "scalp",
             "Material": "Platinum",
-            "Diameter": 10
+            "Diameter": "10"
         },
         "ChannelInfo": {
             "Patient Event": {
@@ -92,5 +92,8 @@
         "offset_dates": false
     },
     "lastInputDirectory": "/media/veracrypt6/projects/eplink/walkthrough_example/ieeg_sample/input",
-    "lastOutputDirectory": "/media/veracrypt6/projects/eplink/walkthrough_example/ieeg_sample/output"
+    "lastOutputDirectory": "/media/veracrypt6/projects/eplink/walkthrough_example/ieeg_sample/output",
+    "general": {
+        "checkUpdates": false
+    }
 }

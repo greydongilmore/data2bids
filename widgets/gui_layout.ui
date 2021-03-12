@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1243</width>
-    <height>991</height>
+    <width>1249</width>
+    <height>782</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -42,39 +42,30 @@
      <height>700</height>
     </size>
    </property>
-   <layout class="QGridLayout" name="gridLayout_2">
-    <item row="0" column="0" colspan="2">
+   <layout class="QGridLayout" name="gridLayout_7">
+    <item row="0" column="0">
      <widget class="QSplitter" name="splitter">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+       <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
       <property name="minimumSize">
        <size>
-        <width>1225</width>
-        <height>450</height>
+        <width>0</width>
+        <height>0</height>
        </size>
-      </property>
-      <property name="midLineWidth">
-       <number>0</number>
       </property>
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
-      <property name="opaqueResize">
-       <bool>false</bool>
-      </property>
-      <property name="handleWidth">
-       <number>4</number>
-      </property>
       <property name="childrenCollapsible">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
       <widget class="QWidget" name="widget_6" native="true">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -82,14 +73,14 @@
        <property name="minimumSize">
         <size>
          <width>1200</width>
-         <height>200</height>
+         <height>0</height>
         </size>
        </property>
-       <layout class="QGridLayout" name="gridLayout_3">
+       <layout class="QGridLayout" name="gridLayout_2">
         <item row="0" column="0">
          <widget class="QWidget" name="widget_4" native="true">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="MinimumExpanding">
+           <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -111,7 +102,7 @@
              </property>
              <property name="minimumSize">
               <size>
-               <width>150</width>
+               <width>160</width>
                <height>30</height>
               </size>
              </property>
@@ -143,7 +134,7 @@
              <property name="sizeHint" stdset="0">
               <size>
                <width>20</width>
-               <height>226</height>
+               <height>0</height>
               </size>
              </property>
             </spacer>
@@ -231,7 +222,7 @@
       </widget>
       <widget class="QWidget" name="widget_8" native="true">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -239,14 +230,14 @@
        <property name="minimumSize">
         <size>
          <width>1200</width>
-         <height>250</height>
+         <height>0</height>
         </size>
        </property>
-       <layout class="QGridLayout" name="gridLayout_5">
+       <layout class="QGridLayout" name="gridLayout_3">
         <item row="0" column="0">
          <widget class="QWidget" name="widget_5" native="true">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="MinimumExpanding">
+           <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -268,7 +259,7 @@
              </property>
              <property name="minimumSize">
               <size>
-               <width>150</width>
+               <width>160</width>
                <height>30</height>
               </size>
              </property>
@@ -339,7 +330,7 @@
              <property name="sizeHint" stdset="0">
               <size>
                <width>20</width>
-               <height>211</height>
+               <height>0</height>
               </size>
              </property>
             </spacer>
@@ -419,166 +410,68 @@
      </widget>
     </item>
     <item row="1" column="0">
-     <widget class="QWidget" name="widget_7" native="true">
+     <widget class="QWidget" name="widget_3" native="true">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
       <property name="minimumSize">
        <size>
-        <width>200</width>
-        <height>250</height>
+        <width>0</width>
+        <height>0</height>
        </size>
       </property>
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>300</height>
-       </size>
-      </property>
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
-        <widget class="QGroupBox" name="groupBox">
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="1" column="2">
+        <widget class="QPlainTextEdit" name="conversionStatus">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
           <size>
-           <width>190</width>
-           <height>200</height>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
           </size>
          </property>
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>12</pointsize>
-           <weight>75</weight>
-           <bold>true</bold>
+           <pointsize>9</pointsize>
           </font>
          </property>
-         <property name="title">
-          <string>Settings Panel</string>
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
          </property>
-         <layout class="QGridLayout" name="gridLayout_9">
-          <item row="0" column="0">
-           <widget class="QCheckBox" name="deidentifyInputDir">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <family>Arial</family>
-              <pointsize>11</pointsize>
-              <weight>50</weight>
-              <bold>false</bold>
-             </font>
-            </property>
-            <property name="text">
-             <string>De-identify input directory</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QCheckBox" name="offsetDate">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <family>Arial</family>
-              <pointsize>11</pointsize>
-              <weight>50</weight>
-              <bold>false</bold>
-             </font>
-            </property>
-            <property name="text">
-             <string>Offset dates</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QCheckBox" name="dryRun">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <family>Arial</family>
-              <pointsize>11</pointsize>
-              <weight>50</weight>
-              <bold>false</bold>
-             </font>
-            </property>
-            <property name="text">
-             <string>Dry run (no EDF)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <spacer name="verticalSpacer_4">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::MinimumExpanding</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
+         <property name="midLineWidth">
+          <number>1</number>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::NoTextInteraction</set>
+         </property>
         </widget>
        </item>
-      </layout>
-     </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="QWidget" name="widget_3" native="true">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>900</width>
-        <height>200</height>
-       </size>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_7">
-       <item row="0" column="0" alignment="Qt::AlignHCenter">
+       <item row="0" column="2">
         <widget class="QWidget" name="widget" native="true">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
           <size>
-           <width>900</width>
+           <width>0</width>
            <height>0</height>
           </size>
          </property>
@@ -1176,11 +1069,17 @@ color: black</string>
          </layout>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label">
+       <item row="0" column="1" rowspan="2">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="minimumSize">
           <size>
-           <width>900</width>
+           <width>0</width>
            <height>0</height>
           </size>
          </property>
@@ -1192,46 +1091,93 @@ color: black</string>
            <bold>true</bold>
           </font>
          </property>
-         <property name="text">
-          <string>Conversion Status</string>
+         <property name="title">
+          <string>Settings Panel</string>
          </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QPlainTextEdit" name="conversionStatus">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>150</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>300</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>9</pointsize>
-          </font>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::Box</enum>
-         </property>
-         <property name="midLineWidth">
-          <number>1</number>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::NoTextInteraction</set>
-         </property>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="dryRun">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Arial</family>
+              <pointsize>11</pointsize>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Dry run (no EDF)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="offsetDate">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Arial</family>
+              <pointsize>11</pointsize>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Offset dates</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="deidentifyInputDir">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Arial</family>
+              <pointsize>11</pointsize>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>De-identify input directory</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <spacer name="verticalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::MinimumExpanding</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
@@ -1252,7 +1198,7 @@ color: black</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1243</width>
+     <width>1249</width>
      <height>23</height>
     </rect>
    </property>
@@ -1272,11 +1218,32 @@ color: black</string>
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuTheme">
+     <property name="title">
+      <string>Theme</string>
+     </property>
+     <addaction name="actionDarkMode"/>
+     <addaction name="actionLightMode"/>
+    </widget>
     <addaction name="actionLoad_data"/>
     <addaction name="actionSettings"/>
+    <addaction name="menuTheme"/>
     <addaction name="actionQuit"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuHelp"/>
   </widget>
   <action name="actionLoad_data">
    <property name="text">
@@ -1303,6 +1270,39 @@ color: black</string>
   <action name="actionSettings">
    <property name="text">
     <string>Settings</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+     <pointsize>11</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About data2bids</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+     <pointsize>11</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionDarkMode">
+   <property name="text">
+    <string>Dark mode</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+     <pointsize>11</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionLightMode">
+   <property name="text">
+    <string>Light mode</string>
    </property>
    <property name="font">
     <font>

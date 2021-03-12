@@ -12,17 +12,87 @@ import shutil
 import numpy as np
 import json
 import re
+import qdarkstyle
 
 from PySide2 import QtGui, QtCore, QtWidgets
 
 from widgets import gui_layout
-from widgets import settings_panel
+from widgets import settings_panel,about_panel
 from edf2bids import edf2bids
 from bids2spred import bids2spred
 from dicom2bids import dicom2bids
 
 from helpers import read_input_dir, read_output_dir, bidsHelper, warningBox
 
+
+class checkUpdates:
+		
+	def __init__(self, app_info=None):
+		super(checkUpdates, self).__init__()
+		
+		self.app_info=app_info
+		
+		if getattr(sys, 'frozen', False):
+			self.application_path = os.path.dirname(sys.argv[0])
+		elif __file__:
+			self.application_path = os.path.dirname(os.path.realpath(__file__))
+			
+		self.credentialFile=os.path.join(self.application_path,'static',"mycreds.txt")
+		self.folder_title='data2bids'
+		self.zipped_title='data2bids_conversion_software'
+	
+	def getLatest(self):
+		from pydrive.auth import GoogleAuth
+		from pydrive.drive import GoogleDrive
+		
+		patt = re.compile('.{2}.{2}.{4}')
+		
+		gauth = GoogleAuth()
+		gauth.DEFAULT_SETTINGS['client_config_file'] = os.path.join(self.application_path,'static','client_secrets.json')
+		
+		# Try to load saved client credentials
+		gauth.LoadCredentialsFile(self.credentialFile)
+		
+		if gauth.credentials is None:
+			gauth.GetFlow()
+			gauth.flow.params.update({'access_type': 'offline'})
+			gauth.flow.params.update({'approval_prompt': 'force'})
+			
+			gauth.LocalWebserverAuth()
+		elif gauth.access_token_expired:
+			gauth.Refresh()
+		else:
+			gauth.Authorize()
+		
+		# Save the current credentials to a file
+		gauth.SaveCredentialsFile(self.credentialFile)
+		
+		drive = GoogleDrive(gauth)
+		
+		zipped_file_id=[]
+		
+		folder_list = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
+		for ifolder in folder_list:
+			if ifolder['title'] == self.folder_title:
+				folder_id = ifolder['id']
+				file_list = drive.ListFile({'q': f"'{ifolder['id']}' in parents and trashed=false"}).GetList()
+				for ifile in file_list:
+					if ifile['title'].startswith(self.zipped_title):
+						zipped_file_id_temp={}
+						zipped_file_id_temp['title']=ifile['title']
+						zipped_file_id_temp['id']=ifile['id']
+						date = patt.findall(os.path.splitext(ifile['title'].split('_')[-1])[0])
+						zipped_file_id_temp['version']=date[0] if isinstance(date,list) else 'N/A'
+						zipped_file_id.append(zipped_file_id_temp)
+				break
+		
+		new_software=None
+		for ifile in zipped_file_id:
+			if ifile['version']>self.app_info['date']:
+				new_software=ifile
+		
+		return new_software
+		
 class Delegate(QtWidgets.QStyledItemDelegate):
 	def initStyleOption(self, option, index):
 		super().initStyleOption(option, index)
@@ -34,11 +104,35 @@ class Delegate(QtWidgets.QStyledItemDelegate):
 			text = str(4*" ").join([index.sibling(index.row(), c).data() for c in columns])
 		option.text = text
 
+class aboutDialog(QtWidgets.QDialog, about_panel.Ui_Dialog):
+	def __init__(self, app_info=None):
+		super(aboutDialog, self).__init__()
+		self.setupUi(self)
+		
+		self.app_info=app_info
+		
+		if getattr(sys, 'frozen', False):
+			self.application_path = os.path.dirname(sys.argv[0])
+		elif __file__:
+			self.application_path = os.path.dirname(os.path.realpath(__file__))
+			
+		self.softwareIcon.setPixmap(QtGui.QPixmap(os.path.join(self.application_path, 'static', 'edf2bids_full_icon.svg')))
+		self.googleDriveLink.viewport().setAutoFillBackground(False)
+		self.documentationLink.viewport().setAutoFillBackground(False)
+		
+		self.versionDateEdit.setText(f"{self.app_info['date'][:2]}.{self.app_info['date'][2:4]}.{self.app_info['date'][4:]}")
+		self.googleDriveLink.setHtml(f'<a href="{self.app_info["driveFolder"]}"><span style=" text-decoration: underline; color:#0000ff;">link to folder</span></a>')
+		self.documentationLink.setHtml(f'<a href="{self.app_info["website"]}"><span style=" text-decoration: underline; color:#0000ff;">link to website</span></a>')
+
 class SettingsDialog(QtWidgets.QDialog, settings_panel.Ui_Dialog):
 	def __init__(self):
 		super(SettingsDialog, self).__init__()
 		self.setupUi(self)
 		
+		self.general = {
+			'checkUpdates': True
+			}
+			
 		# set initials values to widgets
 		self.ieeg_file_metadata = {
 			'TaskName': 'EEG Clinical',
@@ -93,9 +187,34 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 	def __init__(self):
 		super(self.__class__, self).__init__()
 		
+		if getattr(sys, 'frozen', False):
+			self.application_path = os.path.dirname(sys.argv[0])
+		elif __file__:
+			self.application_path = os.path.dirname(os.path.realpath(__file__))
+		
+		version_fname = os.path.join(self.application_path, 'version.json')
+		with open(version_fname) as version_file:
+			self.app_info = json.load(version_file)
+		
 		self.setupUi(self)
 		self.settingsPanel = SettingsDialog()
+		self.aboutPanel=aboutDialog(self.app_info)
 		self.bidsSettingsSetup()
+		
+		if self.settingsPanel.checkUpdates.isChecked():
+			self.checkUpdates=checkUpdates(self.app_info)
+			latestVersion=self.checkUpdates.getLatest()
+			if latestVersion is not None:
+				googleDriveLink=f'<a href="{self.app_info["driveFolder"]}"><span style=" text-decoration: underline; color:#0000ff;">link to folder</span></a>'
+				versionMessage=QtWidgets.QMessageBox()
+				versionMessage.setTextFormat(QtCore.Qt.RichText)
+				versionMessage.setWindowTitle("Newer data2bids version detected")
+				versionMessage.setText("A newer version of data2bids has been released<br>"+
+									f"Current version date: {self.app_info['date']}<br>"+
+									f"Newer version date: {latestVersion['version']}<br>"+
+									"Google drive folder: "+f"<a href='{self.app_info['driveFolder']}'><span style= text-decoration: underline; color:#0000ff;>link to folder</span></a>"
+									)
+				versionMessage.exec_()
 		
 		self.output_path=None
 		
@@ -124,6 +243,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 # 		self.deidentifyInputDir.stateChanged.connect(self.onDeidentifyCheckbox)
 		self.offsetDate.stateChanged.connect(self.onOffsetdateCheckbox)
 		
+		self.settingsPanel.checkUpdates.clicked.connect(self.onUpdatesCheckbox)
+		
 		self.threadpool = QtCore.QThreadPool()
 		
 		self.loadDirButton.clicked.connect(self.onLoadDirButton)
@@ -136,21 +257,34 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.actionSettings.triggered.connect(self.onSettingsButton)
 		self.settingsPanel.buttonBoxJson.accepted.connect(self.onSettingsAccept)
 		self.settingsPanel.buttonBoxJson.rejected.connect(self.onSettingsReject)
+		self.actionAbout.triggered.connect(self.onAboutButton)
+		self.aboutPanel.closeAboutWindowButton.clicked.connect(self.onCloseAbout)
+		self.actionDarkMode.triggered.connect(self.onDarkMode)
+		self.actionLightMode.triggered.connect(self.onLightMode)
 		self.actionQuit.triggered.connect(self.close)
+	
+	def onDarkMode(self):
+		self.setStyleSheet(qdarkstyle.load_stylesheet_pyside2())
+	
+	def onLightMode(self):
+		self.setStyleSheet("")
 	
 	def onSettingsReject(self):
 		pass
 	
+	def onAboutButton(self):
+		self.aboutPanel.exec_()
+	
+	def onCloseAbout(self):
+		self.aboutPanel.close()
+		
 	def bidsSettingsSetup(self):
 		config_name = 'bids_settings.json'
-		if getattr(sys, 'frozen', False):
-			self.application_path = os.path.dirname(sys.argv[0])
-		elif __file__:
-			self.application_path = os.path.dirname(os.path.realpath(__file__))
-			
+		
 		file = os.path.join(self.application_path, config_name)
 		if not os.path.exists(file):
 			bids_settings_json_temp = {}
+			bids_settings_json_temp['general'] = self.settingsPanel.general
 			bids_settings_json_temp['json_metadata'] = self.settingsPanel.ieeg_file_metadata
 			bids_settings_json_temp['natus_info'] = self.settingsPanel.natus_info
 			bids_settings_json_temp['settings_panel'] = {'Deidentify_source': False,
@@ -166,8 +300,17 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		
 		self.bids_settings = bids_settings_json_temp
 		
+		if 'general' not in list(self.bids_settings):
+			self.bids_settings['general']={}
+			self.bids_settings['general']['checkUpdates'] = self.settingsPanel.checkUpdates.isChecked()
+			json_output = json.dumps(self.bids_settings, indent=4)
+			with open(file, 'w') as fid:
+				fid.write(json_output)
+				fid.write('\n')
+				
 # 		self.deidentifyInputDir.setChecked(self.bids_settings['settings_panel']['Deidentify_source'])
 		self.offsetDate.setChecked(self.bids_settings['settings_panel']['offset_dates'])
+		self.settingsPanel.checkUpdates.setChecked(self.bids_settings['general']['checkUpdates'])
 	
 # 	def onDeidentifyCheckbox(self):
 # 		file = os.path.join(self.application_path, 'bids_settings.json')
@@ -183,10 +326,24 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 # 				
 # 			self.bids_settings = bids_settings_json_temp
 	
+	def onUpdatesCheckbox(self):
+		file = os.path.join(self.application_path, 'bids_settings.json')
+		with open(file) as settings_file:
+			bids_settings_json_temp = json.load(settings_file)
+		
+		if bids_settings_json_temp['general']['checkUpdates'] != self.settingsPanel.checkUpdates.isChecked():
+			bids_settings_json_temp['general']['checkUpdates'] = self.settingsPanel.checkUpdates.isChecked()
+			json_output = json.dumps(bids_settings_json_temp, indent=4)
+			with open(file, 'w') as fid:
+				fid.write(json_output)
+				fid.write('\n')
+				
+			self.bids_settings = bids_settings_json_temp
+		
 	def onOffsetdateCheckbox(self):
 		file = os.path.join(self.application_path, 'bids_settings.json')
 		with open(file) as settings_file:
-				bids_settings_json_temp = json.load(settings_file)
+			bids_settings_json_temp = json.load(settings_file)
 				
 		if bids_settings_json_temp['settings_panel']['offset_dates'] != self.offsetDate.isChecked():
 			bids_settings_json_temp['settings_panel']['offset_dates'] = self.offsetDate.isChecked()
@@ -1135,8 +1292,13 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.convertButton.setStyleSheet(self.inactive_color)
 		
 def main():
+	
 	app = QtWidgets.QApplication(sys.argv)
 	window = MainWindow()
+	# setup stylesheet
+	#app.setStyleSheet(qdarkstyle.load_stylesheet_pyside2())
+	# or in new API
+	#app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyside2'))
 	window.show()
 	app.exec_()
 	
