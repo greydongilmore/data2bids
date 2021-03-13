@@ -1,7 +1,7 @@
 {
     "general": {
         "checkUpdates": true,
-        "darkMode": false
+        "darkMode": true
     },
     "json_metadata": {
         "TaskName": "EEG Clinical",
@@ -94,5 +94,7 @@
     "settings_panel": {
         "Deidentify_source": false,
         "offset_dates": false
-    }
+    },
+    "lastInputDirectory": "D:/ieeg_data/working_dir/input",
+    "lastOutputDirectory": "D:/ieeg_data/working_dir/output"
 }
