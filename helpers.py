@@ -1309,10 +1309,10 @@ def folders_in(path_to_parent):
 
 #%%
 
-# input_dir = r'/media/veracrypt6/projects/eplink/other_data/twh eplink data/in'
-# output_path = r'/media/veracrypt6/projects/eplink/other_data/twh eplink data/out'
-# input_dir = r'/home/greydon/Downloads/input'
-# output_path = r'/home/greydon/Downloads/output'
+# input_dir = r'/media/veracrypt6/input'
+# output_path = r'/media/veracrypt6/output'
+# input_dir = r'/media/veracrypt6/projects/eplink/walkthrough_example/ieeg_sample/input'
+# output_path = r'/media/veracrypt6/projects/eplink/walkthrough_example/ieeg_sample/output'
 # input_dir = r'/media/veracrypt6/projects/iEEG/working_dir/edf2bids/input'
 # output_path = r'/media/veracrypt6/projects/iEEG/working_dir/edf2bids/output'
 
@@ -1328,7 +1328,8 @@ def folders_in(path_to_parent):
 # isub = list(file_info)[0]
 # values = file_info[isub]
 # offset_date = False
-	
+
+
 def read_input_dir(input_dir, bids_settings):
 	"""
 	Reads data within the specified path.

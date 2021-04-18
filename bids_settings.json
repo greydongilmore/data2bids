@@ -95,6 +95,6 @@
         "Deidentify_source": false,
         "offset_dates": false
     },
-    "lastInputDirectory": "D:/ieeg_data/working_dir/input",
-    "lastOutputDirectory": "D:/ieeg_data/working_dir/output"
+    "lastInputDirectory": "/media/veracrypt6/input",
+    "lastOutputDirectory": "/media/veracrypt6/output"
 }
