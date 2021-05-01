@@ -440,6 +440,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.file_info, self.chan_label_file, self.imaging_data = read_input_dir(self.input_path, self.bids_settings)
 			self.treeViewLoad.setEditTriggers(self.treeViewLoad.NoEditTriggers)
 			self.treeViewLoad.itemDoubleClicked.connect(self.checkEdit)
+			font = QtGui.QFont("Arial", 11)
+			self.treeViewLoad.setFont(font)
 			
 			for isub, values in self.file_info.items():
 				parent = QtWidgets.QTreeWidgetItem(self.treeViewLoad)
@@ -533,7 +535,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.treeViewLoad.setHeaderItem(QtWidgets.QTreeWidgetItem([self.padentry('Name', 120), self.padentry("Date", 20), self.padentry("Time", 14), 
 															  self.padentry("Size", 12), self.padentry("Frequency", 12), self.padentry("Duration", 12),
 															  self.padentry("EDF Type",12), self.padentry('Type', header_padding), self.padentry('Task', header_padding),
-															  self.padentry('Ret/Pro', header_padding), self.padentry('Channel File', 10), self.padentry('Imaging Data', 10),
+															  self.padentry('Ret/Pro', header_padding), self.padentry('Channel File', 15), self.padentry('Imaging Data', 15),
 															  self.padentry('Channel Labels', 20)]))
 			
 			self.treeViewLoad.header().setDefaultAlignment(QtCore.Qt.AlignHCenter)
@@ -547,7 +549,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 				header.resizeSection(column, width)
 			
 			
-			font = QtGui.QFont()
+			font = QtGui.QFont("Arial", 11)
 			font.setBold(True)
 			self.treeViewLoad.header().setFont(font)
 			
@@ -653,6 +655,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			
 			self.treeViewOutput.setEditTriggers(self.treeViewOutput.NoEditTriggers)
 			self.treeViewOutput.itemDoubleClicked.connect(self.checkEditOutput)
+			font = QtGui.QFont("Arial", 11)
+			self.treeViewOutput.setFont(font)
 			
 			for isub, values in self.new_sessions.items():
 				if values['newSessions']:
@@ -885,7 +889,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			
 			header_padding = 20
 			self.treeViewOutput.setHeaderItem(QtWidgets.QTreeWidgetItem([self.padentry('Name', 120), self.padentry('Session', header_padding), self.padentry("Date", header_padding), 
-																self.padentry("Time", 16), self.padentry("Frequency", 14), self.padentry("Duration", 14),
+																self.padentry("Time", 16), self.padentry("Frequency", 16), self.padentry("Duration", 16),
 															  self.padentry('Type', header_padding), self.padentry('Task', header_padding), self.padentry('Ret/Pro', header_padding)]))
 			
 			self.treeViewOutput.header().setDefaultAlignment(QtCore.Qt.AlignHCenter)
@@ -897,7 +901,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 				header.setSectionResizeMode(column, self.treeViewOutput.header().Interactive)
 				header.resizeSection(column, width)
 			
-			font = QtGui.QFont()
+			font = QtGui.QFont("Arial", 11)
 			font.setBold(True)
 			self.treeViewOutput.header().setFont(font)
 						
