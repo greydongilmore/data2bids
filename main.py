@@ -4,6 +4,7 @@ Created on Sat Dec 29 13:49:51 2018
 
 @author: Greydon
 """
+
 import sys
 import os
 import pandas as pd
@@ -17,7 +18,7 @@ import qdarkstyle
 from PySide2 import QtGui, QtCore, QtWidgets
 
 from widgets import gui_layout
-from widgets import settings_panel,about_panel
+from widgets import settings_panel,about_panel,overwrite_type
 from edf2bids import edf2bids
 from bids2spred import bids2spred
 from dicom2bids import dicom2bids
@@ -124,6 +125,26 @@ class aboutDialog(QtWidgets.QDialog, about_panel.Ui_Dialog):
 		self.googleDriveLink.setHtml(f'<a href="{self.app_info["driveFolder"]}"><span style=" text-decoration: underline; color:#0000ff;">link to folder</span></a>')
 		self.documentationLink.setHtml(f'<a href="{self.app_info["website"]}"><span style=" text-decoration: underline; color:#0000ff;">link to website</span></a>')
 
+
+class overwriteTypeDialog(QtWidgets.QDialog, overwrite_type.Ui_Dialog):
+	def __init__(self):
+		super(overwriteTypeDialog, self).__init__()
+		self.setupUi(self)
+	
+	def closeEvent(self, event):
+		boxElements = self.edfTypeWig.children()
+		radioButtons = [elem for elem in boxElements if isinstance(elem, QtWidgets.QRadioButton)]
+		for i in radioButtons:
+			if i.isChecked():
+				self.edfTypeButtonGroup.setExclusive(False)
+				i.setChecked(False)
+				self.edfTypeButtonGroup.setExclusive(True)
+		
+		self.filePath.clear()
+		event.accept()
+
+		
+
 class SettingsDialog(QtWidgets.QDialog, settings_panel.Ui_Dialog):
 	def __init__(self):
 		super(SettingsDialog, self).__init__()
@@ -201,6 +222,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		
 		self.setupUi(self)
 		self.settingsPanel = SettingsDialog()
+		self.overwriteTypePanel = overwriteTypeDialog()
 		self.aboutPanel=aboutDialog(self.app_info)
 		self.bidsSettingsSetup()
 		
@@ -268,6 +290,11 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.actionDarkMode.triggered.connect(self.onDarkMode)
 		self.actionLightMode.triggered.connect(self.onLightMode)
 		self.actionQuit.triggered.connect(self.close)
+		
+		self.actionOverwrite_Type.triggered.connect(self.onConvertTypeButton)
+		self.overwriteTypePanel.selectFileButton.clicked.connect(self.onLoadFileButton)
+		self.overwriteTypePanel.convertButton.clicked.connect(self.onConvertType)
+		
 	
 	def updateSettingsFile(self,settings_dict):
 		self.bids_settings=settings_dict
@@ -294,7 +321,31 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 	
 	def onCloseAbout(self):
 		self.aboutPanel.close()
+	
+	def onConvertType(self):
+		boxElements = self.overwriteTypePanel.edfTypeWig.children()
+		radioButtons = [elem for elem in boxElements if isinstance(elem, QtWidgets.QRadioButton)]
+		success=None
+		for i in radioButtons:
+			if i.isChecked():
+				if i.objectName() == 'edfD':
+					self.edfC2D(self.overwriteTypePanel.filePath.text())
+					success='EDF+D'
+				elif i.objectName() == 'edfC':
+					self.edfD2C(self.overwriteTypePanel.filePath.text())
+					success='EDF+C'
+				else:
+					print("Please choose either 'c' or 'd' as type")
 		
+		if success is not None:
+			if success == 'EDF+D':
+				warnBox=warningBox(f"File has been changed to {success}. Please open EDFbrowser and use the tool <b>Convert EDF+D to EDF+C</b>.")
+				warnBox.setTextFormat(QtCore.Qt.RichText)
+			else:
+				warningBox(f"File has been changed to {success}")
+		else:
+			warningBox("Please choose the format type to change the file to.")
+	
 	def bidsSettingsSetup(self):
 
 		if not os.path.exists(self.settings_fname):
@@ -345,7 +396,10 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if self.bids_settings['settings_panel']['offset_dates'] != self.offsetDate.isChecked():
 			self.bids_settings['settings_panel']['offset_dates'] = self.offsetDate.isChecked()
 			self.updateSettingsFile(self.bids_settings)
-			
+	
+	def onConvertTypeButton(self):
+		self.overwriteTypePanel.exec_()
+	
 	def onSettingsButton(self):
 		self.settingsPanel.textboxDatasetName.setText(self.bids_settings['json_metadata']['DatasetName'])
 		self.settingsPanel.textboxExperimenter.setText(self.bids_settings['json_metadata']['Experimenter'][0])
@@ -396,7 +450,35 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.bids_settings['natus_info']['EEGElectrodeInfo']['Diameter'] = self.settingsPanel.textboxEEGDiameter.text()
 		
 		self.updateSettingsFile(self.bids_settings)
-				
+	
+	def onLoadFileButton(self):
+		bids_file = os.path.join(self.application_path, 'bids_settings.json')
+		with open(bids_file) as settings_file:
+			bids_settings_json_temp = json.load(settings_file)
+		
+		if 'lastConvertTypeDirectory' not in self.bids_settings.keys():
+			self.bids_settings['lastConvertTypeDirectory']=[]
+			self.updateSettingsFile(self.bids_settings)
+			
+		
+		self.overwriteTypePanel.filePath.clear()
+		if self.bids_settings['lastConvertTypeDirectory']:
+			dialog = QtWidgets.QFileDialog(self, directory=self.bids_settings['lastConvertTypeDirectory'])
+		else:
+			dialog = QtWidgets.QFileDialog(self)
+		
+		dialog.setWindowTitle('Select EDF File')
+		dialog.setNameFilter('*.edf *.EDF')
+		dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+		
+		if dialog.exec_():
+			self.input_path = dialog.selectedFiles()[0]
+			self.overwriteTypePanel.filePath.setText(self.input_path)
+			
+			if self.input_path != self.bids_settings['lastConvertTypeDirectory']:
+				self.bids_settings['lastConvertTypeDirectory']=self.input_path
+				self.updateSettingsFile(self.bids_settings)
+	
 	def onLoadDirButton(self):
 		bids_file = os.path.join(self.application_path, 'bids_settings.json')
 		with open(bids_file) as settings_file:
@@ -1264,7 +1346,20 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		else:
 			self.convertButton.setEnabled(False)
 			self.convertButton.setStyleSheet(self.inactive_color)
-		
+	
+	def edfC2D(self,file):
+		with open(file, 'r+b') as fid:
+			assert(fid.tell() == 0)
+			fid.seek(192)
+			fid.write(bytes(str("EDF+D") + ' ' * (44-len("EDF+D")), encoding="ascii"))
+	
+	def edfD2C(self,file):
+		with open(file, 'r+b') as fid:
+			assert(fid.tell() == 0)
+			fid.seek(192)
+			fid.write(bytes(str("EDF+C") + ' ' * (44-len("EDF+C")), encoding="ascii"))
+
+
 def main():
 	
 	app = QtWidgets.QApplication(sys.argv)

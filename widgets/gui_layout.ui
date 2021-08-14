@@ -1242,7 +1242,14 @@ color: black</string>
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionOverwrite_Type"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionLoad_data">
@@ -1303,6 +1310,17 @@ color: black</string>
   <action name="actionLightMode">
    <property name="text">
     <string>Light mode</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+     <pointsize>11</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionOverwrite_Type">
+   <property name="text">
+    <string>Overwrite EDF Type</string>
    </property>
    <property name="font">
     <font>

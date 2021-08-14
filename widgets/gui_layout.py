@@ -3,22 +3,19 @@
 ################################################################################
 ## Form generated from reading UI file 'gui_layout.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.14.1
+## Created by: Qt User Interface Compiler version 5.15.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QMetaObject, QObject, QPoint,
-    QRect, QSize, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QLinearGradient, QPalette, QPainter, QPixmap,
-    QRadialGradient)
+from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        if MainWindow.objectName():
+        if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(1249, 782)
         sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
@@ -54,6 +51,9 @@ class Ui_MainWindow(object):
         self.actionLightMode = QAction(MainWindow)
         self.actionLightMode.setObjectName(u"actionLightMode")
         self.actionLightMode.setFont(font1)
+        self.actionOverwrite_Type = QAction(MainWindow)
+        self.actionOverwrite_Type.setObjectName(u"actionOverwrite_Type")
+        self.actionOverwrite_Type.setFont(font1)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
@@ -471,9 +471,12 @@ class Ui_MainWindow(object):
         self.menuHelp = QMenu(self.menuBar)
         self.menuHelp.setObjectName(u"menuHelp")
         self.menuHelp.setFont(font1)
+        self.menuTools = QMenu(self.menuBar)
+        self.menuTools.setObjectName(u"menuTools")
         MainWindow.setMenuBar(self.menuBar)
 
         self.menuBar.addAction(self.menuFile.menuAction())
+        self.menuBar.addAction(self.menuTools.menuAction())
         self.menuBar.addAction(self.menuHelp.menuAction())
         self.menuFile.addAction(self.actionLoad_data)
         self.menuFile.addAction(self.actionSettings)
@@ -482,6 +485,7 @@ class Ui_MainWindow(object):
         self.menuTheme.addAction(self.actionDarkMode)
         self.menuTheme.addAction(self.actionLightMode)
         self.menuHelp.addAction(self.actionAbout)
+        self.menuTools.addAction(self.actionOverwrite_Type)
 
         self.retranslateUi(MainWindow)
         self.actionLoad_data.triggered.connect(self.loadDirButton.showMenu)
@@ -497,6 +501,7 @@ class Ui_MainWindow(object):
         self.actionAbout.setText(QCoreApplication.translate("MainWindow", u"About data2bids", None))
         self.actionDarkMode.setText(QCoreApplication.translate("MainWindow", u"Dark mode", None))
         self.actionLightMode.setText(QCoreApplication.translate("MainWindow", u"Light mode", None))
+        self.actionOverwrite_Type.setText(QCoreApplication.translate("MainWindow", u"Overwrite EDF Type", None))
         self.loadDirButton.setText(QCoreApplication.translate("MainWindow", u"Input Directory", None))
         self.outDirButton.setText(QCoreApplication.translate("MainWindow", u"Output Directory", None))
         self.sText.setText(QCoreApplication.translate("MainWindow", u"Checked items are already in output directory.", None))
@@ -512,5 +517,6 @@ class Ui_MainWindow(object):
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuTheme.setTitle(QCoreApplication.translate("MainWindow", u"Theme", None))
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
+        self.menuTools.setTitle(QCoreApplication.translate("MainWindow", u"Tools", None))
     # retranslateUi
 
