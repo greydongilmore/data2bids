@@ -322,6 +322,20 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 	def onCloseAbout(self):
 		self.aboutPanel.close()
 	
+	def recenterWindow(self, new_width):
+		#frameGm = self.frameGeometry()
+		screen = QtGui.QGuiApplication.screenAt(QtWidgets.QApplication.desktop().cursor().pos())
+		centerPoint = screen.availableGeometry().center()
+		screenGeo_x = screen.availableGeometry().width()
+		screenGeo_y = screen.availableGeometry().height()
+		x = screen.availableGeometry().center().x()
+		y = screen.availableGeometry().center().y()
+		#frameGm.moveCenter(centerPoint)
+		#self.move(frameGm.topLeft())
+
+		print(x,y, screenGeo_x, screenGeo_y)
+		self.move(x - new_width/2, y - self.geometry().height()/2)
+
 	def onConvertType(self):
 		boxElements = self.overwriteTypePanel.edfTypeWig.children()
 		radioButtons = [elem for elem in boxElements if isinstance(elem, QtWidgets.QRadioButton)]
@@ -535,6 +549,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 					self.imagingDataPresent=True
 				
 				parent.setTextAlignment(10, QtCore.Qt.AlignCenter)
+				parent.setTextAlignment(11, QtCore.Qt.AlignCenter)
+
 				for ises in range(len(values)):
 					for irun in range(len(values[ises])):
 						date = values[ises][irun]['Date']
@@ -560,7 +576,10 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 						combobox_type = QtWidgets.QComboBox()
 						combobox_type.addItems(['iEEG','Scalp'])
 						combobox_type.setCurrentText(values[ises][irun]['RecordingType'])
-						layout1 = QtWidgets.QHBoxLayout()
+						view1 = QtWidgets.QListView()
+						view1.setStyleSheet("QListView::item{height: 22px}")
+						combobox_type.setView(view1)
+						layout1 = QtWidgets.QVBoxLayout()
 						layout1.setContentsMargins(4,0,4,0)
 						combobox_type.setLayout(layout1)
 						self.treeViewLoad.setItemWidget(child, 7, combobox_type)
@@ -571,66 +590,72 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 						layout2 = QtWidgets.QHBoxLayout()
 						layout2.setContentsMargins(4,0,4,0)
 						combobox_length.setLayout(layout2)
+						view2 = QtWidgets.QListView()
+						view2.setStyleSheet("QListView::item{height: 22px}")
+						combobox_length.setView(view2)
 						self.treeViewLoad.setItemWidget(child, 8, combobox_length)
 						
-						combobox_retpro = QtWidgets.QComboBox()
-						combobox_retpro.addItems(['Ret','Pro'])
-						combobox_retpro.setCurrentText(values[ises][irun]['Retro_Pro'])
-						layout0 = QtWidgets.QHBoxLayout()
-						layout0.setContentsMargins(4,0,4,0)
-						combobox_retpro.setLayout(layout0)
-						self.treeViewLoad.setItemWidget(child, 9, combobox_retpro)
+						self.combobox_retpro = QtWidgets.QComboBox()
+						self.combobox_retpro.addItems(['Ret','Pro'])
+						self.combobox_retpro.setCurrentText(values[ises][irun]['Retro_Pro'])
+						view3 = QtWidgets.QListView()
+						view3.setStyleSheet("QListView::item{height: 22px}")
+						self.combobox_retpro.setView(view3)
+						self.treeViewLoad.setItemWidget(child, 9, self.combobox_retpro)
 						
 						child.setText(10, 'Yes' if values[ises][irun]['ses_chan_label'] else 'No')
 						child.setTextAlignment(10, QtCore.Qt.AlignCenter)
 
 						chan_type = 'SEEG' if 'SEEG' in list(values[ises][irun]['ChanInfo'].keys()) else 'EEG'
 						
-						model = QtGui.QStandardItemModel()
-						model.appendRow([QtGui.QStandardItem("View Labels"), QtGui.QStandardItem("")])
+						self.combobox_labels = QtWidgets.QComboBox()
+						self.model = QtGui.QStandardItemModel(self.combobox_labels)
+						self.model.appendRow([QtGui.QStandardItem("View Labels"), QtGui.QStandardItem("")])
 						row_cnt=1
 						for i in list(values[ises][irun]['ChanInfo'][chan_type]['ChanName']):
 							it1 = QtGui.QStandardItem(f"{row_cnt}")
 							it1.setEnabled(False)
 							it2 = QtGui.QStandardItem(f"{i}")
 							it2.setEnabled(False)
-							model.appendRow([it1, it2])
+							self.model.appendRow([it1, it2])
 							row_cnt +=1
 						
 						
-						combobox_labels = QtWidgets.QComboBox()
-						delegate = Delegate(combobox_labels)
-						combobox_labels.setItemDelegate(delegate)
-						combobox_labels.setModel(model)
-						combobox_labels.setStyleSheet("QAbstractItemView{color: black}")
-						combobox_labels.setFont(QtGui.QFont("Arial", 10))
+						
+						self.delegate = Delegate(self.combobox_labels)
+						self.combobox_labels.setItemDelegate(self.delegate)
+						self.combobox_labels.setModel(self.model)
+						if not self.bids_settings['general']['darkMode']:
+							self.combobox_labels.setStyleSheet("QAbstractItemView{color: black}")
+						else:
+							self.combobox_labels.setStyleSheet("QAbstractItemView{color: white}")
+						self.combobox_labels.setFont(QtGui.QFont("Arial", 10))
 
 						
-						layout_lab = QtWidgets.QHBoxLayout()
+						layout_lab = QtWidgets.QVBoxLayout()
 						layout_lab.setContentsMargins(4,0,4,0)
-						combobox_labels.setLayout(layout_lab)
+						self.combobox_labels.setLayout(layout_lab)
 
-						self.treeViewLoad.setItemWidget(child, 12, combobox_labels)
+						self.treeViewLoad.setItemWidget(child, 12, self.combobox_labels)
 
-						
 			header_padding = 14
-			self.treeViewLoad.setHeaderItem(QtWidgets.QTreeWidgetItem([self.padentry('Name', 120), self.padentry("Date", 20), self.padentry("Time", 14), 
-															  self.padentry("Size", 12), self.padentry("Frequency", 12), self.padentry("Duration", 12),
-															  self.padentry("EDF Type",12), self.padentry('Type', header_padding), self.padentry('Task', header_padding),
-															  self.padentry('Ret/Pro', header_padding), self.padentry('Channel File', 15), self.padentry('Imaging Data', 15),
+			self.treeViewLoad.setHeaderItem(QtWidgets.QTreeWidgetItem([self.padentry('Name', 110), self.padentry("Date", 20), self.padentry("Time", 14), 
+															  self.padentry("Size", 10), self.padentry("Frequency", 6), self.padentry("Duration", 9),
+															  self.padentry("EDF Type",10), self.padentry('Type', header_padding), self.padentry('Task', header_padding),
+															  self.padentry('Ret/Pro', header_padding), self.padentry('Channel File', 6), self.padentry('Imaging Data', 6),
 															  self.padentry('Channel Labels', 20)]))
 			
-			self.treeViewLoad.header().setDefaultAlignment(QtCore.Qt.AlignHCenter)
+			self.treeViewLoad.header().setDefaultAlignment(QtCore.Qt.AlignCenter)
 			
 			header = self.treeViewLoad.header()
-			
+			overall_extension = 0
 			for column in range(header.count()):
 				header.setSectionResizeMode(column, self.treeViewLoad.header().ResizeToContents)
 				width = header.sectionSize(column)
 				header.setSectionResizeMode(column, self.treeViewLoad.header().Interactive)
 				header.resizeSection(column, width)
-			
-			
+				overall_extension += width
+
 			font = QtGui.QFont("Arial", 11)
 			font.setBold(True)
 			self.treeViewLoad.header().setFont(font)
@@ -638,12 +663,14 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			if not self.imagingDataPresent:
 				self.imagingButton.setEnabled(False)
 				self.imagingButton.setStyleSheet(self.inactive_color)
-		
+
 		self.updateStatus("Input directory loaded. Select output directory.")
 		
 		if all(len(value) == 0 for value in self.file_info.values()):
 			self.convertButton.setEnabled(False)
 			self.convertButton.setStyleSheet(self.inactive_color)
+		print(overall_extension)
+		self.recenterWindow(overall_extension+250)
 
 	def checkEdit(self, item, column):
 		if column == 4:
@@ -780,6 +807,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 							layout3 = QtWidgets.QHBoxLayout()
 							layout3.setContentsMargins(4,0,4,0)
 							combobox_type_out.setLayout(layout3)
+							view4 = QtWidgets.QListView()
+							view4.setStyleSheet("QListView::item{height: 22px}")
+							combobox_type_out.setView(view4)
 							self.treeViewOutput.setItemWidget(child, 6, combobox_type_out)
 							
 							combobox_length_out = QtWidgets.QComboBox()
@@ -788,6 +818,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 							layout4 = QtWidgets.QHBoxLayout()
 							layout4.setContentsMargins(4,0,4,0)
 							combobox_length_out.setLayout(layout4)
+							view5 = QtWidgets.QListView()
+							view5.setStyleSheet("QListView::item{height: 28px}")
+							combobox_length_out.setView(view5)
 							self.treeViewOutput.setItemWidget(child, 7, combobox_length_out)
 							
 							combobox_retpro_out = QtWidgets.QComboBox()
@@ -796,6 +829,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 							layout5 = QtWidgets.QHBoxLayout()
 							layout5.setContentsMargins(4,0,4,0)
 							combobox_retpro_out.setLayout(layout5)
+							view6 = QtWidgets.QListView()
+							view6.setStyleSheet("QListView::item{height: 22px}")
+							combobox_retpro_out.setView(view6)
 							self.treeViewOutput.setItemWidget(child, 8, combobox_retpro_out)
 						
 						else:
@@ -969,12 +1005,12 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 							
 			self.sText.setVisible(1)
 			
-			header_padding = 20
-			self.treeViewOutput.setHeaderItem(QtWidgets.QTreeWidgetItem([self.padentry('Name', 120), self.padentry('Session', header_padding), self.padentry("Date", header_padding), 
-																self.padentry("Time", 16), self.padentry("Frequency", 16), self.padentry("Duration", 16),
+			header_padding = 14
+			self.treeViewOutput.setHeaderItem(QtWidgets.QTreeWidgetItem([self.padentry('Name', 110), self.padentry('Session', 20), self.padentry("Date", 20), 
+																self.padentry("Time", 14), self.padentry("Frequency", 6), self.padentry("Duration", 9),
 															  self.padentry('Type', header_padding), self.padentry('Task', header_padding), self.padentry('Ret/Pro', header_padding)]))
 			
-			self.treeViewOutput.header().setDefaultAlignment(QtCore.Qt.AlignHCenter)
+			self.treeViewOutput.header().setDefaultAlignment(QtCore.Qt.AlignCenter)
 			
 			header = self.treeViewOutput.header()
 			for column in range(header.count()):
