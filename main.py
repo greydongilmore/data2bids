@@ -481,13 +481,14 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.overwriteTypePanel.filePath.clear()
 		if self.bids_settings['lastConvertTypeDirectory']:
 			dialog = QtWidgets.QFileDialog(self, directory=self.bids_settings['lastConvertTypeDirectory'])
+			dialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog)
 		else:
 			dialog = QtWidgets.QFileDialog(self)
+			dialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog)
 		
 		dialog.setWindowTitle('Select EDF File')
 		dialog.setNameFilter('*.edf *.EDF')
 		dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
-		
 		if dialog.exec_():
 			self.input_path = dialog.selectedFiles()[0]
 			self.overwriteTypePanel.filePath.setText(self.input_path)
