@@ -352,11 +352,14 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 					print("Please choose either 'c' or 'd' as type")
 		
 		if success is not None:
+			warnBox=QtWidgets.QMessageBox()
 			if success == 'EDF+D':
-				warnBox=warningBox(f"File has been changed to {success}. Please open EDFbrowser and use the tool <b>Convert EDF+D to EDF+C</b>.")
-				warnBox.setTextFormat(QtCore.Qt.RichText)
+				warnBox.setText(f"File has been changed to {success}. Please open EDFbrowser and use the tool <b>Convert EDF+D to EDF+C</b>.")
 			else:
-				warningBox(f"File has been changed to {success}")
+				warnBox.setText(f"File has been changed to {success}")
+			warnBox.setTextFormat(QtCore.Qt.RichText)
+			warnBox.setWindowTitle("Success")
+			x = warnBox.exec_()
 		else:
 			warningBox("Please choose the format type to change the file to.")
 	
