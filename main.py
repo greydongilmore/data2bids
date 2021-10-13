@@ -476,7 +476,6 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if 'lastConvertTypeDirectory' not in self.bids_settings.keys():
 			self.bids_settings['lastConvertTypeDirectory']=[]
 			self.updateSettingsFile(self.bids_settings)
-			
 		
 		self.overwriteTypePanel.filePath.clear()
 		if self.bids_settings['lastConvertTypeDirectory']:
