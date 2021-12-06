@@ -1,3 +1,5 @@
 *.pyc
 bids_settings.json
 edf2bids/main/bids_settings.json
+bids_settings.json
+static/mycreds.txt
