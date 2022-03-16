@@ -23,7 +23,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>databids converter</string>
+   <string>data2bids converter</string>
   </property>
   <property name="windowIcon">
    <iconset>
