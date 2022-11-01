@@ -95,7 +95,7 @@
         "Deidentify_source": false,
         "offset_dates": false
     },
-    "lastInputDirectory": "/media/greydon/SEEG_data/working/in",
+    "lastInputDirectory": "/media/greydon/Red Sandisk/wada_edf",
     "lastOutputDirectory": "/media/greydon/SEEG_data/working/out",
     "lastConvertTypeDirectory": "/media/veracrypt6/projects/eplink/other_data/twh eplink data/in/sub-041/WEST~ SCOTT_f4f79c81-d899-49dc-ba25-b3c2728fb288.edf"
 }

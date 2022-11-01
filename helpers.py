@@ -7,7 +7,7 @@ Created on Thu Jan 10 13:14:21 2019
 import os
 import numpy as np
 import pandas as pd
-pd.set_option('precision', 6)
+#pd.set_option('precision', 6)
 import json
 import datetime
 import warnings

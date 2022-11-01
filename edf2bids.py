@@ -8,7 +8,7 @@ Created on Sat Dec 29 13:49:51 2018
 import os
 import numpy as np
 import pandas as pd
-pd.set_option('precision', 6)
+#pd.set_option('precision', 6)
 import datetime
 import shutil
 from PySide2 import QtCore
