@@ -18,7 +18,8 @@ base = 'Win32GUI' if sys.platform=='win32' else None
 
 includepackages= ['google','googleapiclient']
 includefiles = ['edf2bids.py', 'helpers.py', 'bids2spred.py', 'dicom2bids.py', 'version.json', 'widgets/', 'static/', 'ext_lib/']
-includefiles+=['C:\\Users\\greydon\\AppData\\Local\\Programs\\Python\\Python38\\Lib\\site-packages\\google_api_python_client-2.0.2.dist-info']
+includefiles+=['C:\\Users\\greydon\\AppData\\Local\\Programs\\Python\\Python37\\Lib\\site-packages\\google_api_python_client-2.32.0.dist-info']
+includefiles+=['C:\\Users\\greydon\\AppData\\Local\\Programs\\Python\\Python37\\Lib\\site-packages\\google']
 
 buildOptions = {
 		'build_exe': {
@@ -34,8 +35,7 @@ executables = [
 ]
 
 setup(name='data2bids',
-		version = '1.0',
+		version = '1.2',
 		description = 'Convert clinical data files to BIDS/SPReD format.',
 		options = buildOptions,
 		executables = executables)
-
