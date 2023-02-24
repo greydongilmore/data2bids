@@ -152,7 +152,8 @@ class SettingsDialog(QtWidgets.QDialog, settings_panel.Ui_Dialog):
 		
 		self.general = {
 			'checkUpdates': True,
-			'darkMode': True
+			'darkMode': True,
+			"recordingLabels":"full,clip,stim,ccep"
 			}
 			
 		# set initials values to widgets
@@ -418,6 +419,8 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.overwriteTypePanel.exec_()
 	
 	def onSettingsButton(self):
+		self.settingsPanel.recordingLabels.setText(self.bids_settings['general']['recordingLabels'])
+
 		self.settingsPanel.textboxDatasetName.setText(self.bids_settings['json_metadata']['DatasetName'])
 		self.settingsPanel.textboxExperimenter.setText(self.bids_settings['json_metadata']['Experimenter'][0])
 		self.settingsPanel.textboxLab.setText(self.bids_settings['json_metadata']['Lab'])
@@ -437,6 +440,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.settingsPanel.exec_()
 	
 	def onSettingsAccept(self):
+		if self.bids_settings['general']['recordingLabels'] != self.settingsPanel.recordingLabels.text():
+			self.bids_settings['general']['recordingLabels'] = self.settingsPanel.recordingLabels.text()
+
 		if self.bids_settings['json_metadata']['DatasetName'] != self.settingsPanel.textboxDatasetName.text():
 			self.bids_settings['json_metadata']['DatasetName'] = self.settingsPanel.textboxDatasetName.text()
 		if self.bids_settings['json_metadata']['Experimenter'][0] != self.settingsPanel.textboxExperimenter.text():
@@ -588,7 +594,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 						self.treeViewLoad.setItemWidget(child, 7, combobox_type)
 						
 						combobox_length = QtWidgets.QComboBox()
-						combobox_length.addItems(['Full','Clip','CS'])
+						combobox_length.addItems(self.bids_settings['general']['recordingLabels'].split(','))
 						combobox_length.setCurrentText(values[ises][irun]['RecordingLength'])
 						layout2 = QtWidgets.QHBoxLayout()
 						layout2.setContentsMargins(4,0,4,0)
@@ -816,7 +822,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 							self.treeViewOutput.setItemWidget(child, 6, combobox_type_out)
 							
 							combobox_length_out = QtWidgets.QComboBox()
-							combobox_length_out.addItems(['Full','Clip','CS'])
+							combobox_length_out.addItems(self.bids_settings['general']['recordingLabels'].split(','))
 							combobox_length_out.setCurrentText(self.file_info[isub][isession]['RecordingLength'])
 							layout4 = QtWidgets.QHBoxLayout()
 							layout4.setContentsMargins(4,0,4,0)
@@ -859,15 +865,10 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 							
 								display_name = old_sub + '_' + old_ses
 							
-								if 'full' in side_file_temp['TaskName'].lower():
-									length_out = 'Full'
-								elif 'clip' in side_file_temp['TaskName'].lower():
-									length_out = 'Clip'
-								elif 'cs' in side_file_temp['TaskName'].lower():
-									length_out = 'CS'
-							
+								length_out = side_file_temp['TaskName']
+								
 								if length_out:
-									display_name = display_name + '_' + length_out.upper()
+									display_name = display_name + '_' + length_out
 								
 								if 'ret' in side_file_temp['TaskName'].lower():
 									retpro_out = 'Ret'
@@ -902,7 +903,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 							self.treeViewOutput.setItemWidget(child, 6, combobox_type_out)
 							
 							combobox_length_out = QtWidgets.QComboBox()
-							combobox_length_out.addItems(['Full','Clip','CS'])
+							combobox_length_out.addItems(self.bids_settings['general']['recordingLabels'].split(','))
 							if length_out:
 								combobox_length_out.setCurrentText(length_out)
 							layout4 = QtWidgets.QHBoxLayout()
@@ -944,15 +945,10 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 							
 								display_name = old_sub + '_' + old_ses
 							
-								if 'full' in side_file_temp['TaskName'].lower():
-									length_out = 'Full'
-								elif 'clip' in side_file_temp['TaskName'].lower():
-									length_out = 'Clip'
-								elif 'cs' in side_file_temp['TaskName'].lower():
-									length_out = 'CS'
-							
+								length_out = side_file_temp['TaskName']
+								
 								if length_out:
-									display_name = display_name + '_' + length_out.upper()
+									display_name = display_name + '_' + length_out
 								
 								if 'ret' in side_file_temp['TaskName'].lower():
 									retpro_out = 'Ret'
@@ -988,7 +984,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 							self.treeViewOutput.setItemWidget(child, 6, combobox_type_out)
 							
 							combobox_length_out = QtWidgets.QComboBox()
-							combobox_length_out.addItems(['Full','Clip','CS'])
+							combobox_length_out.addItems(self.bids_settings['general']['recordingLabels'].split(','))
 							if length_out:
 								combobox_length_out.setCurrentText(length_out)
 							layout4 = QtWidgets.QHBoxLayout()

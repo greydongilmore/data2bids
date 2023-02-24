@@ -1,7 +1,8 @@
 {
     "general": {
         "checkUpdates": true,
-        "darkMode": true
+        "darkMode": true,
+        "recordingLabels": "full,clip,stim,ccep"
     },
     "json_metadata": {
         "TaskName": "EEG Clinical",
@@ -12,7 +13,8 @@
         "InstitutionName": "Some University",
         "InstitutionAddress": "123 Fake Street, Fake town, Fake country",
         "ExperimentDescription": "",
-        "DatasetName": ""
+        "DatasetName": "",
+        "EpochLength": 0
     },
     "natus_info": {
         "Manufacturer": "Natus",
@@ -95,7 +97,7 @@
         "Deidentify_source": false,
         "offset_dates": false
     },
-    "lastInputDirectory": "/media/greydon/Red Sandisk/wada_edf",
-    "lastOutputDirectory": "/media/greydon/SEEG_data/working/out",
-    "lastConvertTypeDirectory": "/media/veracrypt6/projects/eplink/other_data/twh eplink data/in/sub-041/WEST~ SCOTT_f4f79c81-d899-49dc-ba25-b3c2728fb288.edf"
+    "lastInputDirectory": "/home/greydon/Downloads/in",
+    "lastOutputDirectory": "/home/greydon/Downloads/out",
+    "lastConvertTypeDirectory": "/media/veracrypt6/projects/ieeg_stimulation/retro/in/sub-R064/Mills~ Linda_b8cd71c8-a3aa-49b4-a69e-7a9496f54ade_2017-11-07_0001_0001.edf"
 }

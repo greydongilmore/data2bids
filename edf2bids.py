@@ -228,7 +228,7 @@ class edf2bids(QtCore.QRunnable):
 							 'event': iannot[2]}
 				annotation_data = pd.concat([annotation_data, pd.DataFrame([data_temp])], axis = 0)
 			
-		annotation_data.to_csv(self.annotation_fname, sep='\t', index=False, na_rep='n/a', line_terminator="", float_format='%.3f')
+		annotation_data.to_csv(self.annotation_fname, sep='\t', index=False, na_rep='n/a', lineterminator="", float_format='%.3f')
 	
 	def copyLargeFile(self, src, dest, callback=None, buffer_size=16*1024):
 		total_size = os.path.getsize(src)
@@ -327,16 +327,11 @@ class edf2bids(QtCore.QRunnable):
 								elif 'iEEG' in file_data[irun]['RecordingType']:
 									kind = 'ieeg'
 								
-								if 'full' in file_data[irun]['RecordingLength'].lower():
-									task_id = 'full'
-								elif 'clip' in file_data[irun]['RecordingLength'].lower():
-									task_id = 'clip'
-								elif 'cs' in file_data[irun]['RecordingLength'].lower():
-									task_id = 'stim'
+								task_id = file_data[irun]['RecordingLength']
 								
 								if 'Ret' in file_data[irun]['Retro_Pro']:
 									task_id = task_id + 'ret'
-									
+								
 								run_num = str(irun+1).zfill(2)
 								
 								bids_helper=bidsHelper(subject_id=isub, session_id=session_id, kind=kind, task_id=task_id, run_num=run_num, output_path=self.output_path, bids_settings=self.bids_settings, make_sub_dir=True)

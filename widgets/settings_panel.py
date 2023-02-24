@@ -3,26 +3,28 @@
 ################################################################################
 ## Form generated from reading UI file 'settings_panel.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.14.1
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QMetaObject, QObject, QPoint,
-    QRect, QSize, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QLinearGradient, QPalette, QPainter, QPixmap,
-    QRadialGradient)
+from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
-        if Dialog.objectName():
+        if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(619, 515)
-        self.verticalLayout_3 = QVBoxLayout(Dialog)
-        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        Dialog.resize(619, 600)
+        sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
+        Dialog.setSizePolicy(sizePolicy)
+        self.gridLayout_2 = QGridLayout(Dialog)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.tabWidget = QTabWidget(Dialog)
         self.tabWidget.setObjectName(u"tabWidget")
         font = QFont()
@@ -32,18 +34,19 @@ class Ui_Dialog(object):
         self.tabWidget.setDocumentMode(True)
         self.tab = QWidget()
         self.tab.setObjectName(u"tab")
-        self.gridLayout_2 = QGridLayout(self.tab)
-        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout_3 = QGridLayout(self.tab)
+        self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.widgetLab_2 = QWidget(self.tab)
         self.widgetLab_2.setObjectName(u"widgetLab_2")
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(40)
-        sizePolicy.setHeightForWidth(self.widgetLab_2.sizePolicy().hasHeightForWidth())
-        self.widgetLab_2.setSizePolicy(sizePolicy)
-        self.widgetLab_2.setMinimumSize(QSize(0, 40))
-        self.widgetLab_2.setMaximumSize(QSize(16777215, 40))
+        sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(40)
+        sizePolicy1.setHeightForWidth(self.widgetLab_2.sizePolicy().hasHeightForWidth())
+        self.widgetLab_2.setSizePolicy(sizePolicy1)
+        self.widgetLab_2.setMinimumSize(QSize(0, 0))
+        self.widgetLab_2.setMaximumSize(QSize(16777215, 16777215))
         font1 = QFont()
+        font1.setFamily(u"Arial")
         font1.setPointSize(11)
         self.widgetLab_2.setFont(font1)
         self.gridLayout = QGridLayout(self.widgetLab_2)
@@ -66,12 +69,33 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.checkUpdates, 0, 1, 1, 1)
 
+        self.checkUpdatesLabel_2 = QLabel(self.widgetLab_2)
+        self.checkUpdatesLabel_2.setObjectName(u"checkUpdatesLabel_2")
+        self.checkUpdatesLabel_2.setMinimumSize(QSize(120, 0))
+        self.checkUpdatesLabel_2.setFont(font2)
 
-        self.gridLayout_2.addWidget(self.widgetLab_2, 0, 0, 1, 1, Qt.AlignLeft)
+        self.gridLayout.addWidget(self.checkUpdatesLabel_2, 1, 0, 1, 1)
 
-        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.recordingLabels = QLineEdit(self.widgetLab_2)
+        self.recordingLabels.setObjectName(u"recordingLabels")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.recordingLabels.sizePolicy().hasHeightForWidth())
+        self.recordingLabels.setSizePolicy(sizePolicy2)
+        self.recordingLabels.setMinimumSize(QSize(300, 0))
+        self.recordingLabels.setMaximumSize(QSize(300, 16777215))
+        self.recordingLabels.setFont(font1)
+        self.recordingLabels.setFrame(False)
 
-        self.gridLayout_2.addItem(self.verticalSpacer_3, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.recordingLabels, 1, 1, 1, 1)
+
+
+        self.gridLayout_3.addWidget(self.widgetLab_2, 0, 0, 1, 1, Qt.AlignLeft)
+
+        self.verticalSpacer_3 = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
+
+        self.gridLayout_3.addItem(self.verticalSpacer_3, 1, 0, 1, 1)
 
         self.tabWidget.addTab(self.tab, "")
         self.tabJson = QWidget()
@@ -80,8 +104,11 @@ class Ui_Dialog(object):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.widgetLab = QWidget(self.tabJson)
         self.widgetLab.setObjectName(u"widgetLab")
-        sizePolicy.setHeightForWidth(self.widgetLab.sizePolicy().hasHeightForWidth())
-        self.widgetLab.setSizePolicy(sizePolicy)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(40)
+        sizePolicy3.setHeightForWidth(self.widgetLab.sizePolicy().hasHeightForWidth())
+        self.widgetLab.setSizePolicy(sizePolicy3)
         self.widgetLab.setMinimumSize(QSize(0, 40))
         self.widgetLab.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout_3 = QHBoxLayout(self.widgetLab)
@@ -110,8 +137,8 @@ class Ui_Dialog(object):
 
         self.widgetExperimenter = QWidget(self.tabJson)
         self.widgetExperimenter.setObjectName(u"widgetExperimenter")
-        sizePolicy.setHeightForWidth(self.widgetExperimenter.sizePolicy().hasHeightForWidth())
-        self.widgetExperimenter.setSizePolicy(sizePolicy)
+        sizePolicy3.setHeightForWidth(self.widgetExperimenter.sizePolicy().hasHeightForWidth())
+        self.widgetExperimenter.setSizePolicy(sizePolicy3)
         self.widgetExperimenter.setMinimumSize(QSize(0, 40))
         self.widgetExperimenter.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout_2 = QHBoxLayout(self.widgetExperimenter)
@@ -135,8 +162,8 @@ class Ui_Dialog(object):
 
         self.widgetDatasetName = QWidget(self.tabJson)
         self.widgetDatasetName.setObjectName(u"widgetDatasetName")
-        sizePolicy.setHeightForWidth(self.widgetDatasetName.sizePolicy().hasHeightForWidth())
-        self.widgetDatasetName.setSizePolicy(sizePolicy)
+        sizePolicy3.setHeightForWidth(self.widgetDatasetName.sizePolicy().hasHeightForWidth())
+        self.widgetDatasetName.setSizePolicy(sizePolicy3)
         self.widgetDatasetName.setMinimumSize(QSize(0, 40))
         self.widgetDatasetName.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout = QHBoxLayout(self.widgetDatasetName)
@@ -160,19 +187,19 @@ class Ui_Dialog(object):
 
         self.widgetInstitutionAddress = QWidget(self.tabJson)
         self.widgetInstitutionAddress.setObjectName(u"widgetInstitutionAddress")
-        sizePolicy.setHeightForWidth(self.widgetInstitutionAddress.sizePolicy().hasHeightForWidth())
-        self.widgetInstitutionAddress.setSizePolicy(sizePolicy)
+        sizePolicy3.setHeightForWidth(self.widgetInstitutionAddress.sizePolicy().hasHeightForWidth())
+        self.widgetInstitutionAddress.setSizePolicy(sizePolicy3)
         self.widgetInstitutionAddress.setMinimumSize(QSize(0, 40))
         self.widgetInstitutionAddress.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout_5 = QHBoxLayout(self.widgetInstitutionAddress)
         self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
         self.labelInstitutionAddress = QLabel(self.widgetInstitutionAddress)
         self.labelInstitutionAddress.setObjectName(u"labelInstitutionAddress")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(20)
-        sizePolicy1.setHeightForWidth(self.labelInstitutionAddress.sizePolicy().hasHeightForWidth())
-        self.labelInstitutionAddress.setSizePolicy(sizePolicy1)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(20)
+        sizePolicy4.setHeightForWidth(self.labelInstitutionAddress.sizePolicy().hasHeightForWidth())
+        self.labelInstitutionAddress.setSizePolicy(sizePolicy4)
         self.labelInstitutionAddress.setMinimumSize(QSize(120, 0))
         self.labelInstitutionAddress.setFont(font3)
 
@@ -190,16 +217,16 @@ class Ui_Dialog(object):
 
         self.widgetInstitutionName = QWidget(self.tabJson)
         self.widgetInstitutionName.setObjectName(u"widgetInstitutionName")
-        sizePolicy.setHeightForWidth(self.widgetInstitutionName.sizePolicy().hasHeightForWidth())
-        self.widgetInstitutionName.setSizePolicy(sizePolicy)
+        sizePolicy3.setHeightForWidth(self.widgetInstitutionName.sizePolicy().hasHeightForWidth())
+        self.widgetInstitutionName.setSizePolicy(sizePolicy3)
         self.widgetInstitutionName.setMinimumSize(QSize(0, 40))
         self.widgetInstitutionName.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout_4 = QHBoxLayout(self.widgetInstitutionName)
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.labelInstitutionName = QLabel(self.widgetInstitutionName)
         self.labelInstitutionName.setObjectName(u"labelInstitutionName")
-        sizePolicy1.setHeightForWidth(self.labelInstitutionName.sizePolicy().hasHeightForWidth())
-        self.labelInstitutionName.setSizePolicy(sizePolicy1)
+        sizePolicy4.setHeightForWidth(self.labelInstitutionName.sizePolicy().hasHeightForWidth())
+        self.labelInstitutionName.setSizePolicy(sizePolicy4)
         self.labelInstitutionName.setMinimumSize(QSize(120, 0))
         self.labelInstitutionName.setFont(font3)
 
@@ -237,8 +264,8 @@ class Ui_Dialog(object):
 
         self.widgetIEEGManufacturer = QWidget(self.tabElectrodeInfo)
         self.widgetIEEGManufacturer.setObjectName(u"widgetIEEGManufacturer")
-        sizePolicy.setHeightForWidth(self.widgetIEEGManufacturer.sizePolicy().hasHeightForWidth())
-        self.widgetIEEGManufacturer.setSizePolicy(sizePolicy)
+        sizePolicy3.setHeightForWidth(self.widgetIEEGManufacturer.sizePolicy().hasHeightForWidth())
+        self.widgetIEEGManufacturer.setSizePolicy(sizePolicy3)
         self.widgetIEEGManufacturer.setMinimumSize(QSize(0, 40))
         self.widgetIEEGManufacturer.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout_6 = QHBoxLayout(self.widgetIEEGManufacturer)
@@ -263,8 +290,8 @@ class Ui_Dialog(object):
 
         self.widgetIEEGType = QWidget(self.tabElectrodeInfo)
         self.widgetIEEGType.setObjectName(u"widgetIEEGType")
-        sizePolicy.setHeightForWidth(self.widgetIEEGType.sizePolicy().hasHeightForWidth())
-        self.widgetIEEGType.setSizePolicy(sizePolicy)
+        sizePolicy3.setHeightForWidth(self.widgetIEEGType.sizePolicy().hasHeightForWidth())
+        self.widgetIEEGType.setSizePolicy(sizePolicy3)
         self.widgetIEEGType.setMinimumSize(QSize(0, 40))
         self.widgetIEEGType.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout_7 = QHBoxLayout(self.widgetIEEGType)
@@ -289,8 +316,8 @@ class Ui_Dialog(object):
 
         self.widgetIEEGMaterial = QWidget(self.tabElectrodeInfo)
         self.widgetIEEGMaterial.setObjectName(u"widgetIEEGMaterial")
-        sizePolicy.setHeightForWidth(self.widgetIEEGMaterial.sizePolicy().hasHeightForWidth())
-        self.widgetIEEGMaterial.setSizePolicy(sizePolicy)
+        sizePolicy3.setHeightForWidth(self.widgetIEEGMaterial.sizePolicy().hasHeightForWidth())
+        self.widgetIEEGMaterial.setSizePolicy(sizePolicy3)
         self.widgetIEEGMaterial.setMinimumSize(QSize(0, 40))
         self.widgetIEEGMaterial.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout_8 = QHBoxLayout(self.widgetIEEGMaterial)
@@ -315,8 +342,8 @@ class Ui_Dialog(object):
 
         self.widgetIEEGDiameter = QWidget(self.tabElectrodeInfo)
         self.widgetIEEGDiameter.setObjectName(u"widgetIEEGDiameter")
-        sizePolicy.setHeightForWidth(self.widgetIEEGDiameter.sizePolicy().hasHeightForWidth())
-        self.widgetIEEGDiameter.setSizePolicy(sizePolicy)
+        sizePolicy3.setHeightForWidth(self.widgetIEEGDiameter.sizePolicy().hasHeightForWidth())
+        self.widgetIEEGDiameter.setSizePolicy(sizePolicy3)
         self.widgetIEEGDiameter.setMinimumSize(QSize(0, 40))
         self.widgetIEEGDiameter.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout_9 = QHBoxLayout(self.widgetIEEGDiameter)
@@ -347,8 +374,8 @@ class Ui_Dialog(object):
 
         self.widgetEEGManufacturer = QWidget(self.tabElectrodeInfo)
         self.widgetEEGManufacturer.setObjectName(u"widgetEEGManufacturer")
-        sizePolicy.setHeightForWidth(self.widgetEEGManufacturer.sizePolicy().hasHeightForWidth())
-        self.widgetEEGManufacturer.setSizePolicy(sizePolicy)
+        sizePolicy3.setHeightForWidth(self.widgetEEGManufacturer.sizePolicy().hasHeightForWidth())
+        self.widgetEEGManufacturer.setSizePolicy(sizePolicy3)
         self.widgetEEGManufacturer.setMinimumSize(QSize(0, 40))
         self.widgetEEGManufacturer.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout_17 = QHBoxLayout(self.widgetEEGManufacturer)
@@ -373,8 +400,8 @@ class Ui_Dialog(object):
 
         self.widgetEEGType = QWidget(self.tabElectrodeInfo)
         self.widgetEEGType.setObjectName(u"widgetEEGType")
-        sizePolicy.setHeightForWidth(self.widgetEEGType.sizePolicy().hasHeightForWidth())
-        self.widgetEEGType.setSizePolicy(sizePolicy)
+        sizePolicy3.setHeightForWidth(self.widgetEEGType.sizePolicy().hasHeightForWidth())
+        self.widgetEEGType.setSizePolicy(sizePolicy3)
         self.widgetEEGType.setMinimumSize(QSize(0, 40))
         self.widgetEEGType.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout_16 = QHBoxLayout(self.widgetEEGType)
@@ -399,8 +426,8 @@ class Ui_Dialog(object):
 
         self.widgetEEGMaterial = QWidget(self.tabElectrodeInfo)
         self.widgetEEGMaterial.setObjectName(u"widgetEEGMaterial")
-        sizePolicy.setHeightForWidth(self.widgetEEGMaterial.sizePolicy().hasHeightForWidth())
-        self.widgetEEGMaterial.setSizePolicy(sizePolicy)
+        sizePolicy3.setHeightForWidth(self.widgetEEGMaterial.sizePolicy().hasHeightForWidth())
+        self.widgetEEGMaterial.setSizePolicy(sizePolicy3)
         self.widgetEEGMaterial.setMinimumSize(QSize(0, 40))
         self.widgetEEGMaterial.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout_14 = QHBoxLayout(self.widgetEEGMaterial)
@@ -425,8 +452,8 @@ class Ui_Dialog(object):
 
         self.widgetEEGDiameter = QWidget(self.tabElectrodeInfo)
         self.widgetEEGDiameter.setObjectName(u"widgetEEGDiameter")
-        sizePolicy.setHeightForWidth(self.widgetEEGDiameter.sizePolicy().hasHeightForWidth())
-        self.widgetEEGDiameter.setSizePolicy(sizePolicy)
+        sizePolicy3.setHeightForWidth(self.widgetEEGDiameter.sizePolicy().hasHeightForWidth())
+        self.widgetEEGDiameter.setSizePolicy(sizePolicy3)
         self.widgetEEGDiameter.setMinimumSize(QSize(0, 40))
         self.widgetEEGDiameter.setMaximumSize(QSize(16777215, 40))
         self.horizontalLayout_15 = QHBoxLayout(self.widgetEEGDiameter)
@@ -455,7 +482,7 @@ class Ui_Dialog(object):
 
         self.tabWidget.addTab(self.tabElectrodeInfo, "")
 
-        self.verticalLayout_3.addWidget(self.tabWidget)
+        self.gridLayout_2.addWidget(self.tabWidget, 0, 0, 1, 1)
 
         self.buttonBoxJson = QDialogButtonBox(Dialog)
         self.buttonBoxJson.setObjectName(u"buttonBoxJson")
@@ -463,7 +490,7 @@ class Ui_Dialog(object):
         self.buttonBoxJson.setOrientation(Qt.Horizontal)
         self.buttonBoxJson.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
 
-        self.verticalLayout_3.addWidget(self.buttonBoxJson)
+        self.gridLayout_2.addWidget(self.buttonBoxJson, 1, 0, 1, 1)
 
 
         self.retranslateUi(Dialog)
@@ -480,6 +507,8 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Settings", None))
         self.checkUpdatesLabel.setText(QCoreApplication.translate("Dialog", u"check for updates on startup", None))
         self.checkUpdates.setText("")
+        self.checkUpdatesLabel_2.setText(QCoreApplication.translate("Dialog", u"Recording labels (comma list)", None))
+        self.recordingLabels.setText(QCoreApplication.translate("Dialog", u"full,clip,stim,ccep", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("Dialog", u"General settings", None))
         self.labelLab.setText(QCoreApplication.translate("Dialog", u"Lab", None))
         self.labelExperimenter.setText(QCoreApplication.translate("Dialog", u"Experimenter", None))

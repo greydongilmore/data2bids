@@ -1088,13 +1088,8 @@ class bidsHelper():
 		else:
 			electrode_manu = 'n/a'
 		
-		if 'Full' in file_info_run['RecordingLength']:
-			task_name = 'full'
-		elif 'Clip' in file_info_run['RecordingLength']:
-			task_name = 'clip'
-		elif 'CS' in file_info_run['RecordingLength']:
-			task_name = 'stim'
-								
+		task_name = file_info_run['RecordingLength']
+							
 		if 'Ret' in file_info_run['Retro_Pro']:
 			task_name = task_name + 'ret'
 		
@@ -1223,9 +1218,9 @@ def get_file_info(raw_file_path_sub, bids_settings):
 						file_info['RecordingType'] = 'iEEG'
 					
 					if file_info['TotalRecordTime'] < 5:
-						file_info['RecordingLength'] = 'Clip'
+						file_info['RecordingLength'] = 'clip'
 					else:
-						file_info['RecordingLength'] = 'Full'
+						file_info['RecordingLength'] = 'full'
 					
 					file_info['Retro_Pro'] = 'Pro'
 					
@@ -1235,13 +1230,8 @@ def get_file_info(raw_file_path_sub, bids_settings):
 					else:
 						file_info['RecordingType'] = 'Scalp'
 						
-					if 'cs' in file_info['DisplayName'].lower():
-						file_info['RecordingLength'] = 'CS'
-					elif 'full' in file_info['DisplayName'].lower():
-						file_info['RecordingLength'] = 'Full'
-					elif 'clip' in file_info['DisplayName'].lower():
-						file_info['RecordingLength'] = 'Clip'
-				
+					file_info['RecordingLength'] = file_info['DisplayName']
+					
 					if 'ret' in file_info['DisplayName'].lower():
 						file_info['Retro_Pro'] = 'Ret'
 					else:
