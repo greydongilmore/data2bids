@@ -228,7 +228,7 @@ class edf2bids(QtCore.QRunnable):
 							 'event': iannot[2]}
 				annotation_data = pd.concat([annotation_data, pd.DataFrame([data_temp])], axis = 0)
 			
-		annotation_data.to_csv(self.annotation_fname, sep='\t', index=False, na_rep='n/a', lineterminator="", float_format='%.3f')
+		annotation_data.to_csv(self.annotation_fname, sep='\t', index=False, na_rep='n/a', line_terminator="", float_format='%.3f')
 	
 	def copyLargeFile(self, src, dest, callback=None, buffer_size=16*1024):
 		total_size = os.path.getsize(src)
