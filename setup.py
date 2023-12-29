@@ -16,10 +16,11 @@ from cx_Freeze import setup, Executable
 
 base = 'Win32GUI' if sys.platform=='win32' else None
 
-includepackages= ['google','googleapiclient']
+includepackages= ['google','googleapiclient','google_api_core','pydicom']
 includefiles = ['edf2bids.py', 'helpers.py', 'bids2spred.py', 'dicom2bids.py', 'version.json', 'widgets/', 'static/', 'ext_lib/']
-includefiles+=['C:\\Users\\greydon\\AppData\\Local\\Programs\\Python\\Python37\\Lib\\site-packages\\google_api_python_client-2.32.0.dist-info']
-includefiles+=['C:\\Users\\greydon\\AppData\\Local\\Programs\\Python\\Python37\\Lib\\site-packages\\google']
+#includefiles+=['C:\\Users\\xluser\\AppData\\Local\\Programs\\Python\\Python310\\Lib\\site-packages\\google_api_core-2.15.0.dist-info']
+#includefiles+=['C:\\Users\\xluser\\AppData\\Local\\Programs\\Python\\Python310\\Lib\\site-packages\\google']
+#includefiles+=['C:\\Users\\xluser\\AppData\\Local\\Programs\\Python\\Python310\\Lib\\site-packages\\python_gdcm-3.0.22.dist-info']
 
 buildOptions = {
 		'build_exe': {
@@ -31,11 +32,11 @@ buildOptions = {
 }
 
 executables = [
-	Executable('main.py', base=base, targetName = 'data2bids', icon="static/eplink_icon.ico")
+	Executable('main.py', base=base, target_name = 'data2bids', icon="static/eplink_icon.ico")
 ]
 
 setup(name='data2bids',
-		version = '1.2',
+		version = '1.4',
 		description = 'Convert clinical data files to BIDS/SPReD format.',
 		options = buildOptions,
 		executables = executables)
