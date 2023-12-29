@@ -95,9 +95,10 @@
     },
     "settings_panel": {
         "Deidentify_source": false,
-        "offset_dates": false
+        "offset_dates": false,
+        "gzip_edf": true
     },
-    "lastInputDirectory": "/home/greydon/Downloads/in",
-    "lastOutputDirectory": "/home/greydon/Downloads/out",
+    "lastInputDirectory": "/home/greydon/Downloads/eeg_recording/input",
+    "lastOutputDirectory": "/home/greydon/Downloads/eeg_recording/output",
     "lastConvertTypeDirectory": "/media/veracrypt6/projects/ieeg_stimulation/retro/in/sub-R064/Mills~ Linda_b8cd71c8-a3aa-49b4-a69e-7a9496f54ade_2017-11-07_0001_0001.edf"
 }

@@ -14,7 +14,7 @@ import numpy as np
 import json
 import re
 import qdarkstyle
-
+import gzip
 from PySide2 import QtGui, QtCore, QtWidgets
 
 from widgets import gui_layout
@@ -269,8 +269,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		
 		self.l1 = QtWidgets.QTreeWidgetItem(["Check items are already present in output directory."])
 		
-# 		self.deidentifyInputDir.stateChanged.connect(self.onDeidentifyCheckbox)
+		self.deidentifyInputDir.stateChanged.connect(self.onDeidentifyCheckbox)
 		self.offsetDate.stateChanged.connect(self.onOffsetdateCheckbox)
+		self.gzipEDF.stateChanged.connect(self.onGzipEDFCheckbox)
 		
 		self.settingsPanel.checkUpdates.clicked.connect(self.onUpdatesCheckbox)
 		
@@ -334,7 +335,6 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		#frameGm.moveCenter(centerPoint)
 		#self.move(frameGm.topLeft())
 
-		print(x,y, screenGeo_x, screenGeo_y)
 		self.move(x - new_width/2, y - self.geometry().height()/2)
 
 	def onConvertType(self):
@@ -372,7 +372,10 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			bids_settings_json_temp['json_metadata'] = self.settingsPanel.ieeg_file_metadata
 			bids_settings_json_temp['natus_info'] = self.settingsPanel.natus_info
 			bids_settings_json_temp['settings_panel'] = {'Deidentify_source': False,
-														  'offset_dates': False}
+														  'offset_dates': False,
+														  'gzip_edf': True
+														  }
+
 			
 			self.updateSettingsFile(bids_settings_json_temp)
 		else:
@@ -382,24 +385,23 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if 'general' not in list(self.bids_settings):
 			self.bids_settings['general']=self.settingsPanel.general
 			self.updateSettingsFile(self.bids_settings)
+
+		if 'gzip_edf' not in list(self.bids_settings['settings_panel']):
+			self.bids_settings['settings_panel']['gzip_edf'] = self.gzipEDF.isChecked()
+			self.updateSettingsFile(self.bids_settings)
 				
 		self.offsetDate.setChecked(self.bids_settings['settings_panel']['offset_dates'])
 		self.settingsPanel.checkUpdates.setChecked(self.bids_settings['general']['checkUpdates'])
 	
-# 	def onDeidentifyCheckbox(self):
-# 		file = os.path.join(self.application_path, 'bids_settings.json')
-# 		with open(file) as settings_file:
-# 				bids_settings_json_temp = json.load(settings_file)
-# 				
-# 		if bids_settings_json_temp['settings_panel']['Deidentify_source'] != self.deidentifyInputDir.isChecked():
-# 			bids_settings_json_temp['settings_panel']['Deidentify_source'] = self.deidentifyInputDir.isChecked()
-# 			json_output = json.dumps(bids_settings_json_temp, indent=4)
-# 			with open(file, 'w') as fid:
-# 				fid.write(json_output)
-# 				fid.write('\n')
-# 				
-# 			self.bids_settings = bids_settings_json_temp
-	
+	def onDeidentifyCheckbox(self):
+		file = os.path.join(self.application_path, 'bids_settings.json')
+		with open(file) as settings_file:
+			bids_settings_json_temp = json.load(settings_file)
+				
+		if self.bids_settings['settings_panel']['Deidentify_source'] != self.deidentifyInputDir.isChecked():
+			self.bids_settings['settings_panel']['Deidentify_source'] = self.deidentifyInputDir.isChecked()
+			self.updateSettingsFile(self.bids_settings)
+
 	def onUpdatesCheckbox(self):
 		
 		if self.bids_settings['general']['checkUpdates'] != self.settingsPanel.checkUpdates.isChecked():
@@ -413,6 +415,15 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 				
 		if self.bids_settings['settings_panel']['offset_dates'] != self.offsetDate.isChecked():
 			self.bids_settings['settings_panel']['offset_dates'] = self.offsetDate.isChecked()
+			self.updateSettingsFile(self.bids_settings)
+
+	def onGzipEDFCheckbox(self):
+		file = os.path.join(self.application_path, 'bids_settings.json')
+		with open(file) as settings_file:
+			bids_settings_json_temp = json.load(settings_file)
+				
+		if self.bids_settings['settings_panel']['gzip_edf'] != self.gzipEDF.isChecked():
+			self.bids_settings['settings_panel']['gzip_edf'] = self.gzipEDF.isChecked()
 			self.updateSettingsFile(self.bids_settings)
 	
 	def onConvertTypeButton(self):
@@ -678,7 +689,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if all(len(value) == 0 for value in self.file_info.values()):
 			self.convertButton.setEnabled(False)
 			self.convertButton.setStyleSheet(self.inactive_color)
-		print(overall_extension)
+		
 		self.recenterWindow(overall_extension+250)
 
 	def checkEdit(self, item, column):
@@ -1099,6 +1110,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.edf2bidsWorker.overwrite = True
 		self.edf2bidsWorker.verbose = False
 		self.edf2bidsWorker.deidentify_source = self.deidentifyInputDir.isChecked()
+		self.edf2bidsWorker.gzip_edf = self.gzipEDF.isChecked()
 		self.edf2bidsWorker.offset_date = self.offsetDate.isChecked()
 		self.edf2bidsWorker.dry_run = self.dryRun.isChecked()
 		
@@ -1383,16 +1395,28 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.convertButton.setStyleSheet(self.inactive_color)
 	
 	def edfC2D(self,file):
-		with open(file, 'r+b') as fid:
-			assert(fid.tell() == 0)
-			fid.seek(192)
-			fid.write(bytes(str("EDF+D") + ' ' * (44-len("EDF+D")), encoding="ascii"))
+		
+		if (file.lower().endswith(".edf")):
+			fid=open(file, "wb")
+		elif (file.lower().endswith(".edfz")) or (file.lower().endswith(".edf.gz")):
+			fid=gzip.open(file, "wb")
+
+		assert(fid.tell() == 0)
+		fid.seek(192)
+		fid.write(bytes(str("EDF+D") + ' ' * (44-len("EDF+D")), encoding="ascii"))
+		fid.close()
 	
 	def edfD2C(self,file):
-		with open(file, 'r+b') as fid:
-			assert(fid.tell() == 0)
-			fid.seek(192)
-			fid.write(bytes(str("EDF+C") + ' ' * (44-len("EDF+C")), encoding="ascii"))
+
+		if (file.lower().endswith(".edf")):
+			fid=open(file, "wb")
+		elif (file.lower().endswith(".edfz")) or (file.lower().endswith(".edf.gz")):
+			fid=gzip.open(file, "wb")
+		
+		assert(fid.tell() == 0)
+		fid.seek(192)
+		fid.write(bytes(str("EDF+C") + ' ' * (44-len("EDF+C")), encoding="ascii"))
+		fid.close()
 
 
 def main():

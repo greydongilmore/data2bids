@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'gui_layout.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.1
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -318,10 +318,8 @@ class Ui_MainWindow(object):
         palette.setBrush(QPalette.Active, QPalette.ButtonText, brush)
         palette.setBrush(QPalette.Active, QPalette.Base, brush1)
         palette.setBrush(QPalette.Active, QPalette.Window, brush1)
-        brush2 = QBrush(QColor(0, 0, 0, 128))
-        brush2.setStyle(Qt.NoBrush)
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette.setBrush(QPalette.Active, QPalette.PlaceholderText, brush2)
+        palette.setBrush(QPalette.Active, QPalette.PlaceholderText, brush)
 #endif
         palette.setBrush(QPalette.Inactive, QPalette.WindowText, brush)
         palette.setBrush(QPalette.Inactive, QPalette.Button, brush1)
@@ -329,10 +327,8 @@ class Ui_MainWindow(object):
         palette.setBrush(QPalette.Inactive, QPalette.ButtonText, brush)
         palette.setBrush(QPalette.Inactive, QPalette.Base, brush1)
         palette.setBrush(QPalette.Inactive, QPalette.Window, brush1)
-        brush3 = QBrush(QColor(0, 0, 0, 128))
-        brush3.setStyle(Qt.NoBrush)
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette.setBrush(QPalette.Inactive, QPalette.PlaceholderText, brush3)
+        palette.setBrush(QPalette.Inactive, QPalette.PlaceholderText, brush)
 #endif
         palette.setBrush(QPalette.Disabled, QPalette.WindowText, brush)
         palette.setBrush(QPalette.Disabled, QPalette.Button, brush1)
@@ -340,10 +336,8 @@ class Ui_MainWindow(object):
         palette.setBrush(QPalette.Disabled, QPalette.ButtonText, brush)
         palette.setBrush(QPalette.Disabled, QPalette.Base, brush1)
         palette.setBrush(QPalette.Disabled, QPalette.Window, brush1)
-        brush4 = QBrush(QColor(0, 0, 0, 128))
-        brush4.setStyle(Qt.NoBrush)
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette.setBrush(QPalette.Disabled, QPalette.PlaceholderText, brush4)
+        palette.setBrush(QPalette.Disabled, QPalette.PlaceholderText, brush)
 #endif
         self.pauseButton.setPalette(palette)
         self.pauseButton.setFont(font6)
@@ -361,39 +355,33 @@ class Ui_MainWindow(object):
         self.cancelButton.setMaximumSize(QSize(150, 16777215))
         palette1 = QPalette()
         palette1.setBrush(QPalette.Active, QPalette.WindowText, brush)
-        brush5 = QBrush(QColor(255, 0, 0, 255))
-        brush5.setStyle(Qt.SolidPattern)
-        palette1.setBrush(QPalette.Active, QPalette.Button, brush5)
+        brush2 = QBrush(QColor(255, 0, 0, 255))
+        brush2.setStyle(Qt.SolidPattern)
+        palette1.setBrush(QPalette.Active, QPalette.Button, brush2)
         palette1.setBrush(QPalette.Active, QPalette.Text, brush)
         palette1.setBrush(QPalette.Active, QPalette.ButtonText, brush)
-        palette1.setBrush(QPalette.Active, QPalette.Base, brush5)
-        palette1.setBrush(QPalette.Active, QPalette.Window, brush5)
-        brush6 = QBrush(QColor(0, 0, 0, 128))
-        brush6.setStyle(Qt.NoBrush)
+        palette1.setBrush(QPalette.Active, QPalette.Base, brush2)
+        palette1.setBrush(QPalette.Active, QPalette.Window, brush2)
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette1.setBrush(QPalette.Active, QPalette.PlaceholderText, brush6)
+        palette1.setBrush(QPalette.Active, QPalette.PlaceholderText, brush)
 #endif
         palette1.setBrush(QPalette.Inactive, QPalette.WindowText, brush)
-        palette1.setBrush(QPalette.Inactive, QPalette.Button, brush5)
+        palette1.setBrush(QPalette.Inactive, QPalette.Button, brush2)
         palette1.setBrush(QPalette.Inactive, QPalette.Text, brush)
         palette1.setBrush(QPalette.Inactive, QPalette.ButtonText, brush)
-        palette1.setBrush(QPalette.Inactive, QPalette.Base, brush5)
-        palette1.setBrush(QPalette.Inactive, QPalette.Window, brush5)
-        brush7 = QBrush(QColor(0, 0, 0, 128))
-        brush7.setStyle(Qt.NoBrush)
+        palette1.setBrush(QPalette.Inactive, QPalette.Base, brush2)
+        palette1.setBrush(QPalette.Inactive, QPalette.Window, brush2)
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette1.setBrush(QPalette.Inactive, QPalette.PlaceholderText, brush7)
+        palette1.setBrush(QPalette.Inactive, QPalette.PlaceholderText, brush)
 #endif
         palette1.setBrush(QPalette.Disabled, QPalette.WindowText, brush)
-        palette1.setBrush(QPalette.Disabled, QPalette.Button, brush5)
+        palette1.setBrush(QPalette.Disabled, QPalette.Button, brush2)
         palette1.setBrush(QPalette.Disabled, QPalette.Text, brush)
         palette1.setBrush(QPalette.Disabled, QPalette.ButtonText, brush)
-        palette1.setBrush(QPalette.Disabled, QPalette.Base, brush5)
-        palette1.setBrush(QPalette.Disabled, QPalette.Window, brush5)
-        brush8 = QBrush(QColor(0, 0, 0, 128))
-        brush8.setStyle(Qt.NoBrush)
+        palette1.setBrush(QPalette.Disabled, QPalette.Base, brush2)
+        palette1.setBrush(QPalette.Disabled, QPalette.Window, brush2)
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        palette1.setBrush(QPalette.Disabled, QPalette.PlaceholderText, brush8)
+        palette1.setBrush(QPalette.Disabled, QPalette.PlaceholderText, brush)
 #endif
         self.cancelButton.setPalette(palette1)
         self.cancelButton.setFont(font6)
@@ -414,27 +402,27 @@ class Ui_MainWindow(object):
         self.groupBox.setFont(font6)
         self.gridLayout = QGridLayout(self.groupBox)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.dryRun = QCheckBox(self.groupBox)
-        self.dryRun.setObjectName(u"dryRun")
-        sizePolicy1.setHeightForWidth(self.dryRun.sizePolicy().hasHeightForWidth())
-        self.dryRun.setSizePolicy(sizePolicy1)
+        self.offsetDate = QCheckBox(self.groupBox)
+        self.offsetDate.setObjectName(u"offsetDate")
+        sizePolicy1.setHeightForWidth(self.offsetDate.sizePolicy().hasHeightForWidth())
+        self.offsetDate.setSizePolicy(sizePolicy1)
         font7 = QFont()
         font7.setFamily(u"Arial")
         font7.setPointSize(11)
         font7.setBold(False)
         font7.setWeight(50)
-        self.dryRun.setFont(font7)
-
-        self.gridLayout.addWidget(self.dryRun, 2, 0, 1, 1)
-
-        self.offsetDate = QCheckBox(self.groupBox)
-        self.offsetDate.setObjectName(u"offsetDate")
-        sizePolicy1.setHeightForWidth(self.offsetDate.sizePolicy().hasHeightForWidth())
-        self.offsetDate.setSizePolicy(sizePolicy1)
         self.offsetDate.setFont(font7)
         self.offsetDate.setChecked(False)
 
         self.gridLayout.addWidget(self.offsetDate, 1, 0, 1, 1)
+
+        self.dryRun = QCheckBox(self.groupBox)
+        self.dryRun.setObjectName(u"dryRun")
+        sizePolicy1.setHeightForWidth(self.dryRun.sizePolicy().hasHeightForWidth())
+        self.dryRun.setSizePolicy(sizePolicy1)
+        self.dryRun.setFont(font7)
+
+        self.gridLayout.addWidget(self.dryRun, 2, 0, 1, 1)
 
         self.deidentifyInputDir = QCheckBox(self.groupBox)
         self.deidentifyInputDir.setObjectName(u"deidentifyInputDir")
@@ -446,7 +434,16 @@ class Ui_MainWindow(object):
 
         self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
 
-        self.gridLayout.addItem(self.verticalSpacer_4, 3, 0, 1, 1)
+        self.gridLayout.addItem(self.verticalSpacer_4, 4, 0, 1, 1)
+
+        self.gzipEDF = QCheckBox(self.groupBox)
+        self.gzipEDF.setObjectName(u"gzipEDF")
+        sizePolicy1.setHeightForWidth(self.gzipEDF.sizePolicy().hasHeightForWidth())
+        self.gzipEDF.setSizePolicy(sizePolicy1)
+        self.gzipEDF.setFont(font7)
+        self.gzipEDF.setChecked(True)
+
+        self.gridLayout.addWidget(self.gzipEDF, 3, 0, 1, 1)
 
 
         self.gridLayout_5.addWidget(self.groupBox, 0, 1, 2, 1)
@@ -511,9 +508,10 @@ class Ui_MainWindow(object):
         self.pauseButton.setText(QCoreApplication.translate("MainWindow", u"Pause", None))
         self.cancelButton.setText(QCoreApplication.translate("MainWindow", u"Cancel", None))
         self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"Settings Panel", None))
-        self.dryRun.setText(QCoreApplication.translate("MainWindow", u"Dry run (no EDF)", None))
         self.offsetDate.setText(QCoreApplication.translate("MainWindow", u"Offset dates", None))
+        self.dryRun.setText(QCoreApplication.translate("MainWindow", u"Dry run (no EDF)", None))
         self.deidentifyInputDir.setText(QCoreApplication.translate("MainWindow", u"De-identify input directory", None))
+        self.gzipEDF.setText(QCoreApplication.translate("MainWindow", u"Compress EDFs (EDFZ)", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuTheme.setTitle(QCoreApplication.translate("MainWindow", u"Theme", None))
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))

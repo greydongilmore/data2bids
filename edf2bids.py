@@ -16,8 +16,9 @@ import time
 import re
 import io
 import traceback, sys
+import gzip
 
-from ext_lib.edflibpy import EDFreader
+from ext_lib.edflibpy import EDFreader as EDFLIBReader
 from helpers import EDFReader, bidsHelper, fix_sessions, sec2time, deidentify_edf
 
 class WorkerKilledException(Exception):
@@ -88,6 +89,7 @@ class edf2bids(QtCore.QRunnable):
 		self.overwrite = []
 		self.verbose = []
 		self.deidentify_source = []
+		self.gzip_edf = False
 		self.offset_date = []
 		self.bids_settings = {}
 		self.dry_run = []
@@ -113,21 +115,27 @@ class edf2bids(QtCore.QRunnable):
 	def kill(self):
 		self.is_killed = True
 	
-	def write_annotations(self, data, data_fname, callback, deidentify=True):
-		self._annotations_data(data, data_fname, callback, deidentify)
+	def write_annotations(self, source_fname, data_fname, callback, deidentify=True):
+		self._annotations_data(source_fname, data_fname, callback, deidentify)
 	
 	def overwrite_annotations(self, events, data_fname, identity_idx, tal_indx, strings, action):
+		
 		
 		for ident in identity_idx:
 			block_chk = events[ident][-1]
 			assert(block_chk>=0)
 			
-			with open(data_fname, 'rb') as fid:
-				assert(fid.tell() == 0)
-				fid.seek((block_chk-(self.header['chan_info']['n_samps'][tal_indx]*2)), io.SEEK_SET)
-				cnv_buf=bytearray(self.header['chan_info']['n_samps'][tal_indx]*2)
-				fid.readinto(cnv_buf)
-					
+			if (data_fname.lower().endswith(".edf")):
+				fid=open(data_fname, "rb")
+			elif (data_fname.lower().endswith(".edfz")) or (data_fname.lower().endswith(".edf.gz")):
+				fid=gzip.open(data_fname, "rb")
+
+			assert(fid.tell() == 0)
+			fid.seek((block_chk-(self.header['chan_info']['n_samps'][tal_indx]*2)), io.SEEK_SET)
+			cnv_buf=bytearray(self.header['chan_info']['n_samps'][tal_indx]*2)
+			fid.readinto(cnv_buf)
+			fid.close()
+
 			if isinstance(strings, dict):
 				replace_idx = [i for i,x in enumerate(strings.keys()) if re.search(x, events[ident][2], re.IGNORECASE)]
 			else:
@@ -154,15 +162,17 @@ class edf2bids(QtCore.QRunnable):
 					assert(len(new_block)==len(cnv_buf))
 					
 			if new_block:
-				with open(data_fname, 'r+b') as fid:
-					assert(fid.tell() == 0)
-					fid.seek((block_chk-(self.header['chan_info']['n_samps'][tal_indx]*2)), io.SEEK_SET)
-					if fid.tell()==(block_chk-(self.header['chan_info']['n_samps'][tal_indx]*2)):
-						fid.write(new_block)
+				
+
+				assert(fid.tell() == 0)
+				fid.seek((block_chk-(self.header['chan_info']['n_samps'][tal_indx]*2)), io.SEEK_SET)
+				if fid.tell()==(block_chk-(self.header['chan_info']['n_samps'][tal_indx]*2)):
+					fid.write(new_block)
+				fid.close()
 		
 		return events
 	
-	def _annotations_data(self, file_info_run, data_fname, callback, deidentify):
+	def _annotations_data(self, source_name, data_fname, callback, deidentify):
 		"""
 		Constructs an annotations data tsv file about patient specific events from edf file.
 		
@@ -179,7 +189,7 @@ class edf2bids(QtCore.QRunnable):
 		
 		"""		
 		file_in = EDFReader()
-		file_in.open(data_fname)
+		file_in.open(source_name)
 		self.header = file_in.readHeader()
 		
 		overwrite_exact = [self.header['meas_info']['firstname'], self.header['meas_info']['lastname']]
@@ -195,7 +205,7 @@ class edf2bids(QtCore.QRunnable):
 		
 		callback.emit('...')
 		
-		hdl=EDFreader(data_fname)
+		hdl = EDFLIBReader(source_name)
 		events=hdl.annotationslist
 		events=[list(x) for x in events]
 		
@@ -228,34 +238,40 @@ class edf2bids(QtCore.QRunnable):
 							 'event': iannot[2]}
 				annotation_data = pd.concat([annotation_data, pd.DataFrame([data_temp])], axis = 0)
 			
-		annotation_data.to_csv(self.annotation_fname, sep='\t', index=False, na_rep='n/a', line_terminator="", float_format='%.3f')
+		annotation_data.to_csv(self.annotation_fname, sep='\t', index=False, na_rep='n/a', float_format='%.3f')
 	
 	def copyLargeFile(self, src, dest, callback=None, buffer_size=16*1024):
 		total_size = os.path.getsize(src)
 		update_cnt = int(total_size/10)
+		if (dest.lower().endswith(".edf")):
+			fdest=open(dest, "wb")
+		elif (dest.lower().endswith(".edfz")) or (dest.lower().endswith(".edf.gz")):
+			fdest=gzip.open(dest, "wb")
+
 		with open(src, 'rb') as fsrc:
-			with open(dest, 'wb') as fdest:
-				copied = 0
-				while 1:
-					while self.is_paused:
-						time.sleep(0)
-					if self.is_killed:
-						self.running = False
-						raise WorkerKilledException
-					else:
-						buf = fsrc.read(buffer_size)
-						if not buf:
-							break
-						fdest.write(buf)
-						copied += len(buf)
-						if update_cnt < copied and not callback is None:
-							if update_cnt == int(total_size/10):
-								callback.emit('copy{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
-							elif copied < (total_size-(int((total_size)/20))):
-								callback.emit('{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
-							update_cnt += int(total_size/10)
-				if not callback is None:
-					callback.emit('100%')
+			copied = 0
+			while 1:
+				
+				while self.is_paused:
+					time.sleep(0)
+				if self.is_killed:
+					self.running = False
+					raise WorkerKilledException
+				else:
+					buf = fsrc.read(buffer_size)
+					if not buf:
+						break
+					fdest.write(buf)
+					copied += len(buf)
+					if update_cnt < copied and not callback is None:
+						if update_cnt == int(total_size/10):
+							callback.emit('copy{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
+						elif copied < (total_size-(int((total_size)/20))):
+							callback.emit('{}%'.format(int(np.ceil((update_cnt/total_size)*100))))
+						update_cnt += int(total_size/10)
+		fdest.close()	
+		if not callback is None:
+			callback.emit('100%')
 
 #%%
 # 	isub = list(new_sessions)[0]
@@ -339,43 +355,57 @@ class edf2bids(QtCore.QRunnable):
 								
 								data_fname = bids_helper.make_bids_filename(suffix = kind + '.edf')
 								source_name = os.path.join(raw_file_path, file_data[irun]['FileName'])
-								self.annotation_fname = bids_helper.make_bids_filename(suffix='annotations.tsv')
+								self.annotation_fname = bids_helper.make_bids_filename(suffix='events.tsv')
 								if not self.dry_run:
 									if self.deidentify_source:
-										self.write_annotations(file_data[irun], data_fname, self.signals.progressEvent, deidentify=True)
-										source_name, epochLength = deidentify_edf(source_name, isub, self.offset_date, True)
+										self.write_annotations(source_name, data_fname, self.signals.progressEvent, deidentify=True)
+										source_name, epochLength = deidentify_edf(source_name, data_fname, isub, self.offset_date, True)
 										self.bids_settings['json_metadata']['EpochLength'] = epochLength
-										
-									self.copyLargeFile(source_name, data_fname, self.signals.progressEvent)
 	# 									edf2b.copyLargeFile(source_name, data_fname)
 									
+									self.copyLargeFile(source_name, data_fname, self.signals.progressEvent)
+									
 									if not self.deidentify_source:
-										self.write_annotations(file_data[irun], data_fname, self.signals.progressEvent, deidentify=True)
-										temp_name, epochLength = deidentify_edf(data_fname, isub, self.offset_date, False)
+										self.write_annotations(source_name, data_fname, self.signals.progressEvent, deidentify=False)
+										temp_name, epochLength = deidentify_edf(data_fname,data_fname, isub, self.offset_date, False)
 										self.bids_settings['json_metadata']['EpochLength'] = epochLength
+									
 									
 									if file_data[irun]['chan_label']:
 										file_in = EDFReader()
-										file_in.open(data_fname)
+										file_in.open(source_name)
 										chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[irun]['chan_label'][0]), self.bids_settings, write=True)
 									elif file_data[irun]['ses_chan_label']:
 										file_in = EDFReader()
-										file_in.open(data_fname)
+										file_in.open(source_name)
 										chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[irun]['ses_chan_label'][0]), self.bids_settings, write=True)
+									
+
 								else:
-									self.write_annotations(file_data[irun], source_name, self.signals.progressEvent, deidentify=False)
+									self.write_annotations(source_name, source_name, self.signals.progressEvent, deidentify=False)
 									if self.deidentify_source:
 										source_name = os.path.join(raw_file_path, file_data[irun]['FileName'])
-										source_name, epochLength = deidentify_edf(source_name, isub, self.offset_date, True)
+										source_name, epochLength = deidentify_edf(source_name, data_fname, isub, self.offset_date, True)
 										self.bids_settings['json_metadata']['EpochLength'] = epochLength
 									else:
 										self.bids_settings['json_metadata']['EpochLength'] = 0
 								
 								scan_fname=data_fname.split(isub+os.path.sep)[-1].replace(os.path.sep,'/')
+								if self.gzip_edf:
+									scan_fname=scan_fname+'.gz'
+								
 								bids_helper.write_scans(scan_fname, file_data[irun], self.offset_date)
 								
 								bids_helper.write_channels(file_data[irun])
 								bids_helper.write_sidecar(file_data[irun])
+
+								if self.gzip_edf and not self.dry_run:
+									data_fname_old=data_fname
+									data_fname=os.path.splitext(data_fname)[0]+'.edf.gz'
+									with open(data_fname_old, 'rb') as f_in:
+										with gzip.open(data_fname, 'wb') as f_out:
+											shutil.copyfileobj(f_in, f_out)
+									os.remove(data_fname_old)
 							
 							bids_helper.write_electrodes(file_data[0], coordinates=None)
 							
