@@ -373,14 +373,13 @@ class edf2bids(QtCore.QRunnable):
 									
 									if file_data[irun]['chan_label']:
 										file_in = EDFReader()
-										file_in.open(source_name)
+										file_in.open(data_fname)
 										chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[irun]['chan_label'][0]), self.bids_settings, write=True)
 									elif file_data[irun]['ses_chan_label']:
 										file_in = EDFReader()
-										file_in.open(source_name)
+										file_in.open(data_fname)
 										chan_label_file=file_in.chnames_update(os.path.join(raw_file_path, file_data[irun]['ses_chan_label'][0]), self.bids_settings, write=True)
 									
-
 								else:
 									self.write_annotations(source_name, source_name, self.signals.progressEvent, deidentify=False)
 									if self.deidentify_source:

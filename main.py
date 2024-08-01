@@ -202,7 +202,8 @@ class SettingsDialog(QtWidgets.QDialog, settings_panel.Ui_Dialog):
 					'EKG': {'type': 'EKG', 'name': 'EKG'},
 					'EMG': {'type': 'EMG', 'name': 'EMG'},
 					'EOG': {'type': 'EOG', 'name': 'EOG'},
-					'ECG': {'type': 'ECG', 'name': 'ECG'}
+					'ECG': {'type': 'ECG', 'name': 'ECG'},
+					'SpO2': {'type': 'SpO2', 'name': 'SpO2'}
 					}
 		 }
 		

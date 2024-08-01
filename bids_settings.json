@@ -90,15 +90,19 @@
             "ECG": {
                 "type": "ECG",
                 "name": "ECG"
+            },
+            "SpO2": {
+                "type": "SpO2",
+                "name": "SpO2"
             }
         }
     },
     "settings_panel": {
         "Deidentify_source": false,
         "offset_dates": false,
-        "gzip_edf": true
+        "gzip_edf": false
     },
-    "lastInputDirectory": "/home/greydon/Downloads/eeg_recording/input",
-    "lastOutputDirectory": "/home/greydon/Downloads/eeg_recording/output",
+    "lastInputDirectory": "/home/greydon/Downloads/input",
+    "lastOutputDirectory": "/home/greydon/Downloads/out2",
     "lastConvertTypeDirectory": "/media/veracrypt6/projects/ieeg_stimulation/retro/in/sub-R064/Mills~ Linda_b8cd71c8-a3aa-49b4-a69e-7a9496f54ade_2017-11-07_0001_0001.edf"
 }

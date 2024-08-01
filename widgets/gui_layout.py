@@ -441,7 +441,7 @@ class Ui_MainWindow(object):
         sizePolicy1.setHeightForWidth(self.gzipEDF.sizePolicy().hasHeightForWidth())
         self.gzipEDF.setSizePolicy(sizePolicy1)
         self.gzipEDF.setFont(font7)
-        self.gzipEDF.setChecked(True)
+        self.gzipEDF.setChecked(False)
 
         self.gridLayout.addWidget(self.gzipEDF, 3, 0, 1, 1)
 

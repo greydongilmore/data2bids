@@ -519,10 +519,12 @@ class EDFReader():
 		elif (self.fname.lower().endswith(".edfz")) or (self.fname.lower().endswith(".edf.gz")):
 			fid=gzip.open(self.fname, "rb")
 		
-		fid.seek(252)
-		channels = list(range(int(fid.read(4).decode())))
-		ch_names_orig= [fid.read(16).strip().decode() for ch in channels]
-		fid.close()
+		with open(self.fname, 'rb') as fid:
+			fid.seek(252)
+			nchan = int(fid.read(4).strip().decode())
+			channels = list(range(nchan))
+			ch_names_orig= [fid.read(16).strip().decode() for ch in channels]
+		
 		
 		chan_idx = [i for i, x in enumerate(ch_names_orig) if not any(x.startswith(substring) for substring in list(bids_settings['natus_info']['ChannelInfo'].keys()))]
 		
@@ -553,15 +555,17 @@ class EDFReader():
 		
 		if write:
 			if (self.fname.lower().endswith(".edf")):
-				fid=open(self.fname, "wb")
+				with open(self.fname, 'r+b') as fid:
+					assert(fid.tell() == 0)
+					fid.seek(256)
+					for ch in ch_names_new:
+						fid.write(padtrim(ch,16))
 			elif (self.fname.lower().endswith(".edfz")) or (self.fname.lower().endswith(".edf.gz")):
-				fid=gzip.open(self.fname, "wb")
-			assert(fid.tell() == 0)
-			fid.seek(256)
-			for ch in ch_names_new:
-				
-				fid.write(padtrim(ch,16))
-			fid.close()
+				with gzip.open(self.fname, 'r+b') as fid:
+					assert(fid.tell() == 0)
+					fid.seek(256)
+					for ch in ch_names_new:
+						fid.write(padtrim(ch,16))
 		
 		return ch_names_new
 		
