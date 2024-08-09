@@ -15,7 +15,7 @@ import json
 import re
 import qdarkstyle
 import gzip
-from PySide2 import QtGui, QtCore, QtWidgets
+from PySide6 import QtGui, QtCore, QtWidgets
 
 from widgets import gui_layout
 from widgets import settings_panel,about_panel,overwrite_type
@@ -197,7 +197,7 @@ class SettingsDialog(QtWidgets.QDialog, settings_panel.Ui_Dialog):
 					'PR': {'type': 'PR', 'name': 'MISC'},
 					'Pleth': {'type': 'Pleth', 'name': 'MISC'},
 					'EDF Annotations': {'type': 'Annotations', 'name': 'ANNO'},
-					'C': {'type': 'unused', 'name': 'unused'},
+					#'C': {'type': 'unused', 'name': 'unused'},
 					'X': {'type': 'unused', 'name': 'unused'},
 					'EKG': {'type': 'EKG', 'name': 'EKG'},
 					'EMG': {'type': 'EMG', 'name': 'EMG'},
@@ -244,7 +244,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 									f"Newer version date: {latestVersion['version']}<br>"+
 									"Google drive folder: "+f"<a href='{self.app_info['driveFolder']}'><span style= text-decoration: underline; color:#0000ff;>link to folder</span></a>"
 									)
-				versionMessage.exec_()
+				versionMessage.exec()
 		
 		self.output_path=None
 		
@@ -307,7 +307,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			fid.write('\n')
 
 	def onDarkMode(self):
-		self.setStyleSheet(qdarkstyle.load_stylesheet_pyside2())
+		self.setStyleSheet(qdarkstyle.load_stylesheet_pyside6())
 		self.bids_settings['general']['darkMode']=True
 		self.updateSettingsFile(self.bids_settings)
 
@@ -320,14 +320,14 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		pass
 	
 	def onAboutButton(self):
-		self.aboutPanel.exec_()
+		self.aboutPanel.exec()
 	
 	def onCloseAbout(self):
 		self.aboutPanel.close()
 	
 	def recenterWindow(self, new_width):
 		#frameGm = self.frameGeometry()
-		screen = QtGui.QGuiApplication.screenAt(QtWidgets.QApplication.desktop().cursor().pos())
+		screen = screen = QtGui.QGuiApplication.screenAt(QtGui.QCursor.pos())
 		centerPoint = screen.availableGeometry().center()
 		screenGeo_x = screen.availableGeometry().width()
 		screenGeo_y = screen.availableGeometry().height()
@@ -361,7 +361,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 				warnBox.setText(f"File has been changed to {success}")
 			warnBox.setTextFormat(QtCore.Qt.RichText)
 			warnBox.setWindowTitle("Success")
-			x = warnBox.exec_()
+			x = warnBox.exec()
 		else:
 			warningBox("Please choose the format type to change the file to.")
 	
@@ -428,7 +428,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.updateSettingsFile(self.bids_settings)
 	
 	def onConvertTypeButton(self):
-		self.overwriteTypePanel.exec_()
+		self.overwriteTypePanel.exec()
 	
 	def onSettingsButton(self):
 		self.settingsPanel.recordingLabels.setText(self.bids_settings['general']['recordingLabels'])
@@ -449,7 +449,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		self.settingsPanel.textboxEEGMaterial.setText(self.bids_settings['natus_info']['EEGElectrodeInfo']['Material'])
 		self.settingsPanel.textboxEEGDiameter.setText(str(self.bids_settings['natus_info']['EEGElectrodeInfo']['Diameter']))
 		
-		self.settingsPanel.exec_()
+		self.settingsPanel.exec()
 	
 	def onSettingsAccept(self):
 		if self.bids_settings['general']['recordingLabels'] != self.settingsPanel.recordingLabels.text():
@@ -505,8 +505,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		
 		dialog.setWindowTitle('Select EDF File')
 		dialog.setNameFilter('*.edf *.EDF')
-		dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
-		if dialog.exec_():
+		
+		dialog.setFileMode(QtWidgets.QFileDialog.Directory)
+		if dialog.exec():
 			self.input_path = dialog.selectedFiles()[0]
 			self.overwriteTypePanel.filePath.setText(self.input_path)
 			
@@ -531,7 +532,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		else:
 			dialog = QtWidgets.QFileDialog(self)
 			
-		dialog.setFileMode(QtWidgets.QFileDialog.DirectoryOnly)
+		dialog.setFileMode(QtWidgets.QFileDialog.Directory)
 		self.treeViewLoad.clear()
 		self.treeViewOutput.clear()
 		self.sText.setVisible(0)
@@ -547,7 +548,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 		if self.spredButton.isEnabled():
 			self.spredButton.setEnabled(False)
 			self.spredButton.setStyleSheet(self.inactive_color)
-		if dialog.exec_():
+		if dialog.exec():
 			self.updateStatus("Loading input directory...")
 			self.input_path = dialog.selectedFiles()[0]
 			if self.input_path != self.bids_settings['lastInputDirectory']:
@@ -555,7 +556,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 				self.updateSettingsFile(self.bids_settings)
 			
 			self.file_info, self.chan_label_file, self.imaging_data = read_input_dir(self.input_path, self.bids_settings)
-			self.treeViewLoad.setEditTriggers(self.treeViewLoad.NoEditTriggers)
+			self.treeViewLoad.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 			self.treeViewLoad.itemDoubleClicked.connect(self.checkEdit)
 			font = QtGui.QFont("Arial", 11)
 			self.treeViewLoad.setFont(font)
@@ -671,9 +672,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			header = self.treeViewLoad.header()
 			overall_extension = 0
 			for column in range(header.count()):
-				header.setSectionResizeMode(column, self.treeViewLoad.header().ResizeToContents)
+				header.setSectionResizeMode(column, QtWidgets.QHeaderView.ResizeToContents)
 				width = header.sectionSize(column)
-				header.setSectionResizeMode(column, self.treeViewLoad.header().Interactive)
+				header.setSectionResizeMode(column, QtWidgets.QHeaderView.Interactive)
 				header.resizeSection(column, width)
 				overall_extension += width
 
@@ -730,7 +731,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			self.imagingButton.setEnabled(False)
 			self.imagingButton.setStyleSheet(self.inactive_color)
 				
-		if dialog.exec_():
+		if dialog.exec():
 			self.updateStatus("Loading output directory...")
 			self.output_path = dialog.selectedFiles()[0]
 			
@@ -783,7 +784,7 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 # 					self.imagingButton.setEnabled(False)
 # 					self.imagingButton.setStyleSheet(self.inactive_color)
 			
-			self.treeViewOutput.setEditTriggers(self.treeViewOutput.NoEditTriggers)
+			self.treeViewOutput.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 			self.treeViewOutput.itemDoubleClicked.connect(self.checkEditOutput)
 			font = QtGui.QFont("Arial", 11)
 			self.treeViewOutput.setFont(font)
@@ -1025,9 +1026,9 @@ class MainWindow(QtWidgets.QMainWindow, gui_layout.Ui_MainWindow):
 			
 			header = self.treeViewOutput.header()
 			for column in range(header.count()):
-				header.setSectionResizeMode(column, self.treeViewOutput.header().ResizeToContents)
+				header.setSectionResizeMode(column, QtWidgets.QHeaderView.ResizeToContents)
 				width = header.sectionSize(column)
-				header.setSectionResizeMode(column, self.treeViewOutput.header().Interactive)
+				header.setSectionResizeMode(column, QtWidgets.QHeaderView.Interactive)
 				header.resizeSection(column, width)
 			
 			font = QtGui.QFont("Arial", 11)
@@ -1429,7 +1430,7 @@ def main():
 	# or in new API
 	#app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyside2'))
 	window.show()
-	app.exec_()
+	app.exec()
 	
 if __name__ == '__main__':	
 	main()

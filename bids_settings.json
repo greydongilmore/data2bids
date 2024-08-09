@@ -67,10 +67,6 @@
                 "type": "Annotations",
                 "name": "ANNO"
             },
-            "C": {
-                "type": "unused",
-                "name": "unused"
-            },
             "X": {
                 "type": "unused",
                 "name": "unused"
@@ -102,7 +98,7 @@
         "offset_dates": false,
         "gzip_edf": false
     },
-    "lastInputDirectory": "/home/greydon/Downloads/input",
-    "lastOutputDirectory": "/home/greydon/Downloads/out2",
+    "lastInputDirectory": "C:/Users/greydon/Downloads/in",
+    "lastOutputDirectory": "C:/Users/greydon/Downloads/out",
     "lastConvertTypeDirectory": "/media/veracrypt6/projects/ieeg_stimulation/retro/in/sub-R064/Mills~ Linda_b8cd71c8-a3aa-49b4-a69e-7a9496f54ade_2017-11-07_0001_0001.edf"
 }

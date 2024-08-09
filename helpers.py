@@ -19,7 +19,7 @@ import glob
 from collections import OrderedDict
 import sys
 import struct
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 #from PyQt5 import QtWidgets
 import gzip
 
@@ -1697,5 +1697,5 @@ class warningBox(QtWidgets.QMessageBox):
 		self.setIcon(QtWidgets.QMessageBox.Critical)
 		self.setText(text)
 		self.setWindowTitle("Error")
-		self.exec_()
+		self.exec()
 		

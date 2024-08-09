@@ -3,22 +3,25 @@
 ################################################################################
 ## Form generated from reading UI file 'about_panel.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.14.1
+## Created by: Qt User Interface Compiler version 6.7.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QMetaObject, QObject, QPoint,
-    QRect, QSize, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QLinearGradient, QPalette, QPainter, QPixmap,
-    QRadialGradient)
-from PySide2.QtWidgets import *
-
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
+    QLabel, QPushButton, QSizePolicy, QSpacerItem,
+    QTextBrowser, QTextEdit, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
-        if Dialog.objectName():
+        if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.resize(593, 421)
         self.gridLayout_2 = QGridLayout(Dialog)
@@ -29,7 +32,7 @@ class Ui_Dialog(object):
         self.gridLayout.setObjectName(u"gridLayout")
         self.versionDate = QLabel(self.widget)
         self.versionDate.setObjectName(u"versionDate")
-        sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.versionDate.sizePolicy().hasHeightForWidth())
@@ -37,10 +40,9 @@ class Ui_Dialog(object):
         self.versionDate.setMinimumSize(QSize(130, 26))
         self.versionDate.setMaximumSize(QSize(16777215, 26))
         font = QFont()
-        font.setFamily(u"Arial")
+        font.setFamilies([u"Arial"])
         font.setPointSize(11)
         font.setBold(True)
-        font.setWeight(75)
         self.versionDate.setFont(font)
         self.versionDate.setStyleSheet(u"")
         self.versionDate.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -54,7 +56,7 @@ class Ui_Dialog(object):
         self.versionDateEdit.setMinimumSize(QSize(0, 26))
         self.versionDateEdit.setMaximumSize(QSize(16777215, 26))
         font1 = QFont()
-        font1.setFamily(u"Arial")
+        font1.setFamilies([u"Arial"])
         font1.setPointSize(11)
         self.versionDateEdit.setFont(font1)
         self.versionDateEdit.setStyleSheet(u"margin-left:1px;")
@@ -75,7 +77,7 @@ class Ui_Dialog(object):
 
         self.googleDriveLink = QTextBrowser(self.widget)
         self.googleDriveLink.setObjectName(u"googleDriveLink")
-        sizePolicy1 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.googleDriveLink.sizePolicy().hasHeightForWidth())
@@ -301,13 +303,13 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.widget, 3, 0, 1, 1, Qt.AlignHCenter)
 
-        self.verticalSpacer = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
+        self.verticalSpacer = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
 
         self.gridLayout_2.addItem(self.verticalSpacer, 4, 0, 1, 1)
 
         self.softwareIcon = QLabel(Dialog)
         self.softwareIcon.setObjectName(u"softwareIcon")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.softwareIcon.sizePolicy().hasHeightForWidth())
@@ -319,7 +321,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.softwareIcon, 0, 0, 1, 1, Qt.AlignHCenter)
 
-        self.verticalSpacer_2 = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
+        self.verticalSpacer_2 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
 
         self.gridLayout_2.addItem(self.verticalSpacer_2, 1, 0, 1, 1)
 

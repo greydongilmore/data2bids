@@ -3,22 +3,29 @@
 ################################################################################
 ## Form generated from reading UI file 'settings_panel.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 6.7.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QAbstractButton, QApplication, QCheckBox, QDialog,
+    QDialogButtonBox, QGridLayout, QHBoxLayout, QLabel,
+    QLineEdit, QSizePolicy, QSpacerItem, QTabWidget,
+    QVBoxLayout, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.resize(619, 600)
-        sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
@@ -28,7 +35,7 @@ class Ui_Dialog(object):
         self.tabWidget = QTabWidget(Dialog)
         self.tabWidget.setObjectName(u"tabWidget")
         font = QFont()
-        font.setFamily(u"Arial")
+        font.setFamilies([u"Arial"])
         font.setPointSize(10)
         self.tabWidget.setFont(font)
         self.tabWidget.setDocumentMode(True)
@@ -38,7 +45,7 @@ class Ui_Dialog(object):
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.widgetLab_2 = QWidget(self.tab)
         self.widgetLab_2.setObjectName(u"widgetLab_2")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(40)
         sizePolicy1.setHeightForWidth(self.widgetLab_2.sizePolicy().hasHeightForWidth())
@@ -46,7 +53,7 @@ class Ui_Dialog(object):
         self.widgetLab_2.setMinimumSize(QSize(0, 0))
         self.widgetLab_2.setMaximumSize(QSize(16777215, 16777215))
         font1 = QFont()
-        font1.setFamily(u"Arial")
+        font1.setFamilies([u"Arial"])
         font1.setPointSize(11)
         self.widgetLab_2.setFont(font1)
         self.gridLayout = QGridLayout(self.widgetLab_2)
@@ -55,10 +62,9 @@ class Ui_Dialog(object):
         self.checkUpdatesLabel.setObjectName(u"checkUpdatesLabel")
         self.checkUpdatesLabel.setMinimumSize(QSize(120, 0))
         font2 = QFont()
-        font2.setFamily(u"Arial")
+        font2.setFamilies([u"Arial"])
         font2.setPointSize(11)
         font2.setBold(False)
-        font2.setWeight(50)
         self.checkUpdatesLabel.setFont(font2)
 
         self.gridLayout.addWidget(self.checkUpdatesLabel, 0, 0, 1, 1)
@@ -78,7 +84,7 @@ class Ui_Dialog(object):
 
         self.recordingLabels = QLineEdit(self.widgetLab_2)
         self.recordingLabels.setObjectName(u"recordingLabels")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.recordingLabels.sizePolicy().hasHeightForWidth())
@@ -93,7 +99,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_3.addWidget(self.widgetLab_2, 0, 0, 1, 1, Qt.AlignLeft)
 
-        self.verticalSpacer_3 = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
+        self.verticalSpacer_3 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
 
         self.gridLayout_3.addItem(self.verticalSpacer_3, 1, 0, 1, 1)
 
@@ -104,7 +110,7 @@ class Ui_Dialog(object):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.widgetLab = QWidget(self.tabJson)
         self.widgetLab.setObjectName(u"widgetLab")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy3.setHorizontalStretch(0)
         sizePolicy3.setVerticalStretch(40)
         sizePolicy3.setHeightForWidth(self.widgetLab.sizePolicy().hasHeightForWidth())
@@ -117,10 +123,9 @@ class Ui_Dialog(object):
         self.labelLab.setObjectName(u"labelLab")
         self.labelLab.setMinimumSize(QSize(120, 0))
         font3 = QFont()
-        font3.setFamily(u"Arial")
+        font3.setFamilies([u"Arial"])
         font3.setPointSize(10)
         font3.setBold(False)
-        font3.setWeight(50)
         self.labelLab.setFont(font3)
 
         self.horizontalLayout_3.addWidget(self.labelLab)
@@ -195,7 +200,7 @@ class Ui_Dialog(object):
         self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
         self.labelInstitutionAddress = QLabel(self.widgetInstitutionAddress)
         self.labelInstitutionAddress.setObjectName(u"labelInstitutionAddress")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(20)
         sizePolicy4.setHeightForWidth(self.labelInstitutionAddress.sizePolicy().hasHeightForWidth())
@@ -242,7 +247,7 @@ class Ui_Dialog(object):
 
         self.verticalLayout.addWidget(self.widgetInstitutionName)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout.addItem(self.verticalSpacer)
 
@@ -254,10 +259,9 @@ class Ui_Dialog(object):
         self.labeliEEG = QLabel(self.tabElectrodeInfo)
         self.labeliEEG.setObjectName(u"labeliEEG")
         font4 = QFont()
-        font4.setFamily(u"Arial")
+        font4.setFamilies([u"Arial"])
         font4.setPointSize(12)
         font4.setBold(True)
-        font4.setWeight(75)
         self.labeliEEG.setFont(font4)
 
         self.verticalLayout_2.addWidget(self.labeliEEG)
@@ -476,7 +480,7 @@ class Ui_Dialog(object):
 
         self.verticalLayout_2.addWidget(self.widgetEEGDiameter)
 
-        self.verticalSpacer_2 = QSpacerItem(20, 6, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_2 = QSpacerItem(20, 6, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_2.addItem(self.verticalSpacer_2)
 

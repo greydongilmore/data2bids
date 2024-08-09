@@ -9,7 +9,7 @@ import os
 import pandas as pd
 #pd.set_option('precision', 6)
 import shutil
-from PySide2 import QtCore
+from PySide6 import QtCore
 import time
 import re
 import datetime

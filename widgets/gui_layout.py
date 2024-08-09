@@ -3,37 +3,47 @@
 ################################################################################
 ## Form generated from reading UI file 'gui_layout.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 6.7.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
+from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QCheckBox,
+    QFrame, QGridLayout, QGroupBox, QHeaderView,
+    QLabel, QMainWindow, QMenu, QMenuBar,
+    QPlainTextEdit, QPushButton, QSizePolicy, QSpacerItem,
+    QSplitter, QStatusBar, QTreeWidget, QTreeWidgetItem,
+    QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(1249, 782)
-        sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
         font = QFont()
-        font.setFamily(u"Arial")
+        font.setFamilies([u"Arial"])
         font.setPointSize(12)
         MainWindow.setFont(font)
         icon = QIcon()
-        icon.addFile(u"eplink_icon.ico", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u"eplink_icon.ico", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         MainWindow.setWindowIcon(icon)
         self.actionLoad_data = QAction(MainWindow)
         self.actionLoad_data.setObjectName(u"actionLoad_data")
         font1 = QFont()
-        font1.setFamily(u"Arial")
+        font1.setFamilies([u"Arial"])
         font1.setPointSize(11)
         self.actionLoad_data.setFont(font1)
         self.actionQuit = QAction(MainWindow)
@@ -56,7 +66,7 @@ class Ui_MainWindow(object):
         self.actionOverwrite_Type.setFont(font1)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.MinimumExpanding)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
@@ -87,24 +97,23 @@ class Ui_MainWindow(object):
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.loadDirButton = QPushButton(self.widget_4)
         self.loadDirButton.setObjectName(u"loadDirButton")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.loadDirButton.sizePolicy().hasHeightForWidth())
         self.loadDirButton.setSizePolicy(sizePolicy2)
         self.loadDirButton.setMinimumSize(QSize(160, 30))
         font2 = QFont()
-        font2.setFamily(u"Arial")
+        font2.setFamilies([u"Arial"])
         font2.setPointSize(12)
         font2.setBold(True)
-        font2.setWeight(75)
         font2.setKerning(True)
         self.loadDirButton.setFont(font2)
         self.loadDirButton.setStyleSheet(u"")
 
         self.gridLayout_4.addWidget(self.loadDirButton, 0, 0, 1, 1)
 
-        self.verticalSpacer = QSpacerItem(20, 0, QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
+        self.verticalSpacer = QSpacerItem(20, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
 
         self.gridLayout_4.addItem(self.verticalSpacer, 1, 0, 1, 1)
 
@@ -118,7 +127,7 @@ class Ui_MainWindow(object):
         self.treeViewLoad.setMinimumSize(QSize(1000, 0))
         self.treeViewLoad.setMaximumSize(QSize(16777215, 16777215))
         font3 = QFont()
-        font3.setFamily(u"Arial")
+        font3.setFamilies([u"Arial"])
         font3.setPointSize(10)
         self.treeViewLoad.setFont(font3)
         self.treeViewLoad.setContextMenuPolicy(Qt.PreventContextMenu)
@@ -169,24 +178,23 @@ class Ui_MainWindow(object):
         self.sText = QLabel(self.widget_5)
         self.sText.setObjectName(u"sText")
         self.sText.setEnabled(True)
-        sizePolicy3 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
         sizePolicy3.setHorizontalStretch(0)
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.sText.sizePolicy().hasHeightForWidth())
         self.sText.setSizePolicy(sizePolicy3)
         self.sText.setMinimumSize(QSize(150, 0))
         font4 = QFont()
-        font4.setFamily(u"Arial")
+        font4.setFamilies([u"Arial"])
         font4.setPointSize(10)
         font4.setBold(True)
-        font4.setWeight(75)
         self.sText.setFont(font4)
         self.sText.setAlignment(Qt.AlignCenter)
         self.sText.setWordWrap(True)
 
         self.gridLayout_6.addWidget(self.sText, 1, 0, 1, 1)
 
-        self.verticalSpacer_2 = QSpacerItem(20, 0, QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
+        self.verticalSpacer_2 = QSpacerItem(20, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
 
         self.gridLayout_6.addItem(self.verticalSpacer_2, 2, 0, 1, 1)
 
@@ -223,7 +231,7 @@ class Ui_MainWindow(object):
 
         self.widget_3 = QWidget(self.centralwidget)
         self.widget_3.setObjectName(u"widget_3")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
         sizePolicy4.setHeightForWidth(self.widget_3.sizePolicy().hasHeightForWidth())
@@ -233,7 +241,7 @@ class Ui_MainWindow(object):
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.conversionStatus = QPlainTextEdit(self.widget_3)
         self.conversionStatus.setObjectName(u"conversionStatus")
-        sizePolicy5 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
         sizePolicy5.setHorizontalStretch(0)
         sizePolicy5.setVerticalStretch(0)
         sizePolicy5.setHeightForWidth(self.conversionStatus.sizePolicy().hasHeightForWidth())
@@ -241,7 +249,7 @@ class Ui_MainWindow(object):
         self.conversionStatus.setMinimumSize(QSize(0, 0))
         self.conversionStatus.setMaximumSize(QSize(16777215, 16777215))
         font5 = QFont()
-        font5.setFamily(u"Arial")
+        font5.setFamilies([u"Arial"])
         font5.setPointSize(9)
         self.conversionStatus.setFont(font5)
         self.conversionStatus.setFrameShape(QFrame.Box)
@@ -259,7 +267,7 @@ class Ui_MainWindow(object):
         self.gridLayout_8.setObjectName(u"gridLayout_8")
         self.convertButton = QPushButton(self.widget)
         self.convertButton.setObjectName(u"convertButton")
-        sizePolicy6 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy6.setHorizontalStretch(0)
         sizePolicy6.setVerticalStretch(0)
         sizePolicy6.setHeightForWidth(self.convertButton.sizePolicy().hasHeightForWidth())
@@ -279,10 +287,9 @@ class Ui_MainWindow(object):
         self.imagingButton.setMinimumSize(QSize(170, 0))
         self.imagingButton.setMaximumSize(QSize(150, 16777215))
         font6 = QFont()
-        font6.setFamily(u"Arial")
+        font6.setFamilies([u"Arial"])
         font6.setPointSize(12)
         font6.setBold(True)
-        font6.setWeight(75)
         self.imagingButton.setFont(font6)
         self.imagingButton.setStyleSheet(u"background-color: rgb(0, 85, 255);\n"
 "color: black")
@@ -407,10 +414,9 @@ class Ui_MainWindow(object):
         sizePolicy1.setHeightForWidth(self.offsetDate.sizePolicy().hasHeightForWidth())
         self.offsetDate.setSizePolicy(sizePolicy1)
         font7 = QFont()
-        font7.setFamily(u"Arial")
+        font7.setFamilies([u"Arial"])
         font7.setPointSize(11)
         font7.setBold(False)
-        font7.setWeight(50)
         self.offsetDate.setFont(font7)
         self.offsetDate.setChecked(False)
 
@@ -432,7 +438,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.deidentifyInputDir, 0, 0, 1, 1)
 
-        self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
+        self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
 
         self.gridLayout.addItem(self.verticalSpacer_4, 4, 0, 1, 1)
 
@@ -485,7 +491,7 @@ class Ui_MainWindow(object):
         self.menuTools.addAction(self.actionOverwrite_Type)
 
         self.retranslateUi(MainWindow)
-        self.actionLoad_data.triggered.connect(self.loadDirButton.showMenu)
+        self.actionLoad_data.triggered["bool"].connect(self.loadDirButton.showMenu)
 
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi

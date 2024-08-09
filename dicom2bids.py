@@ -8,7 +8,7 @@ Created on Wed Jun 24 18:06:23 2020
 import os
 import pandas as pd
 #pd.set_option('precision', 6)
-from PySide2 import QtCore
+from PySide6 import QtCore
 import pydicom
 from dicognito.anonymizer import Anonymizer
 import datetime
