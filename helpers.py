@@ -514,11 +514,6 @@ class EDFReader():
 	
 	def chnames_update(self, channel_file, bids_settings, write=False):
 		
-		if (self.fname.lower().endswith(".edf")):
-			fid=open(self.fname, "rb")
-		elif (self.fname.lower().endswith(".edfz")) or (self.fname.lower().endswith(".edf.gz")):
-			fid=gzip.open(self.fname, "rb")
-		
 		with open(self.fname, 'rb') as fid:
 			fid.seek(252)
 			nchan = int(fid.read(4).strip().decode())
@@ -528,6 +523,13 @@ class EDFReader():
 		
 		chan_idx = [i for i, x in enumerate(ch_names_orig) if not any(x.startswith(substring) for substring in list(bids_settings['natus_info']['ChannelInfo'].keys()))]
 		
+		if channel_file.endswith('.mtg'):
+			chan_label_new = get_montage(channel_file)
+			chan_label_new=chan_label_new[['ChanIndex','To_Name']].values
+		else:
+			chan_label_new = np.genfromtxt(channel_file, dtype='str',delimiter="\t").tolist()
+
+
 		if channel_file.endswith('.mtg'):
 			chan_label_new = self.get_montage(channel_file)
 		else:
